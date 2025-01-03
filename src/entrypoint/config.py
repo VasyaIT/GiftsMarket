@@ -1,0 +1,48 @@
+from os import environ
+
+from pydantic import BaseModel, Field
+
+
+class AppConfig(BaseModel):
+    CORS_ALLOWED_ORIGINS: str
+    DEBUG: bool
+    SECRET_KEY: str
+    TOKEN_ALGORITHM: str = Field(default="HS256")
+    TOKEN_LIFETIME: int = Field(default=86400)
+
+    @property
+    def cors_allowed_origins(self) -> list[str]:
+        return ["*"] if self.DEBUG else self.CORS_ALLOWED_ORIGINS.split()
+
+    @property
+    def docs_url(self) -> str:
+        return "/docs" if self.DEBUG else ""
+
+    @property
+    def openapi_url(self) -> str:
+        return "/openapi.json" if self.DEBUG else ""
+
+
+class PostgresConfig(BaseModel):
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_HOST: str
+    POSTGRES_PORT: int
+    POSTGRES_DB: str
+
+    @property
+    def database_url(self) -> str:
+        return (
+            f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@"
+            f"{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}?async_fallback=True"
+        )
+
+
+class BotConfig(BaseModel):
+    BOT_TOKEN: str
+
+
+class Config(BaseModel):
+    app: AppConfig = Field(default_factory=lambda: AppConfig(**environ))  # type: ignore
+    postgres: PostgresConfig = Field(default_factory=lambda: PostgresConfig(**environ))  # type: ignore
+    bot: BotConfig = Field(default_factory=lambda: BotConfig(**environ))  # type: ignore

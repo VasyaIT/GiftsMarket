@@ -1,0 +1,2 @@
+class InitDataIsNotValidError(Exception):
+    pass
