@@ -40,9 +40,23 @@ class PostgresConfig(BaseModel):
 
 class BotConfig(BaseModel):
     BOT_TOKEN: str
+    WEBAPP_URL: str
+    DEPOSIT_CHAT_ID: str
+    OWNERS_CHAT_ID: str
+
+    @property
+    def owners_chat_id(self) -> list[str]:
+        return self.OWNERS_CHAT_ID.split()
+
+
+class TonapiConfig(BaseModel):
+    TONAPI_TOKEN: str
+    DEPOSIT_ADDRESS: str
+    IS_TESTNET: bool
 
 
 class Config(BaseModel):
     app: AppConfig = Field(default_factory=lambda: AppConfig(**environ))  # type: ignore
     postgres: PostgresConfig = Field(default_factory=lambda: PostgresConfig(**environ))  # type: ignore
     bot: BotConfig = Field(default_factory=lambda: BotConfig(**environ))  # type: ignore
+    tonapi: TonapiConfig = Field(default_factory=lambda: TonapiConfig(**environ))  # type: ignore

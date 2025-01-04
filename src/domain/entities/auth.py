@@ -1,7 +1,6 @@
-from dataclasses import dataclass
+from pydantic import BaseModel
 
 
-@dataclass(slots=True)
-class InitDataDM:
+class InitDataDM(BaseModel):
     user: dict
     start_param: str | None

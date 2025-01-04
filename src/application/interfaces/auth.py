@@ -16,7 +16,7 @@ class TokenEncoder(Protocol):
 
 class TokenDecoder(Protocol):
     @abstractmethod
-    def decode(self, user_id: int) -> str:
+    def decode(self, encoded_token: str) -> dict:
         ...
 
 

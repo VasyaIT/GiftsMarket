@@ -1,7 +1,9 @@
+from aiogram import Bot
 from dishka import make_async_container
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
 
+from src.application.common.utils import get_bot
 from src.entrypoint.config import Config
 from src.entrypoint.ioc import AppProvider
 from src.presentation.api.middlewares import setup_middlewares
@@ -15,8 +17,9 @@ def get_fastapi_app() -> FastAPI:
         docs_url=config.app.docs_url,
         openapi_url=config.app.openapi_url
     )
-    container = make_async_container(AppProvider(), context={Config: config})
+    bot = get_bot(config.bot.BOT_TOKEN)
+    container = make_async_container(AppProvider(), context={Config: config, Bot: bot})
+    setup_dishka(container, app)
     setup_middlewares(app, config.app)
     setup_routers(app)
-    setup_dishka(container, app)
     return app

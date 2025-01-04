@@ -1,19 +1,35 @@
 from typing import AsyncIterable
 
-from dishka import AnyOf, Provider, Scope, from_context, provide
+from aiogram import Bot
+from dishka import AnyOf, Scope, from_context, provide
+from dishka.integrations.fastapi import FastapiProvider
+from fastapi import Request
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from src.application.interactors.market import CreateOrderInteractor, GetOrdersInteractor
 from src.application.interactors.user import LoginInteractor
 from src.application.interfaces.auth import InitDataValidator, TokenDecoder, TokenEncoder
 from src.application.interfaces.database import DBSession
+from src.application.interfaces.market import OrderReader, OrderSaver
+from src.application.interfaces.user import UserManager, UserReader, UserSaver
+from src.domain.entities.user import UserDM
 from src.entrypoint.config import Config
 from src.infrastructure.database.session import new_session_maker
 from src.infrastructure.gateways.auth import TelegramGateway, TokenGateway
+from src.infrastructure.gateways.market import MarketGateway
 from src.infrastructure.gateways.user import UserGateway
+from src.presentation.api.authentication import get_user_by_token
 
 
-class AppProvider(Provider):
+class AppProvider(FastapiProvider):
     config = from_context(provides=Config, scope=Scope.APP)
+    bot = from_context(provides=Bot, scope=Scope.APP)
+
+    @provide(scope=Scope.REQUEST)
+    async def authentication(
+        self, request: Request, user_gateway: UserReader, token_gateway: TokenDecoder
+    ) -> UserDM:
+        return await get_user_by_token(request, user_gateway, token_gateway)
 
     @provide(scope=Scope.APP)
     def get_session_maker(self, config: Config) -> async_sessionmaker[AsyncSession]:
@@ -39,5 +55,8 @@ class AppProvider(Provider):
     async def get_telegram_gateway(self, config: Config) -> TelegramGateway:
         return TelegramGateway(bot_config=config.bot)
 
-    user_gateway = provide(UserGateway, scope=Scope.REQUEST)
+    user_gateway = provide(UserGateway, scope=Scope.REQUEST, provides=AnyOf[UserManager, UserReader, UserSaver])
+    market_gateway = provide(MarketGateway, scope=Scope.REQUEST, provides=AnyOf[OrderSaver, OrderReader])
     login_interactor = provide(LoginInteractor, scope=Scope.REQUEST)
+    create_order_interactor = provide(CreateOrderInteractor, scope=Scope.REQUEST)
+    get_orders_interactor = provide(GetOrdersInteractor, scope=Scope.REQUEST)

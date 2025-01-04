@@ -1,10 +1,10 @@
 from dishka import FromDishka
 from dishka.integrations.fastapi import inject
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, File, HTTPException, Response, UploadFile
 from starlette import status
 
 from src.application.common.const import COOKIES_MAX_AGE
-from src.application.dto.user import LoginDTO, UserDTO
+from src.application.dto.user import LoginDTO
 from src.application.interactors.user import LoginInteractor
 
 

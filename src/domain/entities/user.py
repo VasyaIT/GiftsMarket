@@ -1,15 +1,23 @@
-from dataclasses import dataclass
+from pydantic import BaseModel
 
 
-@dataclass(slots=True)
-class CreateUserDM:
+class CreateUserDM(BaseModel):
     id: int
     username: str | None
     first_name: str | None
+    deposit_comment: str
 
 
-@dataclass(slots=True)
-class UserDM:
+class UserDM(BaseModel):
     id: int
     username: str | None
     first_name: str | None
+    deposit_comment: str
+    balance: float
+    is_banned: bool = False
+
+
+class UpdateUserBalanceDM(BaseModel):
+    id: int | None = None
+    deposit_comment: str | None = None
+    amount: float
