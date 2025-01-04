@@ -18,3 +18,10 @@ class OrderDM(BaseModel):
     seller_id: int
     buyer_id: int | None
     status: OrderStatus
+
+
+class UpdateOrderStatusDM(BaseModel):
+    id: int
+    old_status: OrderStatus
+    new_status: OrderStatus
+    buyer_id: int | None = None

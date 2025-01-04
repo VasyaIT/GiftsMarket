@@ -4,3 +4,11 @@ class InitDataIsNotValidError(Exception):
 
 class NotEnoughBalanceError(Exception):
     pass
+
+
+class NotFoundError(Exception):
+    pass
+
+
+class NotAccessError(Exception):
+    pass

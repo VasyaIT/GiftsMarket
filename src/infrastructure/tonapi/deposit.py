@@ -1,17 +1,15 @@
 from aiogram import Bot
 from pytonapi import AsyncTonapi
 
-from domain.entities.user import UpdateUserBalanceDM, UserDM
-from entrypoint.config import Config, PostgresConfig, TonapiConfig
-from infrastructure.database.session import new_session_maker
-from infrastructure.gateways.transaction import TransactionGateway
-from infrastructure.gateways.user import UserGateway
 from src.application.common.utils import send_message
+from src.domain.entities.user import UpdateUserBalanceDM, UserDM
+from src.entrypoint.config import Config, PostgresConfig
+from src.infrastructure.database.session import new_session_maker
+from src.infrastructure.gateways.transaction import TransactionGateway
+from src.infrastructure.gateways.user import UserGateway
 
 
-async def run_tracker(
-    config: Config, bot: Bot
-) -> None:
+async def run_tracker(config: Config, bot: Bot) -> None:
     tonapi = AsyncTonapi(config.tonapi.TONAPI_TOKEN, is_testnet=config.tonapi.IS_TESTNET)
     after_lt = await get_last_lt(config.postgres)
     try:
@@ -43,12 +41,14 @@ async def run_tracker(
         user = await update_user_balance_and_lt(comment, ton_amount, transaction.lt, config.postgres)
         if user:
             user_data_text = f"{f'@{user.username}' if user.username else ''} #<code>{user.id}</code>"
+            link_text = "testnet." if config.tonapi.IS_TESTNET else ""
             await send_message(
                 bot,
-                f"{user_data_text.strip()} пополнил баланс на {ton_amount} TON\n\n"
-                f"<b><a href='https://tonviewer.com/transaction/{transaction.hash}'>Транзакция</a><b>",
+                f"💸 {user_data_text.strip()} пополнил баланс на {ton_amount} TON\n\n"
+                f"🔗 <b><a href='https://{link_text}tonviewer.com/transaction/{transaction.hash}'>Транзакция</a></b>",
                 [config.bot.DEPOSIT_CHAT_ID]
             )
+            await bot.session.close()
 
 
 async def update_user_balance_and_lt(
