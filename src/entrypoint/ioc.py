@@ -12,6 +12,7 @@ from src.application.interfaces.auth import InitDataValidator, TokenDecoder, Tok
 from src.application.interfaces.database import DBSession
 from src.application.interfaces.market import OrderReader, OrderSaver
 from src.application.interfaces.user import UserManager, UserReader, UserSaver
+from src.domain.entities.bot import BotInfoDM
 from src.domain.entities.user import UserDM
 from src.entrypoint.config import Config
 from src.infrastructure.database.session import new_session_maker
@@ -25,15 +26,19 @@ class AppProvider(FastapiProvider):
     config = from_context(provides=Config, scope=Scope.APP)
     bot = from_context(provides=Bot, scope=Scope.APP)
 
+    @provide(scope=Scope.APP)
+    async def bot_data(self, bot: Bot) -> BotInfoDM:
+        return BotInfoDM(**(await bot.me()).model_dump())
+
+    @provide(scope=Scope.APP)
+    def get_session_maker(self, config: Config) -> async_sessionmaker[AsyncSession]:
+        return new_session_maker(config.postgres)
+
     @provide(scope=Scope.REQUEST)
     async def authentication(
         self, request: Request, user_gateway: UserReader, token_gateway: TokenDecoder
     ) -> UserDM:
         return await get_user_by_token(request, user_gateway, token_gateway)
-
-    @provide(scope=Scope.APP)
-    def get_session_maker(self, config: Config) -> async_sessionmaker[AsyncSession]:
-        return new_session_maker(config.postgres)
 
     @provide(scope=Scope.REQUEST)
     async def get_session(self, session_maker: async_sessionmaker[AsyncSession]) -> AsyncIterable[AnyOf[
@@ -55,7 +60,9 @@ class AppProvider(FastapiProvider):
     async def get_telegram_gateway(self, config: Config) -> TelegramGateway:
         return TelegramGateway(bot_config=config.bot)
 
-    user_gateway = provide(UserGateway, scope=Scope.REQUEST, provides=AnyOf[UserManager, UserReader, UserSaver])
+    user_gateway = provide(
+        UserGateway, scope=Scope.REQUEST, provides=AnyOf[UserManager, UserReader, UserSaver]
+    )
     market_gateway = provide(MarketGateway, scope=Scope.REQUEST, provides=AnyOf[OrderSaver, OrderReader])
 
     login_interactor = provide(LoginInteractor, scope=Scope.REQUEST)

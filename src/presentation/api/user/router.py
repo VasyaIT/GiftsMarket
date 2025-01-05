@@ -1,14 +1,22 @@
 from dishka import FromDishka
 from dishka.integrations.fastapi import inject
-from fastapi import APIRouter, File, HTTPException, Response, UploadFile
+from fastapi import APIRouter, HTTPException, Response
 from starlette import status
 
 from src.application.common.const import COOKIES_MAX_AGE
-from src.application.dto.user import LoginDTO
-from src.application.interactors.user import LoginInteractor
+from src.application.dto.user import LoginDTO, UserDTO
+from src.application.interactors.user import GetUserInteractor, LoginInteractor
 
 
 user_router = APIRouter(prefix="/user", tags=["User"])
+
+
+@user_router.get("/me")
+@inject
+async def get_current_user(interactor: FromDishka[GetUserInteractor]) -> UserDTO:
+    """Get current user and referral link by token in cookies"""
+
+    return await interactor()
 
 
 @user_router.post("/login")

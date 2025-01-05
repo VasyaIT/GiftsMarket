@@ -2,7 +2,7 @@ from sqlalchemy import insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.interfaces.market import OrderSaver
-from src.domain.entities.market import CreateOrderDM, OrderDM, UpdateOrderStatusDM
+from src.domain.entities.market import CreateOrderDM, OrderDM, OrderFiltersDM, UpdateOrderStatusDM
 from src.infrastructure.models.order import Order
 
 
@@ -10,8 +10,17 @@ class MarketGateway(OrderSaver):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def get_all(self, offset: int = 0, limit: int | None = None) -> list[OrderDM]:
-        stmt = select(Order).filter_by().limit(limit).offset(offset)
+    async def get_all(self, filters: OrderFiltersDM) -> list[OrderDM]:
+        stmt = (
+            select(Order)
+            .where(
+                filters.from_price < Order.price, filters.to_price > Order.price,
+                Order.rarity.in_(filters.rarities), Order.type.in_(filters.types)
+            )
+            .filter_by()
+            .limit(filters.limit)
+            .offset(filters.offset)
+        )
         result = await self._session.execute(stmt)
         return [OrderDM(**order.__dict__) for order in result.scalars().all()]
 

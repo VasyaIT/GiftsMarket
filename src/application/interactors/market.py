@@ -2,14 +2,14 @@ import logging
 
 from aiogram import Bot
 
-from src.application.common.const import OrderStatus, PriceList
+from src.application.common.const import GiftRarity, OrderStatus, PriceList
 from src.application.dto.market import CreateOrderDTO
 from src.application.interactors.errors import NotAccessError, NotEnoughBalanceError, NotFoundError
 from src.application.interfaces.database import DBSession
 from src.application.interfaces.interactor import Interactor
 from src.application.interfaces.market import OrderReader, OrderSaver
 from src.application.interfaces.user import UserSaver
-from src.domain.entities.market import CreateOrderDM, OrderDM, UpdateOrderStatusDM
+from src.domain.entities.market import CreateOrderDM, OrderDM, OrderFiltersDM, UpdateOrderStatusDM
 from src.domain.entities.user import UpdateUserBalanceDM, UserDM
 from src.presentation.api.params import FilterParams
 
@@ -31,8 +31,26 @@ class CreateOrderInteractor(Interactor[CreateOrderDTO, None]):
         self._user_gateway = user_gateway
 
     async def __call__(self, data: CreateOrderDTO) -> None:
+        sum_characteristics_percent = sum((data.background, data.model, data.pattern))
+        rarity = GiftRarity.LEGEND
+        if sum_characteristics_percent >= 2.5:
+            rarity = GiftRarity.COMMON
+        elif sum_characteristics_percent >= 1.7:
+            rarity = GiftRarity.RARE
+        elif sum_characteristics_percent >= 1:
+            rarity = GiftRarity.MYTHICAL
+
         await self._market_gateway.save(
-            CreateOrderDM(image_url="", title=data.title, amount=data.amount, seller_id=self._user.id)
+            CreateOrderDM(
+                image_url="",
+                type=data.type,
+                rarity=rarity,
+                price=data.price,
+                background=data.background,
+                model=data.model,
+                pattern=data.pattern,
+                seller_id=self._user.id,
+            )
         )
         updated_user = await self._user_gateway.update_balance(
             UpdateUserBalanceDM(id=self._user.id, amount=-PriceList.UP_FOR_SALE)
@@ -48,7 +66,18 @@ class GetOrdersInteractor(Interactor[FilterParams, list[OrderDM]]):
         self._market_gateway = market_gateway
 
     async def __call__(self, data: FilterParams) -> list[OrderDM]:
-        return await self._market_gateway.get_all(data.offset, data.limit)
+        filters = self._prepare_filters(data)
+        return await self._market_gateway.get_all(filters)
+
+    def _prepare_filters(self, filters: FilterParams) -> OrderFiltersDM:
+        return OrderFiltersDM(
+            limit=filters.limit,
+            offset=filters.offset,
+            from_price=filters.from_price if filters.from_price else 0,
+            to_price=filters.to_price if filters.to_price else 99999,
+            rarities=filters.rarities if filters.rarities else [],
+            types=filters.types if filters.types else [],
+        )
 
 
 class GetOrderInteractor(Interactor[int, OrderDM]):
@@ -93,7 +122,7 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
         buyer = await self._user_gateway.update_balance(
             UpdateUserBalanceDM(
                 id=self._user.id,
-                amount=-(order.amount + PriceList.BUYER_FEE_TON)
+                amount=-(order.price + PriceList.BUYER_FEE_TON)
             )
         )
         if buyer.balance < 0:  # type: ignore
@@ -193,7 +222,7 @@ class AcceptTransferInteractor(Interactor[int, OrderDM]):
         await self._user_gateway.update_balance(
             UpdateUserBalanceDM(
                 id=order.seller_id,
-                amount=order.amount - (order.amount * PriceList.SELLER_FEE_PERCENT / 100)
+                amount=order.price - (order.price * PriceList.SELLER_FEE_PERCENT / 100)
             )
         )
 

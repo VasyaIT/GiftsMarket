@@ -5,8 +5,9 @@ class UserDTO(BaseDTO):
     id: int
     username: str | None
     first_name: str | None
-    balance: float = 0
+    balance: float
     deposit_comment: str
+    referral_link: str
 
 
 class LoginDTO(BaseDTO):

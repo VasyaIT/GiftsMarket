@@ -22,6 +22,10 @@ class UserSaver(Protocol):
     async def update_balance(self, data: UpdateUserBalanceDM) -> UserDM | None:
         ...
 
+    @abstractmethod
+    async def add_referral(self, referrer_id: int, referral: UserDM) -> None:
+        ...
+
 
 class UserManager(UserReader, UserSaver):
     ...

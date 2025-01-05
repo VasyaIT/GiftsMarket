@@ -11,11 +11,16 @@ class OrderStatus(StrEnum):
     GIFT_RECEIVED = auto()
 
 
-class OrderType(Enum):
+class OrderType(StrEnum):
     COMMON = auto()
     VIP = auto()
-    GIFT_TRANSFERRED = auto()
-    GIFT_RECEIVED = auto()
+
+
+class GiftRarity(StrEnum):
+    COMMON = auto()
+    RARE = auto()
+    MYTHICAL = auto()
+    LEGEND = auto()
 
 
 class PriceList:
@@ -25,3 +30,26 @@ class PriceList:
     PIN_COMMON_ORDERS = 3
     BUYER_FEE_TON = 0.1
     SELLER_FEE_PERCENT = 5
+
+
+class GiftType(Enum):
+    DUROV_CAP = "Durov's Cap"
+    SIGNET_RING = "Signet Ring"
+    PLUSH_PEPE = "Plush Pepe"
+    PERFUME_BOTTLE = "Perfume Bottle"
+    SPY_AGARIC = "Spy Agaric"
+    SHARP_TONGUE = "Sharp Tongue"
+    SCARED_CAT = "Scared Cat"
+    HEX_POT = "Hex Pot"
+    KISSED_FROG = "Kissed Frog"
+    SANTA_HAT = "Santa Hat"
+    HOMEMADE_CAKE = "Homemade Cake"
+    SKULL_FLOWER = "Skull Flower"
+    PRECIOUS_PEACH = "Precious Peach"
+    SPICED_WINE = "Spiced Wine"
+    JELLY_BUNNY = "Jelly Bunny"
+    ETERNAL_ROSE = "Eternal Rose"
+    BERRY_BOX = "Berry Box"
+    VINTAGE_CIGAR = "Vintage Cigar"
+    MAGIC_POTION = "Magic Potion"
+    EVIL_EYE = "Evil Eye"

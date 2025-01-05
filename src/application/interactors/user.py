@@ -1,10 +1,13 @@
+from aiogram.utils.payload import decode_payload, encode_payload
+
 from src.application.common.utils import generate_deposit_comment
-from src.application.dto.user import LoginDTO
+from src.application.dto.user import LoginDTO, UserDTO
 from src.application.interfaces.auth import InitDataValidator, TokenEncoder
 from src.application.interfaces.database import DBSession
 from src.application.interfaces.interactor import Interactor
 from src.application.interfaces.user import UserManager
-from src.domain.entities.user import CreateUserDM
+from src.domain.entities.bot import BotInfoDM
+from src.domain.entities.user import CreateUserDM, UserDM
 
 
 class LoginInteractor(Interactor[LoginDTO, str]):
@@ -41,4 +44,32 @@ class LoginInteractor(Interactor[LoginDTO, str]):
             )
             user = await self._user_gateway.save(user_dm)
             await self._db_session.commit()
+
+            referrer_id = self._get_referrer_id(valid_data.start_param)
+            if referrer_id and referrer_id != user_id:
+                if await self._user_gateway.add_referral(referrer_id, user):
+                    await self._db_session.commit()
+                else:
+                    await self._db_session.rollback()
         return self._token_gateway.encode(user_id)
+
+    def _get_referrer_id(self, decoded_payload: str | None) -> int | None:
+        try:
+            return None if not decoded_payload else int(decode_payload(decoded_payload))
+        except Exception:
+            return
+
+
+class GetUserInteractor(Interactor[None, UserDTO]):
+    def __init__(
+        self,
+        user: UserDM,
+        bot_data: BotInfoDM,
+    ) -> None:
+        self._user = user
+        self._bot_data = bot_data
+
+    async def __call__(self) -> UserDTO:
+        payload = encode_payload(str(self._user.id))
+        referral_link = f"https://t.me/{self._bot_data.username}/market?startapp={payload}"
+        return UserDTO(**self._user.model_dump(), referral_link=referral_link)

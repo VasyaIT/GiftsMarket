@@ -1,9 +1,10 @@
 from sqlalchemy import insert, select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.interfaces.user import UserReader, UserSaver
 from src.domain.entities.user import CreateUserDM, UpdateUserBalanceDM, UserDM
-from src.infrastructure.models.user import User
+from src.infrastructure.models.user import User, UserReferral
 
 
 class UserGateway(UserReader, UserSaver):
@@ -44,3 +45,16 @@ class UserGateway(UserReader, UserSaver):
         user = result.scalar_one_or_none()
         if user:
             return UserDM(**user.__dict__)
+
+    async def add_referral(self, referrer_id: int, referral: UserDM) -> bool:
+        stmt = (
+            insert(UserReferral)
+            .values(referrer_id=referrer_id, referral_id=referral.id)
+            .returning(UserReferral)
+        )
+        try:
+            result = await self._session.execute(stmt)
+        except IntegrityError:
+            return False
+
+        return not result.scalar_one().referrer.is_banned
