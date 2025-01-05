@@ -20,14 +20,27 @@ class OrderDM(CreateOrderDM):
     status: OrderStatus
 
 
+class ReadOrderDM(CreateOrderDM):
+    image_url: str
+    type: GiftType
+    price: float
+    model: float
+    pattern: float
+    background: float
+    rarity: GiftRarity
+    seller_name: str | None
+    buyer_name: str | None
+
+
 class UpdateOrderStatusDM(BaseModel):
     id: int
-    old_status: OrderStatus
+    current_status: OrderStatus
     new_status: OrderStatus
-    buyer_id: int | None = None
+    current_buyer_id: int | None = None
+    new_buyer_id: int | None = None
 
 
-class OrderFiltersDM(BaseModel):
+class GiftFiltersDM(BaseModel):
     limit: int | None
     offset: int | None
     from_price: float
@@ -35,3 +48,9 @@ class OrderFiltersDM(BaseModel):
     rarities: list[GiftRarity]
     types: list[GiftType]
     status: OrderStatus
+
+
+class OrderFiltersDM(BaseModel):
+    limit: int | None
+    offset: int | None
+    statuses: list[OrderStatus]

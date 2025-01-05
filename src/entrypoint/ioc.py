@@ -8,10 +8,12 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from src.application.interactors import market
 from src.application.interactors.user import GetUserInteractor, LoginInteractor
+from src.application.interactors.wallet import WithdrawRequestInteractor
 from src.application.interfaces.auth import InitDataValidator, TokenDecoder, TokenEncoder
 from src.application.interfaces.database import DBSession
 from src.application.interfaces.market import OrderReader, OrderSaver
 from src.application.interfaces.user import UserManager, UserReader, UserSaver
+from src.application.interfaces.wallet import WithdrawRequestSaver
 from src.domain.entities.bot import BotInfoDM
 from src.domain.entities.user import UserDM
 from src.entrypoint.config import Config
@@ -19,6 +21,7 @@ from src.infrastructure.database.session import new_session_maker
 from src.infrastructure.gateways.auth import TelegramGateway, TokenGateway
 from src.infrastructure.gateways.market import MarketGateway
 from src.infrastructure.gateways.user import UserGateway
+from src.infrastructure.gateways.wallet import WalletGateway
 from src.presentation.api.authentication import get_user_by_token
 
 
@@ -27,8 +30,9 @@ class AppProvider(FastapiProvider):
     bot = from_context(provides=Bot, scope=Scope.APP)
 
     @provide(scope=Scope.APP)
-    async def bot_data(self, bot: Bot) -> BotInfoDM:
-        return BotInfoDM(**(await bot.me()).model_dump())
+    async def bot_info(self, bot: Bot) -> BotInfoDM:
+        bot_data = await bot.me()
+        return BotInfoDM(**bot_data.model_dump())
 
     @provide(scope=Scope.APP)
     def get_session_maker(self, config: Config) -> async_sessionmaker[AsyncSession]:
@@ -64,6 +68,7 @@ class AppProvider(FastapiProvider):
         UserGateway, scope=Scope.REQUEST, provides=AnyOf[UserManager, UserReader, UserSaver]
     )
     market_gateway = provide(MarketGateway, scope=Scope.REQUEST, provides=AnyOf[OrderSaver, OrderReader])
+    wallet_gateway = provide(WalletGateway, scope=Scope.REQUEST, provides=AnyOf[WithdrawRequestSaver])
 
     login_interactor = provide(LoginInteractor, scope=Scope.REQUEST)
     create_order_interactor = provide(market.CreateOrderInteractor, scope=Scope.REQUEST)
@@ -73,3 +78,4 @@ class AppProvider(FastapiProvider):
     confirm_transfer_interactor = provide(market.ConfirmTransferInteractor, scope=Scope.REQUEST)
     accept_transfer_interactor = provide(market.AcceptTransferInteractor, scope=Scope.REQUEST)
     get_user_interactor = provide(GetUserInteractor, scope=Scope.REQUEST)
+    withdraw_request_interactor = provide(WithdrawRequestInteractor, scope=Scope.REQUEST)

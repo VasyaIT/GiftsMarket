@@ -9,9 +9,18 @@ from src.application.interfaces.database import DBSession
 from src.application.interfaces.interactor import Interactor
 from src.application.interfaces.market import OrderReader, OrderSaver
 from src.application.interfaces.user import UserSaver
-from src.domain.entities.market import CreateOrderDM, OrderDM, OrderFiltersDM, UpdateOrderStatusDM
+from src.domain.entities.market import (
+    CreateOrderDM,
+    GiftFiltersDM,
+    OrderDM,
+    OrderFiltersDM,
+    ReadOrderDM,
+    UpdateOrderStatusDM
+)
 from src.domain.entities.user import UpdateUserBalanceDM, UserDM
-from src.presentation.api.market.params import FilterParams
+from src.entrypoint.config import Config
+from src.presentation.api.market.params import GiftFilterParams, OrderFilterParams
+from src.presentation.bot.services import text
 
 
 logger = logging.getLogger(__name__)
@@ -61,16 +70,16 @@ class CreateOrderInteractor(Interactor[CreateOrderDTO, None]):
         await self._db_session.commit()
 
 
-class GetOrdersInteractor(Interactor[FilterParams, list[OrderDM]]):
+class GetGiftsInteractor(Interactor[GiftFilterParams, list[ReadOrderDM]]):
     def __init__(self, market_gateway: OrderReader) -> None:
         self._market_gateway = market_gateway
 
-    async def __call__(self, data: FilterParams) -> list[OrderDM]:
+    async def __call__(self, data: GiftFilterParams) -> list[ReadOrderDM]:
         filters = self._prepare_filters(data)
-        return await self._market_gateway.get_all(filters)
+        return await self._market_gateway.get_all_gifts(filters)
 
-    def _prepare_filters(self, filters: FilterParams) -> OrderFiltersDM:
-        return OrderFiltersDM(
+    def _prepare_filters(self, filters: GiftFilterParams) -> GiftFiltersDM:
+        return GiftFiltersDM(
             limit=filters.limit,
             offset=filters.offset,
             from_price=filters.from_price if filters.from_price else 0,
@@ -81,22 +90,21 @@ class GetOrdersInteractor(Interactor[FilterParams, list[OrderDM]]):
         )
 
 
-class GetOrderInteractor(Interactor[int, OrderDTO]):
+class GetOrdersInteractor(Interactor[OrderFilterParams, list[ReadOrderDM]]):
     def __init__(self, market_gateway: OrderReader, user: UserDM) -> None:
         self._market_gateway = market_gateway
         self._user = user
 
-    async def __call__(self, order_id: int) -> OrderDTO:
-        order = await self._market_gateway.get_by_id(order_id)
-        if (
-            not order
-            or (
-                order.status != OrderStatus.ON_MARKET
-                and self._user.id not in (order.buyer_id, order.seller_id)
-            )
-        ):
-            raise NotFoundError("Order not found")
-        return OrderDTO(**order.model_dump())
+    async def __call__(self, data: OrderFilterParams) -> list[ReadOrderDM]:
+        filters = self._prepare_filters(data)
+        return await self._market_gateway.get_all_orders(filters)
+
+    def _prepare_filters(self, filters: OrderFilterParams) -> OrderFiltersDM:
+        return OrderFiltersDM(
+            limit=filters.limit,
+            offset=filters.offset,
+            statuses=[OrderStatus.BUY, OrderStatus.GIFT_TRANSFERRED]
+        )
 
 
 class BuyGiftInteractor(Interactor[int, OrderDM]):
@@ -115,14 +123,13 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
         self._bot = bot
 
     async def __call__(self, order_id: int) -> OrderDM:
-        order = await self._market_gateway.update_status(
-            UpdateOrderStatusDM(
-                id=order_id,
-                old_status=OrderStatus.ON_MARKET,
-                new_status=OrderStatus.BUY,
-                buyer_id=self._user.id
-            )
+        order_dm = UpdateOrderStatusDM(
+            id=order_id,
+            current_status=OrderStatus.ON_MARKET,
+            new_status=OrderStatus.BUY,
+            new_buyer_id=self._user.id
         )
+        order = await self._market_gateway.update_status(order_dm, consider_buyers=True)
 
         if not order:
             await self._db_session.rollback()
@@ -146,14 +153,64 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
         await self._bot.send_photo(
             chat_id=order.seller_id,
             photo=order.image_url,
-            caption=(
-                f"💰 Your gift was bought - <b>#{order.type.name}</b>\n\n"
-                "📤 Transfer your gift to the buyer, then go to the market and confirm the transfer of the gift"
-            ),
+            caption=text.get_buy_gift_text(order.type.name),
         )
-        await self._bot.session.close()
 
         logger.info(f"Order id: {order_id} successfully completed")
+        return order
+
+
+class CancelOrderInteractor(Interactor[int, OrderDM]):
+    def __init__(
+        self,
+        db_session: DBSession,
+        market_gateway: OrderSaver,
+        user_gateway: UserSaver,
+        user: UserDM,
+        bot: Bot,
+        config: Config,
+    ) -> None:
+        self._db_session = db_session
+        self._market_gateway = market_gateway
+        self._user_gateway = user_gateway
+        self._user = user
+        self._bot = bot
+        self._config = config
+
+    async def __call__(self, order_id: int) -> OrderDM:
+        order_dm = UpdateOrderStatusDM(
+            id=order_id,
+            current_status=OrderStatus.BUY,
+            new_status=OrderStatus.ON_MARKET,
+            current_buyer_id=self._user.id,
+            new_buyer_id=None,
+        )
+        order = await self._market_gateway.update_status(order_dm, consider_buyers=True)
+
+        if not order:
+            await self._db_session.rollback()
+            raise NotFoundError("Order not found")
+
+        await self._user_gateway.update_balance(
+            UpdateUserBalanceDM(
+                id=self._user.id,
+                amount=order.price + PriceList.BUYER_FEE_TON
+            )
+        )
+
+        await self._db_session.commit()
+
+        await self._bot.send_photo(
+            chat_id=order.seller_id,
+            photo=order.image_url,
+            caption=text.get_cancel_gift_text(order.type.name),
+        )
+        await self._bot.send_message(
+            self._config.bot.DEPOSIT_CHAT_ID,
+            text.get_canceled_text_to_owner(self._user.username, self._user.id)
+        )
+
+        logger.info(f"Order id: {order_id} was canceled")
         return order
 
 
@@ -168,7 +225,7 @@ class ConfirmTransferInteractor(Interactor[int, OrderDM]):
         order = await self._market_gateway.update_status(
             UpdateOrderStatusDM(
                 id=order_id,
-                old_status=OrderStatus.BUY,
+                current_status=OrderStatus.BUY,
                 new_status=OrderStatus.GIFT_TRANSFERRED,
             )
         )
@@ -187,14 +244,8 @@ class ConfirmTransferInteractor(Interactor[int, OrderDM]):
         await self._bot.send_photo(
             chat_id=order.buyer_id,
             photo=order.image_url,
-            caption=(
-                f"✅ The seller transferred you a gift - <b>#{order.type.name}</b>\n\n"
-                "Go to the market and confirm receipt of the gift\n\n"
-                "⚠️ <i>Be sure to check if you have received the gift for real!"
-                "Check your profile, and only then confirm receipt!</i>"
-            ),
+            caption=text.get_confirm_transfer_text(order.type.name),
         )
-        await self._bot.session.close()
         return order
 
 
@@ -214,22 +265,18 @@ class AcceptTransferInteractor(Interactor[int, OrderDM]):
         self._bot = bot
 
     async def __call__(self, order_id: int) -> OrderDM:
-        order = await self._market_gateway.update_status(
-            UpdateOrderStatusDM(
-                id=order_id,
-                old_status=OrderStatus.GIFT_TRANSFERRED,
-                new_status=OrderStatus.GIFT_RECEIVED,
-            )
+        order_dm = UpdateOrderStatusDM(
+            id=order_id,
+            current_status=OrderStatus.GIFT_TRANSFERRED,
+            new_status=OrderStatus.GIFT_RECEIVED,
+            current_buyer_id=self._user.id,
+            new_buyer_id=self._user.id
         )
-        if not (order and order.buyer_id and order.buyer_id == self._user.id):
+        order = await self._market_gateway.update_status(order_dm, consider_buyers=True)
+
+        if not order:
             await self._db_session.rollback()
-            if not order:
-                raise NotFoundError("Order not found")
-            if not order.buyer_id:
-                logger.error(f"Buyer not found in accept transfer. Order id: {order_id}")
-                raise NotFoundError("Buyer not found")
-            if order.buyer_id != self._user.id:
-                raise NotAccessError("Forbidden")
+            raise NotFoundError("Order not found")
 
         await self._user_gateway.update_balance(
             UpdateUserBalanceDM(
@@ -241,9 +288,8 @@ class AcceptTransferInteractor(Interactor[int, OrderDM]):
 
         for user_id in (order.buyer_id, order.seller_id):
             await self._bot.send_photo(
-                chat_id=user_id,
+                chat_id=user_id,  # type: ignore
                 photo=order.image_url,
-                caption=f"✅ The order was completed successfully - <b>#{order.type.name}</b>",
+                caption=text.get_accept_transfer_text(order.type.name),
             )
-        await self._bot.session.close()
         return order

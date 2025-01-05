@@ -12,12 +12,17 @@ from src.presentation.api.routers import setup_routers
 
 def get_fastapi_app() -> FastAPI:
     config = Config()
+    bot = get_bot(config.bot.BOT_TOKEN)
+
+    async def on_shutdown() -> None:
+        await bot.session.close()
+
     app = FastAPI(
         debug=config.app.DEBUG,
         docs_url=config.app.docs_url,
-        openapi_url=config.app.openapi_url
+        openapi_url=config.app.openapi_url,
+        on_shutdown=[on_shutdown],
     )
-    bot = get_bot(config.bot.BOT_TOKEN)
     container = make_async_container(AppProvider(), context={Config: config, Bot: bot})
     setup_dishka(container, app)
     setup_middlewares(app, config.app)

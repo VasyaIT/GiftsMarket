@@ -7,6 +7,7 @@ from src.entrypoint.config import Config, PostgresConfig
 from src.infrastructure.database.session import new_session_maker
 from src.infrastructure.gateways.transaction import TransactionGateway
 from src.infrastructure.gateways.user import UserGateway
+from src.presentation.bot.services.text import get_deposit_text
 
 
 async def run_tracker(config: Config, bot: Bot) -> None:
@@ -40,15 +41,10 @@ async def run_tracker(config: Config, bot: Bot) -> None:
             continue
         user = await update_user_balance_and_lt(comment, ton_amount, transaction.lt, config.postgres)
         if user:
-            user_data_text = f"{f'@{user.username}' if user.username else ''} #<code>{user.id}</code>"
-            link_text = "testnet." if config.tonapi.IS_TESTNET else ""
-            await send_message(
-                bot,
-                f"💸 {user_data_text.strip()} пополнил баланс на {ton_amount} TON\n\n"
-                f"🔗 <b><a href='https://{link_text}tonviewer.com/transaction/{transaction.hash}'>Транзакция</a></b>",
-                [config.bot.DEPOSIT_CHAT_ID]
+            message = get_deposit_text(
+                user.username, user.id, config.tonapi.IS_TESTNET, ton_amount, transaction.hash
             )
-            await bot.session.close()
+            await send_message(bot, message, [config.bot.DEPOSIT_CHAT_ID])
 
 
 async def update_user_balance_and_lt(

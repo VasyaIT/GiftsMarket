@@ -43,10 +43,15 @@ class BotConfig(BaseModel):
     WEBAPP_URL: str
     DEPOSIT_CHAT_ID: str
     OWNERS_CHAT_ID: str
+    MODERATORS_CHAT_ID: str
 
     @property
-    def owners_chat_id(self) -> list[str]:
-        return self.OWNERS_CHAT_ID.split()
+    def owners_chat_id(self) -> list[int]:
+        return list(map(int, self.OWNERS_CHAT_ID.split()))
+
+    @property
+    def moderators_chat_id(self) -> list[int]:
+        return list(map(int, self.MODERATORS_CHAT_ID.split()))
 
 
 class TonapiConfig(BaseModel):

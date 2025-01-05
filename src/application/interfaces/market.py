@@ -1,12 +1,23 @@
 from abc import abstractmethod
 from typing import Protocol
 
-from src.domain.entities.market import CreateOrderDM, OrderDM, OrderFiltersDM, UpdateOrderStatusDM
+from src.domain.entities.market import (
+    CreateOrderDM,
+    GiftFiltersDM,
+    OrderDM,
+    OrderFiltersDM,
+    ReadOrderDM,
+    UpdateOrderStatusDM
+)
 
 
 class OrderReader(Protocol):
     @abstractmethod
-    async def get_all(self, filters: OrderFiltersDM) -> list[OrderDM]:
+    async def get_all_gifts(self, filters: GiftFiltersDM) -> list[ReadOrderDM]:
+        ...
+
+    @abstractmethod
+    async def get_all_orders(self, filters: OrderFiltersDM) -> list[ReadOrderDM]:
         ...
 
     @abstractmethod
@@ -20,5 +31,7 @@ class OrderSaver(Protocol):
         ...
 
     @abstractmethod
-    async def update_status(self, order_dm: UpdateOrderStatusDM) -> OrderDM | None:
+    async def update_status(
+        self, order_dm: UpdateOrderStatusDM, consider_buyers: bool = False
+    ) -> OrderDM | None:
         ...
