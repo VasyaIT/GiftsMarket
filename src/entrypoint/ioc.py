@@ -7,7 +7,7 @@ from fastapi import Request
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from src.application.interactors import market
-from src.application.interactors.user import LoginInteractor
+from src.application.interactors.user import GetUserInteractor, LoginInteractor
 from src.application.interfaces.auth import InitDataValidator, TokenDecoder, TokenEncoder
 from src.application.interfaces.database import DBSession
 from src.application.interfaces.market import OrderReader, OrderSaver
@@ -72,3 +72,4 @@ class AppProvider(FastapiProvider):
     buy_gift_interactor = provide(market.BuyGiftInteractor, scope=Scope.REQUEST)
     confirm_transfer_interactor = provide(market.ConfirmTransferInteractor, scope=Scope.REQUEST)
     accept_transfer_interactor = provide(market.AcceptTransferInteractor, scope=Scope.REQUEST)
+    get_user_interactor = provide(GetUserInteractor, scope=Scope.REQUEST)

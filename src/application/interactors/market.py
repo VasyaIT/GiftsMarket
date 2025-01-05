@@ -3,7 +3,7 @@ import logging
 from aiogram import Bot
 
 from src.application.common.const import GiftRarity, OrderStatus, PriceList
-from src.application.dto.market import CreateOrderDTO
+from src.application.dto.market import CreateOrderDTO, OrderDTO
 from src.application.interactors.errors import NotAccessError, NotEnoughBalanceError, NotFoundError
 from src.application.interfaces.database import DBSession
 from src.application.interfaces.interactor import Interactor
@@ -11,7 +11,7 @@ from src.application.interfaces.market import OrderReader, OrderSaver
 from src.application.interfaces.user import UserSaver
 from src.domain.entities.market import CreateOrderDM, OrderDM, OrderFiltersDM, UpdateOrderStatusDM
 from src.domain.entities.user import UpdateUserBalanceDM, UserDM
-from src.presentation.api.params import FilterParams
+from src.presentation.api.market.params import FilterParams
 
 
 logger = logging.getLogger(__name__)
@@ -77,18 +77,26 @@ class GetOrdersInteractor(Interactor[FilterParams, list[OrderDM]]):
             to_price=filters.to_price if filters.to_price else 99999,
             rarities=filters.rarities if filters.rarities else [],
             types=filters.types if filters.types else [],
+            status=OrderStatus.ON_MARKET
         )
 
 
-class GetOrderInteractor(Interactor[int, OrderDM]):
-    def __init__(self, market_gateway: OrderReader) -> None:
+class GetOrderInteractor(Interactor[int, OrderDTO]):
+    def __init__(self, market_gateway: OrderReader, user: UserDM) -> None:
         self._market_gateway = market_gateway
+        self._user = user
 
-    async def __call__(self, order_id: int) -> OrderDM:
+    async def __call__(self, order_id: int) -> OrderDTO:
         order = await self._market_gateway.get_by_id(order_id)
-        if not order:
+        if (
+            not order
+            or (
+                order.status != OrderStatus.ON_MARKET
+                and self._user.id not in (order.buyer_id, order.seller_id)
+            )
+        ):
             raise NotFoundError("Order not found")
-        return order
+        return OrderDTO(**order.model_dump())
 
 
 class BuyGiftInteractor(Interactor[int, OrderDM]):
@@ -115,9 +123,13 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
                 buyer_id=self._user.id
             )
         )
+
         if not order:
             await self._db_session.rollback()
             raise NotFoundError("Order not found")
+        if self._user.id == order.seller_id:
+            await self._db_session.rollback()
+            raise NotAccessError("Forbidden")
 
         buyer = await self._user_gateway.update_balance(
             UpdateUserBalanceDM(
@@ -135,10 +147,11 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
             chat_id=order.seller_id,
             photo=order.image_url,
             caption=(
-                f"💰 Your gift was bought - <b>#{order.title}</b>\n\n"
+                f"💰 Your gift was bought - <b>#{order.type.name}</b>\n\n"
                 "📤 Transfer your gift to the buyer, then go to the market and confirm the transfer of the gift"
             ),
         )
+        await self._bot.session.close()
 
         logger.info(f"Order id: {order_id} successfully completed")
         return order
@@ -175,12 +188,13 @@ class ConfirmTransferInteractor(Interactor[int, OrderDM]):
             chat_id=order.buyer_id,
             photo=order.image_url,
             caption=(
-                f"✅ The seller transferred you a gift - <b>#{order.title}</b>\n\n"
+                f"✅ The seller transferred you a gift - <b>#{order.type.name}</b>\n\n"
                 "Go to the market and confirm receipt of the gift\n\n"
                 "⚠️ <i>Be sure to check if you have received the gift for real!"
                 "Check your profile, and only then confirm receipt!</i>"
             ),
         )
+        await self._bot.session.close()
         return order
 
 
@@ -217,19 +231,19 @@ class AcceptTransferInteractor(Interactor[int, OrderDM]):
             if order.buyer_id != self._user.id:
                 raise NotAccessError("Forbidden")
 
-        await self._db_session.commit()
-
         await self._user_gateway.update_balance(
             UpdateUserBalanceDM(
                 id=order.seller_id,
                 amount=order.price - (order.price * PriceList.SELLER_FEE_PERCENT / 100)
             )
         )
+        await self._db_session.commit()
 
         for user_id in (order.buyer_id, order.seller_id):
             await self._bot.send_photo(
                 chat_id=user_id,
                 photo=order.image_url,
-                caption=f"✅ The order was completed successfully - <b>#{order.title}</b>",
+                caption=f"✅ The order was completed successfully - <b>#{order.type.name}</b>",
             )
+        await self._bot.session.close()
         return order

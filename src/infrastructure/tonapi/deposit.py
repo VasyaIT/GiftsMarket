@@ -14,11 +14,11 @@ async def run_tracker(config: Config, bot: Bot) -> None:
     after_lt = await get_last_lt(config.postgres)
     try:
         result = await tonapi.blockchain.get_account_transactions(
-            account_id=config.tonapi.DEPOSIT_ADDRESS, after_lt=after_lt, limit=30, sort_order='asc'
+            account_id=config.tonapi.DEPOSIT_ADDRESS, after_lt=after_lt, limit=30
         )
     except Exception:
         return
-    if not (transactions := result.transactions):
+    if not (transactions := result.transactions[::-1]):
         return
     for transaction in transactions:
         if not transaction.success:

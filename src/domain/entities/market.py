@@ -14,12 +14,8 @@ class CreateOrderDM(BaseModel):
     seller_id: int
 
 
-class OrderDM(BaseModel):
+class OrderDM(CreateOrderDM):
     id: int
-    image_url: str
-    title: str
-    price: float
-    seller_id: int
     buyer_id: int | None
     status: OrderStatus
 
@@ -38,3 +34,4 @@ class OrderFiltersDM(BaseModel):
     to_price: float
     rarities: list[GiftRarity]
     types: list[GiftType]
+    status: OrderStatus

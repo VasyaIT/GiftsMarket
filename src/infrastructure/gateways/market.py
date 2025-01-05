@@ -15,9 +15,9 @@ class MarketGateway(OrderSaver):
             select(Order)
             .where(
                 filters.from_price < Order.price, filters.to_price > Order.price,
-                Order.rarity.in_(filters.rarities), Order.type.in_(filters.types)
+                Order.rarity.in_(filters.rarities), Order.type.in_(filters.types),
+                Order.status == filters.status
             )
-            .filter_by()
             .limit(filters.limit)
             .offset(filters.offset)
         )
@@ -39,7 +39,9 @@ class MarketGateway(OrderSaver):
         values: dict = {"status": data.new_status}
         if data.buyer_id:
             values["buyer_id"] = data.buyer_id
-        stmt = update(Order).filter_by(id=data.id, status=data.old_status).values(values)
+        stmt = (
+            update(Order).filter_by(id=data.id, status=data.old_status).values(values).returning(Order)
+        )
         result = await self._session.execute(stmt)
         order = result.scalar_one_or_none()
         if order:

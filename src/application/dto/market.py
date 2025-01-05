@@ -1,4 +1,4 @@
-from src.application.common.const import GiftType
+from src.application.common.const import GiftRarity, GiftType
 from src.application.dto.base import BaseDTO
 
 
@@ -12,3 +12,8 @@ class CreateOrderDTO(BaseDTO):
 
 class OrderIdDTO(BaseDTO):
     id: int
+
+
+class OrderDTO(OrderIdDTO, CreateOrderDTO):
+    image_url: str
+    rarity: GiftRarity
