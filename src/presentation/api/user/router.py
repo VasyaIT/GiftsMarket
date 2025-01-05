@@ -6,6 +6,7 @@ from starlette import status
 from src.application.common.const import COOKIES_MAX_AGE
 from src.application.dto.user import LoginDTO, UserDTO
 from src.application.interactors.user import GetUserInteractor, LoginInteractor
+from src.entrypoint.config import Config
 
 
 user_router = APIRouter(prefix="/user", tags=["User"])
@@ -21,10 +22,14 @@ async def get_current_user(interactor: FromDishka[GetUserInteractor]) -> UserDTO
 
 @user_router.post("/login")
 @inject
-async def user_login(dto: LoginDTO, interactor: FromDishka[LoginInteractor]) -> Response:
+async def user_login(
+    dto: LoginDTO, interactor: FromDishka[LoginInteractor], config: FromDishka[Config]
+) -> Response:
     token = await interactor(data=dto)
     if not token:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Init data is not valid")
     response = Response()
-    response.set_cookie("token", token, httponly=True, secure=True, samesite=None, max_age=COOKIES_MAX_AGE)
+    response.set_cookie(
+        "token", token, httponly=True, secure=not config.app.DEBUG, samesite=None, max_age=COOKIES_MAX_AGE
+    )
     return response
