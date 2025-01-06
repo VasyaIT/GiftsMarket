@@ -17,7 +17,7 @@ async def start_handler(message: Message, config: Config) -> None:
     await message.answer(get_start_text(), reply_markup=open_app_kb(config.bot.WEBAPP_URL))
 
 
-@router.callback_query(F.startswith("withdraw_completed:"))
+@router.callback_query(F.data.startswith("withdraw_completed:"))
 async def withdraw_success_callback(call: CallbackQuery, config: Config) -> AnswerCallbackQuery | None:
     if call.from_user.id not in config.bot.moderators_chat_id:
         return call.answer("У тебя нет прав", show_alert=True)

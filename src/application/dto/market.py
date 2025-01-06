@@ -11,10 +11,10 @@ class OrderIdDTO(BaseDTO):
 class CreateOrderDTO(OrderIdDTO):
     image_url: HttpUrl
     type: GiftType
-    price: float = Field(ge=0)
-    model: float = Field(default=0, ge=0, lt=100)
-    pattern: float = Field(default=0, ge=0, lt=100)
-    background: float = Field(default=0, ge=0, lt=100)
+    price: float = Field(gt=0)
+    model: float = Field(default=0, gt=0, lt=100)
+    pattern: float = Field(default=0, gt=0, lt=100)
+    background: float = Field(default=0, gt=0, lt=100)
 
 
 class OrderDTO(CreateOrderDTO):
