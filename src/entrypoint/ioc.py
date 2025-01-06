@@ -71,7 +71,7 @@ class AppProvider(FastapiProvider):
 
     login_interactor = provide(user.LoginInteractor, scope=Scope.REQUEST)
     get_user_interactor = provide(user.GetUserInteractor, scope=Scope.REQUEST)
-    get_user_gifts_interactor = provide(user.GetUserGiftsDM, scope=Scope.REQUEST)
+    get_user_gifts_interactor = provide(user.GetUserGiftsInteractor, scope=Scope.REQUEST)
     update_user_gift_interactor = provide(user.UpdateUserGiftInteractor, scope=Scope.REQUEST)
     delete_user_gift_interactor = provide(user.DeleteUserGiftInteractor, scope=Scope.REQUEST)
     create_order_interactor = provide(market.CreateOrderInteractor, scope=Scope.REQUEST)
