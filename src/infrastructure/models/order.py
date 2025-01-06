@@ -1,4 +1,6 @@
-from sqlalchemy import Float, ForeignKey, Integer, String
+from datetime import datetime
+
+from sqlalchemy import TIMESTAMP, Float, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -8,7 +10,7 @@ from src.infrastructure.models.user import User
 
 
 class Order(Base):
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)
     image_url: Mapped[str] = mapped_column(String)
     type: Mapped[GiftType] = mapped_column(ENUM(GiftType))
     price: Mapped[float] = mapped_column(Float)
@@ -17,6 +19,8 @@ class Order(Base):
     background: Mapped[float] = mapped_column(Float)
     rarity: Mapped[GiftRarity] = mapped_column(ENUM(GiftRarity))
     status: Mapped[OrderStatus] = mapped_column(ENUM(OrderStatus), default=OrderStatus.ON_MARKET)
+    created_order_date: Mapped[datetime | None] = mapped_column(TIMESTAMP, nullable=True)
+    completed_order_date: Mapped[datetime | None] = mapped_column(TIMESTAMP, nullable=True)
 
     seller_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     buyer_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=True)

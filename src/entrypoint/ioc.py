@@ -6,8 +6,7 @@ from dishka.integrations.fastapi import FastapiProvider
 from fastapi import Request
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from src.application.interactors import market
-from src.application.interactors.user import GetUserInteractor, LoginInteractor
+from src.application.interactors import market, user
 from src.application.interactors.wallet import WithdrawRequestInteractor
 from src.application.interfaces.auth import InitDataValidator, TokenDecoder, TokenEncoder
 from src.application.interfaces.database import DBSession
@@ -70,12 +69,15 @@ class AppProvider(FastapiProvider):
     market_gateway = provide(MarketGateway, scope=Scope.REQUEST, provides=AnyOf[OrderSaver, OrderReader])
     wallet_gateway = provide(WalletGateway, scope=Scope.REQUEST, provides=AnyOf[WithdrawRequestSaver])
 
-    login_interactor = provide(LoginInteractor, scope=Scope.REQUEST)
+    login_interactor = provide(user.LoginInteractor, scope=Scope.REQUEST)
+    get_user_interactor = provide(user.GetUserInteractor, scope=Scope.REQUEST)
+    get_user_gifts_interactor = provide(user.GetUserGiftsDM, scope=Scope.REQUEST)
+    update_user_gift_interactor = provide(user.UpdateUserGiftInteractor, scope=Scope.REQUEST)
+    delete_user_gift_interactor = provide(user.DeleteUserGiftInteractor, scope=Scope.REQUEST)
     create_order_interactor = provide(market.CreateOrderInteractor, scope=Scope.REQUEST)
     get_gifts_interactor = provide(market.GetGiftsInteractor, scope=Scope.REQUEST)
     get_orders_interactor = provide(market.GetOrdersInteractor, scope=Scope.REQUEST)
     buy_gift_interactor = provide(market.BuyGiftInteractor, scope=Scope.REQUEST)
     confirm_transfer_interactor = provide(market.ConfirmTransferInteractor, scope=Scope.REQUEST)
     accept_transfer_interactor = provide(market.AcceptTransferInteractor, scope=Scope.REQUEST)
-    get_user_interactor = provide(GetUserInteractor, scope=Scope.REQUEST)
     withdraw_request_interactor = provide(WithdrawRequestInteractor, scope=Scope.REQUEST)

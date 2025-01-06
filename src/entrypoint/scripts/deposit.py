@@ -21,7 +21,7 @@ async def start_deposit_tracker() -> None:
         await run_tracker(config, bot)
     except Exception:
         message = f"DEPOSIT TRACKER ERROR:\n{format_exc(chain=False)[:4000]}"
-        await send_message(bot, hpre(message), config.bot.owners_chat_id)  # type: ignore
+        await send_message(bot, hpre(message), config.bot.owners_chat_id)
         raise
     finally:
         await bot.session.close()

@@ -12,8 +12,10 @@ class OrderStatus(StrEnum):
 
 
 class OrderType(StrEnum):
-    COMMON = auto()
-    VIP = auto()
+    ALL = auto()
+    BUY = auto()
+    SELL = auto()
+    CLOSED = auto()
 
 
 class GiftRarity(StrEnum):
@@ -30,6 +32,8 @@ class PriceList:
     PIN_COMMON_ORDERS = 3
     BUYER_FEE_TON = 0.1
     SELLER_FEE_PERCENT = 5
+    REFERRAL_PERCENT = 20
+    VIP_REFERRAL_PERCENT = 40
 
 
 class GiftType(Enum):

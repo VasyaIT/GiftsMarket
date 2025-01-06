@@ -10,6 +10,7 @@ class User(Base):
     first_name: Mapped[str | None] = mapped_column(String, nullable=True)
     deposit_comment: Mapped[str] = mapped_column(String, unique=True)
     balance: Mapped[float] = mapped_column(Float, default=0)
+    commission: Mapped[float] = mapped_column(Float, default=0)
     is_banned: Mapped[bool] = mapped_column(Boolean, default=False)
 
 

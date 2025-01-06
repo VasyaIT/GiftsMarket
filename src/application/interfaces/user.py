@@ -9,6 +9,12 @@ class UserReader(Protocol):
     async def get_by_id(self, user_id: int) -> UserDM | None:
         ...
 
+    async def get_referrer(self, user_id: int) -> UserDM | None:
+        ...
+
+    async def get_all_referrals(self, user_id: int) -> list[UserDM]:
+        ...
+
     async def get_by_comment(self, comment: str) -> UserDM | None:
         ...
 
@@ -20,6 +26,14 @@ class UserSaver(Protocol):
 
     @abstractmethod
     async def update_balance(self, data: UpdateUserBalanceDM) -> UserDM | None:
+        ...
+
+    @abstractmethod
+    async def update_referrer_balance(self, referrer_id: int, amount: float) -> None:
+        ...
+
+    @abstractmethod
+    async def update_referrer_commission(self, referral_id: int, amount: float) -> UserDM | None:
         ...
 
     @abstractmethod

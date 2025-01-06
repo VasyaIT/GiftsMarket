@@ -12,11 +12,6 @@ class Base(DeclarativeBase):
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), server_default=func.now()
     )
-    updated_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now()
-    )
 
     @declared_attr
     def __tablename__(cls) -> str:

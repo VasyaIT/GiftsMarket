@@ -1,15 +1,18 @@
-from sqlalchemy import insert, select, update
+from sqlalchemy import ColumnExpressionArgument, delete, insert, select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.interfaces.market import OrderSaver
 from src.domain.entities.market import (
     CreateOrderDM,
+    GetUserGiftsDM,
     GiftFiltersDM,
     OrderDM,
     OrderFiltersDM,
     ReadOrderDM,
-    UpdateOrderStatusDM
+    UserGiftsDM
 )
+from src.infrastructure.gateways.errors import AlreadyExistError
 from src.infrastructure.models.order import Order
 
 
@@ -34,32 +37,36 @@ class MarketGateway(OrderSaver):
             order_rm.append(
                 ReadOrderDM(
                     **order.__dict__,
-                    seller_name=order.seller.first_name,
-                    buyer_name=order.buyer.first_name
+                    seller_name=order.seller.username,
+                    buyer_name=None if not order.buyer else order.buyer.username
                 )
             )
         return order_rm
 
     async def get_all_orders(self, filters: OrderFiltersDM) -> list[ReadOrderDM]:
-        stmt = (
-            select(Order)
-            .where(
-                Order.status.in_(filters.statuses)
-            )
-            .limit(filters.limit)
-            .offset(filters.offset)
-        )
+        conditions: list[ColumnExpressionArgument[bool]] = [Order.status.in_(filters.statuses)]
+        if filters.buyer_id:
+            conditions.append(Order.buyer_id == filters.buyer_id)
+        elif filters.seller_id:
+            conditions.append(Order.seller_id == filters.seller_id)
+
+        stmt = select(Order).where(*conditions).limit(filters.limit).offset(filters.offset)
         result = await self._session.execute(stmt)
         order_rm = []
         for order in result.scalars().all():
             order_rm.append(
                 ReadOrderDM(
                     **order.__dict__,
-                    seller_name=order.seller.first_name,
-                    buyer_name=order.buyer.first_name
+                    seller_name=order.seller.username,
+                    buyer_name=order.buyer.username,
                 )
             )
         return order_rm
+
+    async def get_user_gifts(self, data: GetUserGiftsDM) -> list[UserGiftsDM]:
+        stmt = select(Order).filter_by(seller_id=data.user_id, status=data.status)
+        result = await self._session.execute(stmt)
+        return [UserGiftsDM(**order.__dict__) for order in result.scalars().all()]
 
     async def get_by_id(self, order_id: int) -> OrderDM | None:
         stmt = select(Order).filter_by(id=order_id)
@@ -72,13 +79,18 @@ class MarketGateway(OrderSaver):
         stmt = insert(Order).values(order_dm.model_dump())
         await self._session.execute(stmt)
 
-    async def update_status(self, data: UpdateOrderStatusDM, consider_buyers: bool = False) -> OrderDM | None:
-        values: dict = {"status": data.new_status}
-        filters = {"id": data.id, "status": data.current_status}
-        if consider_buyers:
-            values["buyer_id"] = data.new_buyer_id
-            filters["buyer_id"] = data.current_buyer_id
-        stmt = (update(Order).filter_by(**filters).values(values).returning(Order))
+    async def update_order(self, data: dict, **filters) -> OrderDM | None:
+        stmt = update(Order).filter_by(**filters).values(data).returning(Order)
+        try:
+            result = await self._session.execute(stmt)
+        except IntegrityError:
+            raise AlreadyExistError("Order already exist")
+        order = result.scalar_one_or_none()
+        if order:
+            return OrderDM(**order.__dict__)
+
+    async def delete_order(self, **filters) -> OrderDM | None:
+        stmt = delete(Order).filter_by(**filters).returning(Order)
         result = await self._session.execute(stmt)
         order = result.scalar_one_or_none()
         if order:

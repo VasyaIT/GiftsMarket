@@ -1,9 +1,12 @@
+from datetime import datetime
+
 from pydantic import BaseModel
 
 from src.application.common.const import GiftRarity, GiftType, OrderStatus
 
 
-class CreateOrderDM(BaseModel):
+class UpdateOrderDM(BaseModel):
+    id: int
     image_url: str
     type: GiftType
     price: float
@@ -11,16 +14,27 @@ class CreateOrderDM(BaseModel):
     pattern: float
     background: float
     rarity: GiftRarity
+
+
+class CreateOrderDM(UpdateOrderDM):
     seller_id: int
 
 
 class OrderDM(CreateOrderDM):
-    id: int
     buyer_id: int | None
     status: OrderStatus
 
 
 class ReadOrderDM(CreateOrderDM):
+    status: OrderStatus
+    created_order_date: datetime | None
+    completed_order_date: datetime | None
+    seller_name: str | None
+    buyer_name: str | None
+
+
+class UserGiftsDM(BaseModel):
+    id: int
     image_url: str
     type: GiftType
     price: float
@@ -28,16 +42,11 @@ class ReadOrderDM(CreateOrderDM):
     pattern: float
     background: float
     rarity: GiftRarity
-    seller_name: str | None
-    buyer_name: str | None
 
 
-class UpdateOrderStatusDM(BaseModel):
-    id: int
-    current_status: OrderStatus
-    new_status: OrderStatus
-    current_buyer_id: int | None = None
-    new_buyer_id: int | None = None
+class GetUserGiftsDM(BaseModel):
+    user_id: int
+    status: OrderStatus
 
 
 class GiftFiltersDM(BaseModel):
@@ -54,3 +63,5 @@ class OrderFiltersDM(BaseModel):
     limit: int | None
     offset: int | None
     statuses: list[OrderStatus]
+    seller_id: int | None
+    buyer_id: int | None

@@ -9,6 +9,7 @@ class AppConfig(BaseModel):
     SECRET_KEY: str
     TOKEN_ALGORITHM: str = Field(default="HS256")
     TOKEN_LIFETIME: int = Field(default=86400)
+    VIP_USERS_ID: str
 
     @property
     def cors_allowed_origins(self) -> list[str]:
@@ -21,6 +22,10 @@ class AppConfig(BaseModel):
     @property
     def openapi_url(self) -> str:
         return "/openapi.json" if self.DEBUG else ""
+
+    @property
+    def vip_users_id(self) -> list[int]:
+        return list(map(int, self.VIP_USERS_ID.split()))
 
 
 class PostgresConfig(BaseModel):

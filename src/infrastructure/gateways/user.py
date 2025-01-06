@@ -58,3 +58,22 @@ class UserGateway(UserReader, UserSaver):
             return False
 
         return not result.scalar_one().referrer.is_banned
+
+    async def update_referrer_balance(self, referrer_id: int, amount: float) -> None:
+        stmt = (
+            update(User)
+            .values(balance=User.balance + amount, commission=User.commission + amount)
+            .filter_by(id=referrer_id)
+        )
+        await self._session.execute(stmt)
+
+    async def get_referrer(self, user_id: int) -> UserDM | None:
+        stmt = select(UserReferral).filter_by(referral_id=user_id)
+        result = await self._session.execute(stmt)
+        user_referral = result.scalar_one_or_none()
+        return UserDM(**user_referral.referrer.__dict__) if user_referral else None
+
+    async def get_all_referrals(self, user_id: int) -> list[UserDM]:
+        stmt = select(UserReferral).filter_by(referrer_id=user_id)
+        result = await self._session.execute(stmt)
+        return [UserDM(**referral.__dict__) for referral in result.scalars().all()]

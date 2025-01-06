@@ -1,21 +1,21 @@
 import logging
+from datetime import datetime
 
 from aiogram import Bot
 
-from src.application.common.const import GiftRarity, OrderStatus, PriceList
-from src.application.dto.market import CreateOrderDTO, OrderDTO
+from src.application.common.const import GiftRarity, OrderStatus, OrderType, PriceList
+from src.application.dto.market import CreateOrderDTO
 from src.application.interactors.errors import NotAccessError, NotEnoughBalanceError, NotFoundError
 from src.application.interfaces.database import DBSession
 from src.application.interfaces.interactor import Interactor
 from src.application.interfaces.market import OrderReader, OrderSaver
-from src.application.interfaces.user import UserSaver
+from src.application.interfaces.user import UserManager, UserSaver
 from src.domain.entities.market import (
     CreateOrderDM,
     GiftFiltersDM,
     OrderDM,
     OrderFiltersDM,
-    ReadOrderDM,
-    UpdateOrderStatusDM
+    ReadOrderDM
 )
 from src.domain.entities.user import UpdateUserBalanceDM, UserDM
 from src.entrypoint.config import Config
@@ -51,6 +51,7 @@ class CreateOrderInteractor(Interactor[CreateOrderDTO, None]):
 
         await self._market_gateway.save(
             CreateOrderDM(
+                id=data.id,
                 image_url="",
                 type=data.type,
                 rarity=rarity,
@@ -100,10 +101,18 @@ class GetOrdersInteractor(Interactor[OrderFilterParams, list[ReadOrderDM]]):
         return await self._market_gateway.get_all_orders(filters)
 
     def _prepare_filters(self, filters: OrderFilterParams) -> OrderFiltersDM:
+        statuses = [OrderStatus.BUY, OrderStatus.GIFT_TRANSFERRED]
+        if filters.order_type is OrderType.ALL:
+            statuses = [status for status in OrderStatus]
+        elif filters.order_type is OrderType.CLOSED:
+            statuses = [OrderStatus.GIFT_RECEIVED]
+
         return OrderFiltersDM(
             limit=filters.limit,
             offset=filters.offset,
-            statuses=[OrderStatus.BUY, OrderStatus.GIFT_TRANSFERRED]
+            statuses=statuses,
+            buyer_id=self._user.id if filters.order_type is OrderType.BUY else None,
+            seller_id=self._user.id if filters.order_type is OrderType.SELL else None
         )
 
 
@@ -123,13 +132,10 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
         self._bot = bot
 
     async def __call__(self, order_id: int) -> OrderDM:
-        order_dm = UpdateOrderStatusDM(
-            id=order_id,
-            current_status=OrderStatus.ON_MARKET,
-            new_status=OrderStatus.BUY,
-            new_buyer_id=self._user.id
+        values = dict(status=OrderStatus.BUY, buyer_id=self._user.id, created_order_date=datetime.now())
+        order = await self._market_gateway.update_order(
+            values, id=order_id, status=OrderStatus.ON_MARKET, buyer_id=None
         )
-        order = await self._market_gateway.update_status(order_dm, consider_buyers=True)
 
         if not order:
             await self._db_session.rollback()
@@ -178,14 +184,10 @@ class CancelOrderInteractor(Interactor[int, OrderDM]):
         self._config = config
 
     async def __call__(self, order_id: int) -> OrderDM:
-        order_dm = UpdateOrderStatusDM(
-            id=order_id,
-            current_status=OrderStatus.BUY,
-            new_status=OrderStatus.ON_MARKET,
-            current_buyer_id=self._user.id,
-            new_buyer_id=None,
+        values = dict(status=OrderStatus.ON_MARKET, buyer_id=None, created_order_date=None)
+        order = await self._market_gateway.update_order(
+            values, id=order_id, status=OrderStatus.BUY, buyer_id=self._user.id
         )
-        order = await self._market_gateway.update_status(order_dm, consider_buyers=True)
 
         if not order:
             await self._db_session.rollback()
@@ -222,12 +224,8 @@ class ConfirmTransferInteractor(Interactor[int, OrderDM]):
         self._bot = bot
 
     async def __call__(self, order_id: int) -> OrderDM:
-        order = await self._market_gateway.update_status(
-            UpdateOrderStatusDM(
-                id=order_id,
-                current_status=OrderStatus.BUY,
-                new_status=OrderStatus.GIFT_TRANSFERRED,
-            )
+        order = await self._market_gateway.update_order(
+            dict(status=OrderStatus.ON_MARKET), id=order_id, status=OrderStatus.BUY
         )
         if not (order and order.buyer_id and order.seller_id == self._user.id):
             await self._db_session.rollback()
@@ -254,36 +252,39 @@ class AcceptTransferInteractor(Interactor[int, OrderDM]):
         self,
         db_session: DBSession,
         market_gateway: OrderSaver,
-        user_gateway: UserSaver,
+        user_gateway: UserManager,
         user: UserDM,
         bot: Bot,
+        config: Config,
     ) -> None:
         self._db_session = db_session
         self._market_gateway = market_gateway
         self._user_gateway = user_gateway
         self._user = user
         self._bot = bot
+        self._config = config
 
     async def __call__(self, order_id: int) -> OrderDM:
-        order_dm = UpdateOrderStatusDM(
-            id=order_id,
-            current_status=OrderStatus.GIFT_TRANSFERRED,
-            new_status=OrderStatus.GIFT_RECEIVED,
-            current_buyer_id=self._user.id,
-            new_buyer_id=self._user.id
+        values = dict(status=OrderStatus.GIFT_RECEIVED, completed_order_date=datetime.now())
+        order = await self._market_gateway.update_order(
+            values, id=order_id, status=OrderStatus.GIFT_TRANSFERRED, buyer_id=self._user.id
         )
-        order = await self._market_gateway.update_status(order_dm, consider_buyers=True)
 
         if not order:
             await self._db_session.rollback()
             raise NotFoundError("Order not found")
 
+        commission = order.price * PriceList.SELLER_FEE_PERCENT / 100
         await self._user_gateway.update_balance(
-            UpdateUserBalanceDM(
-                id=order.seller_id,
-                amount=order.price - (order.price * PriceList.SELLER_FEE_PERCENT / 100)
-            )
+            UpdateUserBalanceDM(id=order.seller_id, amount=order.price - commission)
         )
+        referrer = await self._user_gateway.get_referrer(user_id=order.seller_id)
+        if referrer:
+            referrer_percent = PriceList.REFERRAL_PERCENT
+            if referrer.id in self._config.app.vip_users_id:
+                referrer_percent = PriceList.VIP_REFERRAL_PERCENT
+            referrer_reward = commission * referrer_percent / 100
+            await self._user_gateway.update_referrer_balance(referrer.id, referrer_reward)
         await self._db_session.commit()
 
         for user_id in (order.buyer_id, order.seller_id):

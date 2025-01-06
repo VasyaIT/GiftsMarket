@@ -25,6 +25,6 @@ def get_fastapi_app() -> FastAPI:
     )
     container = make_async_container(AppProvider(), context={Config: config, Bot: bot})
     setup_dishka(container, app)
-    setup_middlewares(app, config.app)
+    setup_middlewares(app, config, bot)
     setup_routers(app)
     return app

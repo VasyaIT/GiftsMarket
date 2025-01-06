@@ -6,6 +6,7 @@ from src.infrastructure.models.base import Base
 
 class Lt(Base):
     last_lt: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=False)
+    created_at: None = None
 
 
 class WithdrawRequest(Base):

@@ -3,11 +3,12 @@ from typing import Protocol
 
 from src.domain.entities.market import (
     CreateOrderDM,
+    GetUserGiftsDM,
     GiftFiltersDM,
     OrderDM,
     OrderFiltersDM,
     ReadOrderDM,
-    UpdateOrderStatusDM
+    UserGiftsDM
 )
 
 
@@ -21,6 +22,10 @@ class OrderReader(Protocol):
         ...
 
     @abstractmethod
+    async def get_user_gifts(self, data: GetUserGiftsDM) -> list[UserGiftsDM]:
+        ...
+
+    @abstractmethod
     async def get_by_id(self, order_id: int) -> OrderDM | None:
         ...
 
@@ -31,7 +36,9 @@ class OrderSaver(Protocol):
         ...
 
     @abstractmethod
-    async def update_status(
-        self, order_dm: UpdateOrderStatusDM, consider_buyers: bool = False
-    ) -> OrderDM | None:
+    async def update_order(self, data: dict, **filters) -> OrderDM | None:
+        ...
+
+    @abstractmethod
+    async def delete_order(self, **filters) -> OrderDM | None:
         ...
