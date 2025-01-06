@@ -46,7 +46,7 @@ async def get_user_gifts(interactor: FromDishka[user.GetUserGiftsInteractor]) ->
     return await interactor()
 
 
-@user_router.post(f"/gifts/{id}")
+@user_router.post("/gifts/{id}")
 @inject
 async def edit_gift(
     id: int, dto: CreateOrderDTO, interactor: FromDishka[user.UpdateUserGiftInteractor]
@@ -57,7 +57,7 @@ async def edit_gift(
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
 
 
-@user_router.delete(f"/gifts/{id}")
+@user_router.delete("/gifts/{id}")
 @inject
 async def delete_gift(id: int, interactor: FromDishka[user.DeleteUserGiftInteractor]) -> ResponseDTO:
     try:
