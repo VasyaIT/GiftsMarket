@@ -10,7 +10,8 @@ from src.infrastructure.models.user import User
 
 
 class Order(Base):
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    number: Mapped[int] = mapped_column(Integer)
     image_url: Mapped[str] = mapped_column(String)
     type: Mapped[GiftType] = mapped_column(ENUM(GiftType))
     price: Mapped[float] = mapped_column(Float)

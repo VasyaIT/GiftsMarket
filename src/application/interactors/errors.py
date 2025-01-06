@@ -16,3 +16,7 @@ class NotAccessError(Exception):
 
 class NotUsernameError(Exception):
     pass
+
+
+class InvalidImageUrlError(Exception):
+    pass

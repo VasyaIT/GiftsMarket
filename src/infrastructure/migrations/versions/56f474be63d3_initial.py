@@ -1,8 +1,8 @@
 """Initial
 
-Revision ID: 39834b5948dd
+Revision ID: 56f474be63d3
 Revises: 
-Create Date: 2025-01-06 18:09:49.996433
+Create Date: 2025-01-06 22:09:57.202573
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = '39834b5948dd'
+revision: str = '56f474be63d3'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -37,7 +37,8 @@ def upgrade() -> None:
     sa.UniqueConstraint('deposit_comment')
     )
     op.create_table('orders',
-    sa.Column('id', sa.Integer(), autoincrement=False, nullable=False),
+    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('number', sa.Integer(), nullable=False),
     sa.Column('image_url', sa.String(), nullable=False),
     sa.Column('type', postgresql.ENUM('DUROV_CAP', 'SIGNET_RING', 'PLUSH_PEPE', 'PERFUME_BOTTLE', 'SPY_AGARIC', 'SHARP_TONGUE', 'SCARED_CAT', 'HEX_POT', 'KISSED_FROG', 'SANTA_HAT', 'HOMEMADE_CAKE', 'SKULL_FLOWER', 'PRECIOUS_PEACH', 'SPICED_WINE', 'JELLY_BUNNY', 'ETERNAL_ROSE', 'BERRY_BOX', 'VINTAGE_CIGAR', 'MAGIC_POTION', 'EVIL_EYE', name='gifttype'), nullable=False),
     sa.Column('price', sa.Float(), nullable=False),

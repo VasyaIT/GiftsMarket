@@ -12,7 +12,6 @@ from src.domain.entities.market import (
     ReadOrderDM,
     UserGiftsDM
 )
-from src.infrastructure.gateways.errors import AlreadyExistError
 from src.infrastructure.models.order import Order
 
 
@@ -24,7 +23,7 @@ class MarketGateway(OrderSaver):
         stmt = (
             select(Order)
             .where(
-                filters.from_price < Order.price, filters.to_price > Order.price,
+                filters.from_price <= Order.price, filters.to_price >= Order.price,
                 Order.rarity.in_(filters.rarities), Order.type.in_(filters.types),
                 Order.status == filters.status
             )
@@ -81,10 +80,7 @@ class MarketGateway(OrderSaver):
 
     async def update_order(self, data: dict, **filters) -> OrderDM | None:
         stmt = update(Order).filter_by(**filters).values(data).returning(Order)
-        try:
-            result = await self._session.execute(stmt)
-        except IntegrityError:
-            raise AlreadyExistError("Order already exist")
+        result = await self._session.execute(stmt)
         order = result.scalar_one_or_none()
         if order:
             return OrderDM(**order.__dict__)

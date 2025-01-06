@@ -1,4 +1,4 @@
-from pydantic import Field, HttpUrl
+from pydantic import Field
 
 from src.application.common.const import GiftRarity, GiftType
 from src.application.dto.base import BaseDTO
@@ -8,8 +8,9 @@ class OrderIdDTO(BaseDTO):
     id: int
 
 
-class CreateOrderDTO(OrderIdDTO):
-    image_url: HttpUrl
+class CreateOrderDTO(BaseDTO):
+    number: int
+    image_url: str = Field(examples=["https://example.com"])
     type: GiftType
     price: float = Field(gt=0)
     model: float = Field(default=0, gt=0, lt=100)

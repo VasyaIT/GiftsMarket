@@ -1,4 +1,4 @@
-from sqlalchemy import insert, select, update
+from sqlalchemy import func, insert, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -80,7 +80,7 @@ class UserGateway(UserReader, UserSaver):
         user_referral = result.scalar_one_or_none()
         return UserDM(**user_referral.referrer.__dict__) if user_referral else None
 
-    async def get_all_referrals(self, user_id: int) -> list[UserDM]:
-        stmt = select(UserReferral).filter_by(referrer_id=user_id)
+    async def get_count_referrals(self, user_id: int) -> int:
+        stmt = select(func.count()).select_from(UserReferral).filter_by(referrer_id=user_id)
         result = await self._session.execute(stmt)
-        return [UserDM(**referral.__dict__) for referral in result.scalars().all()]
+        return result.scalar_one()

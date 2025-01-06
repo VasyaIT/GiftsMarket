@@ -1,28 +1,28 @@
-def get_buy_gift_text(type_name: str) -> str:
+def get_buy_gift_text(type_name: str, gift_number: int, buyer_username: str) -> str:
     return (
-        f"💰 Your gift was bought - <b>#{type_name}</b>\n\n"
-        "📤 Transfer your gift to the buyer, then go to the market and confirm the transfer of the gift"
+        f"💰 Your gift was bought - <b>{type_name} #{gift_number}</b>\n\n"
+        f"📤 Transfer your gift {buyer_username}, then go to the market and confirm the transfer of the gift"
     )
 
 
-def get_cancel_gift_text(type_name: str) -> str:
+def get_cancel_gift_text(type_name: str, gift_number: int) -> str:
     return (
-        f"❗ The buyer canceled the purchase of your gift - <b>#{type_name}</b>\n\n"
+        f"❗ The buyer canceled the purchase of your gift - <b>{type_name} #{gift_number}</b>\n\n"
         "⚠️ <b>Don't transfer your gift! If the transfer has occurred, please contact support</b>"
     )
 
 
-def get_confirm_transfer_text(type_name: str) -> str:
+def get_confirm_transfer_text(type_name: str, gift_number: int) -> str:
     return (
-        f"✅ The seller transferred you a gift - <b>#{type_name}</b>\n\n"
+        f"✅ The seller transferred you a gift - <b>{type_name} #{gift_number}</b>\n\n"
         "Go to the market and confirm receipt of the gift\n\n"
         "⚠️ <i>Be sure to check if you have received the gift for real!"
         "Check your profile, and only then confirm receipt!</i>"
     )
 
 
-def get_accept_transfer_text(type_name: str) -> str:
-    return f"✅ The order was completed successfully - <b>#{type_name}</b>"
+def get_accept_transfer_text(type_name: str, gift_number: int) -> str:
+    return f"✅ The order was completed successfully - <b>{type_name} #{gift_number}</b>"
 
 
 def get_withdraw_request_text(username: str | None, user_id: int, amount: float, wallet: str) -> str:

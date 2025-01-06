@@ -4,7 +4,7 @@ from src.application.common.const import GiftRarity, OrderStatus
 from src.application.common.utils import generate_deposit_comment
 from src.application.dto.market import CreateOrderDTO, OrderDTO
 from src.application.dto.user import LoginDTO, UserDTO
-from src.application.interactors.errors import NotFoundError
+from src.application.interactors.errors import InvalidImageUrlError, NotFoundError
 from src.application.interfaces.auth import InitDataValidator, TokenEncoder
 from src.application.interfaces.database import DBSession
 from src.application.interfaces.interactor import Interactor
@@ -13,7 +13,7 @@ from src.application.interfaces.user import UserManager, UserReader
 from src.domain.entities.bot import BotInfoDM
 from src.domain.entities.market import GetUserGiftsDM, UpdateOrderDM, UserGiftsDM
 from src.domain.entities.user import CreateUserDM, UserDM
-from src.infrastructure.gateways.errors import AlreadyExistError
+from src.entrypoint.config import Config
 
 
 class LoginInteractor(Interactor[LoginDTO, str]):
@@ -85,9 +85,9 @@ class GetUserInteractor(Interactor[None, UserDTO]):
     async def __call__(self) -> UserDTO:
         payload = encode_payload(str(self._user.id))
         referral_link = f"https://t.me/{self._bot_data.username}/market?startapp={payload}"
-        referrals = await self._user_gateway.get_all_referrals(self._user.id)
+        count_referrals = await self._user_gateway.get_count_referrals(self._user.id)
         return UserDTO(
-            **self._user.model_dump(), referral_link=referral_link, count_referrals=len(referrals)
+            **self._user.model_dump(), referral_link=referral_link, count_referrals=count_referrals
         )
 
 
@@ -102,13 +102,18 @@ class GetUserGiftsInteractor(Interactor[None, list[UserGiftsDM]]):
         )
 
 
-class UpdateUserGiftInteractor(Interactor[CreateOrderDTO, OrderDTO]):
-    def __init__(self, market_gateway: OrderSaver, user: UserDM, db_session: DBSession) -> None:
+class UpdateUserGiftInteractor:
+    def __init__(
+        self, market_gateway: OrderSaver, user: UserDM, db_session: DBSession, config: Config
+    ) -> None:
         self._market_gateway = market_gateway
         self._user = user
         self._db_session = db_session
+        self._config = config
 
-    async def __call__(self, current_gift_id: int, data: CreateOrderDTO) -> OrderDTO:
+    async def __call__(self, id: int, data: CreateOrderDTO) -> OrderDTO:
+        if not self._config.app.DEBUG and not data.image_url.startswith(self._config.bot.WEBAPP_URL):
+            raise InvalidImageUrlError("This image does not exist for a gift")
         sum_characteristics_percent = sum((data.background, data.model, data.pattern))
         rarity = GiftRarity.LEGEND
         if sum_characteristics_percent >= 2.5:
@@ -119,13 +124,9 @@ class UpdateUserGiftInteractor(Interactor[CreateOrderDTO, OrderDTO]):
             rarity = GiftRarity.MYTHICAL
 
         order = UpdateOrderDM(**data.model_dump(), rarity=rarity)
-        try:
-            updated_order = await self._market_gateway.update_order(
-                order.model_dump(), id=current_gift_id, status=OrderStatus.ON_MARKET, seller_id=self._user.id
-            )
-        except AlreadyExistError:
-            await self._db_session.rollback()
-            raise
+        updated_order = await self._market_gateway.update_order(
+            order.model_dump(), id=id, status=OrderStatus.ON_MARKET, seller_id=self._user.id
+        )
         if not updated_order:
             await self._db_session.rollback()
             raise NotFoundError("Gift not found")

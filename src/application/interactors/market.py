@@ -34,13 +34,17 @@ class CreateOrderInteractor(Interactor[CreateOrderDTO, None]):
         market_gateway: OrderSaver,
         user: UserDM,
         user_gateway: UserSaver,
+        config: Config,
     ) -> None:
         self._db_session = db_session
         self._market_gateway = market_gateway
         self._user = user
         self._user_gateway = user_gateway
+        self._config = config
 
     async def __call__(self, data: CreateOrderDTO) -> None:
+        if not self._config.app.DEBUG and not data.image_url.startswith(self._config.bot.WEBAPP_URL):
+            raise errors.InvalidImageUrlError("This image does not exist for a gift")
         if not self._user.username:
             raise errors.NotUsernameError("User does not have a username to create an order")
 
@@ -54,17 +58,7 @@ class CreateOrderInteractor(Interactor[CreateOrderDTO, None]):
             rarity = GiftRarity.MYTHICAL
 
         await self._market_gateway.save(
-            CreateOrderDM(
-                id=data.id,
-                image_url="",
-                type=data.type,
-                rarity=rarity,
-                price=data.price,
-                background=data.background,
-                model=data.model,
-                pattern=data.pattern,
-                seller_id=self._user.id,
-            )
+            CreateOrderDM(**data.model_dump(), rarity=rarity, seller_id=self._user.id)
         )
         updated_user = await self._user_gateway.update_balance(
             UpdateUserBalanceDM(id=self._user.id, amount=-PriceList.UP_FOR_SALE)
@@ -164,7 +158,10 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
         await self._db_session.commit()
 
         await send_photo(
-            self._bot, order.image_url, text.get_buy_gift_text(order.type.name), [order.seller_id]
+            self._bot,
+            order.image_url,
+            text.get_buy_gift_text(order.type.name, order.number, self._user.username),
+            [order.seller_id]
         )
 
         logger.info(f"Order id: {order_id} successfully completed")
@@ -208,7 +205,10 @@ class CancelOrderInteractor(Interactor[int, OrderDM]):
         await self._db_session.commit()
 
         await send_photo(
-            self._bot, order.image_url, text.get_cancel_gift_text(order.type.name), [order.seller_id]
+            self._bot,
+            order.image_url,
+            text.get_cancel_gift_text(order.type.name, order.number),
+            [order.seller_id],
         )
         await send_message(
             self._bot,
@@ -228,23 +228,25 @@ class ConfirmTransferInteractor(Interactor[int, OrderDM]):
         self._bot = bot
 
     async def __call__(self, order_id: int) -> OrderDM:
+        values = dict(status=OrderStatus.GIFT_TRANSFERRED)
         order = await self._market_gateway.update_order(
-            dict(status=OrderStatus.ON_MARKET), id=order_id, status=OrderStatus.BUY
+            values, id=order_id, status=OrderStatus.BUY, seller_id=self._user.id
         )
-        if not (order and order.buyer_id and order.seller_id == self._user.id):
+        if not (order and order.buyer_id):
             await self._db_session.rollback()
             if not order:
                 raise errors.NotFoundError("Order not found")
             elif not order.buyer_id:
                 logger.error(f"Buyer not found in confirm transfer. Order id: {order_id}")
                 raise errors.NotFoundError("Buyer not found")
-            elif order.seller_id != self._user.id:
-                raise errors.NotAccessError("Forbidden")
 
         await self._db_session.commit()
 
         await send_photo(
-            self._bot, order.image_url, text.get_confirm_transfer_text(order.type.name), [order.buyer_id]
+            self._bot,
+            order.image_url,
+            text.get_confirm_transfer_text(order.type.name, order.number),
+            [order.buyer_id],
         )
         return order
 
@@ -292,7 +294,7 @@ class AcceptTransferInteractor(Interactor[int, OrderDM]):
         await send_photo(
             self._bot,
             order.image_url,
-            text.get_accept_transfer_text(order.type.name),
+            text.get_accept_transfer_text(order.type.name, order.number),
             [order.buyer_id, order.seller_id]  # type: ignore
         )
         return order

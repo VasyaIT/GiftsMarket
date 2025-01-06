@@ -12,7 +12,7 @@ class UserReader(Protocol):
     async def get_referrer(self, user_id: int) -> UserDM | None:
         ...
 
-    async def get_all_referrals(self, user_id: int) -> list[UserDM]:
+    async def get_count_referrals(self, user_id: int) -> int:
         ...
 
     async def get_by_comment(self, comment: str) -> UserDM | None:

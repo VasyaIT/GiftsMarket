@@ -14,6 +14,7 @@ class UserDM(BaseModel):
     first_name: str | None
     deposit_comment: str
     balance: float
+    commission: float
     is_banned: bool = False
 
 

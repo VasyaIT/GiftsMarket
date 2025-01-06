@@ -6,7 +6,7 @@ from src.application.common.const import GiftRarity, GiftType, OrderStatus
 
 
 class UpdateOrderDM(BaseModel):
-    id: int
+    number: int
     image_url: str
     type: GiftType
     price: float
