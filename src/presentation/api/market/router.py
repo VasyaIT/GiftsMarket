@@ -8,7 +8,12 @@ from starlette import status
 from src.application.dto.common import ResponseDTO
 from src.application.dto.market import CreateOrderDTO, OrderIdDTO
 from src.application.interactors import market
-from src.application.interactors.errors import NotAccessError, NotEnoughBalanceError, NotFoundError
+from src.application.interactors.errors import (
+    NotAccessError,
+    NotEnoughBalanceError,
+    NotFoundError,
+    NotUsernameError
+)
 from src.domain.entities.market import ReadOrderDM
 from src.presentation.api.market.params import GiftFilterParams, OrderFilterParams
 
@@ -44,7 +49,7 @@ async def create_order(
 
     try:
         await interactor(dto)
-    except NotEnoughBalanceError as e:
+    except (NotEnoughBalanceError, NotUsernameError) as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
     return ResponseDTO(success=True)
 
@@ -56,7 +61,7 @@ async def buy_gift(dto: OrderIdDTO, interactor: FromDishka[market.BuyGiftInterac
 
     try:
         await interactor(dto.id)
-    except (NotFoundError, NotEnoughBalanceError, NotAccessError) as e:
+    except (NotFoundError, NotEnoughBalanceError, NotAccessError, NotUsernameError) as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
     return ResponseDTO(success=True)
 

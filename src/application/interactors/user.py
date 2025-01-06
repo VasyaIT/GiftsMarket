@@ -57,6 +57,11 @@ class LoginInteractor(Interactor[LoginDTO, str]):
                     await self._db_session.commit()
                 else:
                     await self._db_session.rollback()
+        if user.username != user_data.get("username"):
+            await self._user_gateway.update_user(
+                dict(username=user_data.get("username")), id=user_id
+            )
+            await self._db_session.commit()
         return self._token_gateway.encode(user_id)
 
     def _get_referrer_id(self, decoded_payload: str | None) -> int | None:

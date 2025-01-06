@@ -1,5 +1,6 @@
 from aiogram import Bot
 
+from src.application.common.utils import send_message
 from src.application.dto.wallet import WithdrawRequestDTO
 from src.application.interactors.errors import NotEnoughBalanceError
 from src.application.interfaces.database import DBSession
@@ -45,6 +46,6 @@ class WithdrawRequestInteractor(Interactor[WithdrawRequestDTO, None]):
         await self._db_session.commit()
 
         message = get_withdraw_request_text(self._user.username, self._user.id, data.amount, data.wallet)
-        await self._bot.send_message(
-            self._config.bot.DEPOSIT_CHAT_ID, message, reply_markup=withdraw_kb(withdraw_request.id)
+        await send_message(
+            self._bot, message, [self._config.bot.DEPOSIT_CHAT_ID], reply_markup=withdraw_kb(withdraw_request.id)
         )

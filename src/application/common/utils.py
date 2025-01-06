@@ -2,6 +2,8 @@ from random import randint
 
 from aiogram import Bot
 from aiogram.client.default import DefaultBotProperties
+from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
+from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 
 
 def generate_deposit_comment(length: int = 8) -> str:
@@ -9,10 +11,36 @@ def generate_deposit_comment(length: int = 8) -> str:
 
 
 async def send_message(
-    bot: Bot, message: str, chats_id: list[int] | list[str], parse_mode: str | None = "html"
+    bot: Bot,
+    message: str,
+    chats_id: list[int] | list[str],
+    parse_mode: str | None = "html",
+    reply_markup: InlineKeyboardMarkup | None = None,
 ) -> None:
-    for chat_id in chats_id:
-        await bot.send_message(chat_id, message, parse_mode=parse_mode, disable_web_page_preview=True)
+    try:
+        for chat_id in chats_id:
+            await bot.send_message(
+                chat_id, message, reply_markup=reply_markup, parse_mode=parse_mode, disable_web_page_preview=True
+            )
+    except (TelegramBadRequest, TelegramForbiddenError):
+        pass
+
+
+async def send_photo(
+    bot: Bot,
+    photo: str,
+    caption: str,
+    chats_id: list[int] | list[str],
+    parse_mode: str | None = "html",
+    reply_markup: InlineKeyboardMarkup | None = None,
+) -> None:
+    try:
+        for chat_id in chats_id:
+            await bot.send_photo(
+                chat_id, photo=photo, caption=caption, parse_mode=parse_mode, reply_markup=reply_markup
+            )
+    except (TelegramBadRequest, TelegramForbiddenError):
+        pass
 
 
 def get_bot(token: str) -> Bot:

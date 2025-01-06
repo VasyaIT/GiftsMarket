@@ -4,8 +4,9 @@ from datetime import datetime
 from aiogram import Bot
 
 from src.application.common.const import GiftRarity, OrderStatus, OrderType, PriceList
+from src.application.common.utils import send_message, send_photo
 from src.application.dto.market import CreateOrderDTO
-from src.application.interactors.errors import NotAccessError, NotEnoughBalanceError, NotFoundError
+from src.application.interactors import errors
 from src.application.interfaces.database import DBSession
 from src.application.interfaces.interactor import Interactor
 from src.application.interfaces.market import OrderReader, OrderSaver
@@ -40,6 +41,9 @@ class CreateOrderInteractor(Interactor[CreateOrderDTO, None]):
         self._user_gateway = user_gateway
 
     async def __call__(self, data: CreateOrderDTO) -> None:
+        if not self._user.username:
+            raise errors.NotUsernameError("User does not have a username to create an order")
+
         sum_characteristics_percent = sum((data.background, data.model, data.pattern))
         rarity = GiftRarity.LEGEND
         if sum_characteristics_percent >= 2.5:
@@ -67,7 +71,7 @@ class CreateOrderInteractor(Interactor[CreateOrderDTO, None]):
         )
         if not updated_user or updated_user.balance < 0:
             await self._db_session.rollback()
-            raise NotEnoughBalanceError("User does not have enough balance")
+            raise errors.NotEnoughBalanceError("User does not have enough balance")
         await self._db_session.commit()
 
 
@@ -132,6 +136,9 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
         self._bot = bot
 
     async def __call__(self, order_id: int) -> OrderDM:
+        if not self._user.username:
+            raise errors.NotUsernameError("User does not have a username to buy a gift")
+
         values = dict(status=OrderStatus.BUY, buyer_id=self._user.id, created_order_date=datetime.now())
         order = await self._market_gateway.update_order(
             values, id=order_id, status=OrderStatus.ON_MARKET, buyer_id=None
@@ -139,10 +146,10 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
 
         if not order:
             await self._db_session.rollback()
-            raise NotFoundError("Order not found")
+            raise errors.NotFoundError("Order not found")
         if self._user.id == order.seller_id:
             await self._db_session.rollback()
-            raise NotAccessError("Forbidden")
+            raise errors.NotAccessError("Forbidden")
 
         buyer = await self._user_gateway.update_balance(
             UpdateUserBalanceDM(
@@ -152,14 +159,12 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
         )
         if buyer.balance < 0:  # type: ignore
             await self._db_session.rollback()
-            raise NotEnoughBalanceError("User not enough balance")
+            raise errors.NotEnoughBalanceError("User not enough balance")
 
         await self._db_session.commit()
 
-        await self._bot.send_photo(
-            chat_id=order.seller_id,
-            photo=order.image_url,
-            caption=text.get_buy_gift_text(order.type.name),
+        await send_photo(
+            self._bot, order.image_url, text.get_buy_gift_text(order.type.name), [order.seller_id]
         )
 
         logger.info(f"Order id: {order_id} successfully completed")
@@ -191,7 +196,7 @@ class CancelOrderInteractor(Interactor[int, OrderDM]):
 
         if not order:
             await self._db_session.rollback()
-            raise NotFoundError("Order not found")
+            raise errors.NotFoundError("Order not found")
 
         await self._user_gateway.update_balance(
             UpdateUserBalanceDM(
@@ -202,14 +207,13 @@ class CancelOrderInteractor(Interactor[int, OrderDM]):
 
         await self._db_session.commit()
 
-        await self._bot.send_photo(
-            chat_id=order.seller_id,
-            photo=order.image_url,
-            caption=text.get_cancel_gift_text(order.type.name),
+        await send_photo(
+            self._bot, order.image_url, text.get_cancel_gift_text(order.type.name), [order.seller_id]
         )
-        await self._bot.send_message(
-            self._config.bot.DEPOSIT_CHAT_ID,
-            text.get_canceled_text_to_owner(self._user.username, self._user.id)
+        await send_message(
+            self._bot,
+            text.get_canceled_text_to_owner(self._user.username, self._user.id),
+            [self._config.bot.DEPOSIT_CHAT_ID],
         )
 
         logger.info(f"Order id: {order_id} was canceled")
@@ -230,19 +234,17 @@ class ConfirmTransferInteractor(Interactor[int, OrderDM]):
         if not (order and order.buyer_id and order.seller_id == self._user.id):
             await self._db_session.rollback()
             if not order:
-                raise NotFoundError("Order not found")
+                raise errors.NotFoundError("Order not found")
             elif not order.buyer_id:
                 logger.error(f"Buyer not found in confirm transfer. Order id: {order_id}")
-                raise NotFoundError("Buyer not found")
+                raise errors.NotFoundError("Buyer not found")
             elif order.seller_id != self._user.id:
-                raise NotAccessError("Forbidden")
+                raise errors.NotAccessError("Forbidden")
 
         await self._db_session.commit()
 
-        await self._bot.send_photo(
-            chat_id=order.buyer_id,
-            photo=order.image_url,
-            caption=text.get_confirm_transfer_text(order.type.name),
+        await send_photo(
+            self._bot, order.image_url, text.get_confirm_transfer_text(order.type.name), [order.buyer_id]
         )
         return order
 
@@ -272,7 +274,7 @@ class AcceptTransferInteractor(Interactor[int, OrderDM]):
 
         if not order:
             await self._db_session.rollback()
-            raise NotFoundError("Order not found")
+            raise errors.NotFoundError("Order not found")
 
         commission = order.price * PriceList.SELLER_FEE_PERCENT / 100
         await self._user_gateway.update_balance(
@@ -287,10 +289,10 @@ class AcceptTransferInteractor(Interactor[int, OrderDM]):
             await self._user_gateway.update_referrer_balance(referrer.id, referrer_reward)
         await self._db_session.commit()
 
-        for user_id in (order.buyer_id, order.seller_id):
-            await self._bot.send_photo(
-                chat_id=user_id,  # type: ignore
-                photo=order.image_url,
-                caption=text.get_accept_transfer_text(order.type.name),
-            )
+        await send_photo(
+            self._bot,
+            order.image_url,
+            text.get_accept_transfer_text(order.type.name),
+            [order.buyer_id, order.seller_id]  # type: ignore
+        )
         return order

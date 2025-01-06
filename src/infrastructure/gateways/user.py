@@ -24,6 +24,13 @@ class UserGateway(UserReader, UserSaver):
         new_user = result.scalar_one()
         return UserDM(**new_user.__dict__)
 
+    async def update_user(self, data: dict, **filters) -> UserDM | None:
+        stmt = update(User).values(data).filter_by(**filters).returning(User)
+        result = await self._session.execute(stmt)
+        new_user = result.scalar_one_or_none()
+        if new_user:
+            return UserDM(**new_user.__dict__)
+
     async def get_by_comment(self, comment: str) -> UserDM | None:
         stmt = select(User).filter_by(deposit_comment=comment)
         result = await self._session.execute(stmt)

@@ -12,3 +12,7 @@ class NotFoundError(Exception):
 
 class NotAccessError(Exception):
     pass
+
+
+class NotUsernameError(Exception):
+    pass

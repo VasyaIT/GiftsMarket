@@ -25,15 +25,15 @@ class UserSaver(Protocol):
         ...
 
     @abstractmethod
+    async def update_user(self, data: dict, **filters) -> UserDM | None:
+        ...
+
+    @abstractmethod
     async def update_balance(self, data: UpdateUserBalanceDM) -> UserDM | None:
         ...
 
     @abstractmethod
     async def update_referrer_balance(self, referrer_id: int, amount: float) -> None:
-        ...
-
-    @abstractmethod
-    async def update_referrer_commission(self, referral_id: int, amount: float) -> UserDM | None:
         ...
 
     @abstractmethod
