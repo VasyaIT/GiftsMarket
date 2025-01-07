@@ -13,7 +13,7 @@ class AppConfig(BaseModel):
 
     @property
     def cors_allowed_origins(self) -> list[str]:
-        return ["*"] if self.DEBUG else self.CORS_ALLOWED_ORIGINS.split()
+        return self.CORS_ALLOWED_ORIGINS.split()
 
     @property
     def docs_url(self) -> str:
