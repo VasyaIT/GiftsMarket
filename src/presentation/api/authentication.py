@@ -10,7 +10,7 @@ from src.infrastructure.gateways.errors import TokenError
 async def get_user_by_token(
     request: Request, user_gateway: UserReader, token_gateway: TokenDecoder
 ) -> UserDM:
-    token = request.cookies.get("token")
+    token = request.headers.get("Authorization")
     if not token:
         raise HTTPException(HTTP_401_UNAUTHORIZED)
 
