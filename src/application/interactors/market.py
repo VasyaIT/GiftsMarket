@@ -3,7 +3,7 @@ from datetime import datetime
 
 from aiogram import Bot
 
-from src.application.common.const import GiftRarity, OrderStatus, OrderType, PriceList
+from src.application.common.const import GiftRarity, GiftType, OrderStatus, OrderType, PriceList
 from src.application.common.utils import send_message, send_photo
 from src.application.dto.market import CreateOrderDTO
 from src.application.interactors import errors
@@ -83,8 +83,8 @@ class GetGiftsInteractor(Interactor[GiftFilterParams, list[ReadOrderDM]]):
             offset=filters.offset,
             from_price=filters.from_price if filters.from_price else 0,
             to_price=filters.to_price if filters.to_price else 99999,
-            rarities=filters.rarities if filters.rarities else [],
-            types=filters.types if filters.types else [],
+            rarities=filters.rarities if filters.rarities else [rarity for rarity in GiftRarity],
+            types=filters.types if filters.types else [type for type in GiftType],
             status=OrderStatus.ON_MARKET
         )
 
