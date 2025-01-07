@@ -50,6 +50,15 @@ async def get_user_orders(
         raise HTTPException(status.HTTP_404_NOT_FOUND, str(e))
 
 
+@market_router.get("/order/{id}")
+@inject
+async def get_user_order(id: int, interactor: FromDishka[market.GetOrderInteractor]) -> ReadOrderDM:
+    try:
+        return await interactor(id)
+    except NotFoundError as e:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, str(e))
+
+
 @market_router.post("/order/create")
 @inject
 async def create_order(

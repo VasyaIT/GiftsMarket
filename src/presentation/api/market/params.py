@@ -10,8 +10,8 @@ class GiftFilterParams:
         limit: int | None = Query(default=50, ge=0, le=1000),
         from_price: float | None = Query(default=None, ge=0),
         to_price: float | None = Query(default=None, ge=0),
-        rarity: list[GiftRarity] | None = Query(default=None),
-        type: list[GiftType] | None = Query(default=None),
+        rarity: list[GiftRarity] | None = Query(default=None, alias="rarity[]"),
+        type: list[GiftType] | None = Query(default=None, alias="type[]"),
     ) -> None:
         self.offset = offset
         self.limit = limit

@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from typing import Protocol
 
+from src.application.common.const import OrderStatus
 from src.domain.entities.market import (
     CreateOrderDM,
     GetUserGiftsDM,
@@ -27,6 +28,12 @@ class OrderReader(Protocol):
 
     @abstractmethod
     async def get_by_id(self, **filters) -> ReadOrderDM | None:
+        ...
+
+    @abstractmethod
+    async def get_by_id_and_user(
+        self, order_id: int, user_id: int, statuses: list[OrderStatus]
+    ) -> ReadOrderDM | None:
         ...
 
 

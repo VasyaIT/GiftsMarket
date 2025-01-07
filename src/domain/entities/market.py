@@ -64,5 +64,6 @@ class OrderFiltersDM(BaseModel):
     limit: int | None
     offset: int | None
     statuses: list[OrderStatus]
-    seller_id: int | None
-    buyer_id: int | None
+    user_id: int
+    is_buyer: bool
+    is_seller: bool

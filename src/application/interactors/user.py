@@ -102,6 +102,20 @@ class GetUserGiftsInteractor(Interactor[None, list[UserGiftsDM]]):
         )
 
 
+class GetUserGiftInteractor(Interactor[int, UserGiftsDM]):
+    def __init__(self, market_gateway: OrderReader, user: UserDM) -> None:
+        self._market_gateway = market_gateway
+        self._user = user
+
+    async def __call__(self, gift_id: int) -> UserGiftsDM:
+        gift = await self._market_gateway.get_by_id(
+            id=gift_id, status=OrderStatus.ON_MARKET, seller_id=self._user.id
+        )
+        if not gift:
+            raise NotFoundError("Gift not found")
+        return UserGiftsDM(**gift.model_dump())
+
+
 class UpdateUserGiftInteractor:
     def __init__(
         self, market_gateway: OrderSaver, user: UserDM, db_session: DBSession, config: Config

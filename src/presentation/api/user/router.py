@@ -37,6 +37,15 @@ async def get_user_gifts(interactor: FromDishka[user.GetUserGiftsInteractor]) ->
     return await interactor()
 
 
+@user_router.get("/gifts/{id}")
+@inject
+async def get_user_gift(id: int, interactor: FromDishka[user.GetUserGiftInteractor]) -> UserGiftsDM:
+    try:
+        return await interactor(id)
+    except (NotFoundError) as e:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, str(e))
+
+
 @user_router.post("/gifts/{id}")
 @inject
 async def edit_gift(

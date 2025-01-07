@@ -99,17 +99,6 @@ class GetGiftInteractor(Interactor[int, ReadOrderDM]):
             raise errors.NotFoundError("Gift not found")
         return gift
 
-    def _prepare_filters(self, filters: GiftFilterParams) -> GiftFiltersDM:
-        return GiftFiltersDM(
-            limit=filters.limit,
-            offset=filters.offset,
-            from_price=filters.from_price if filters.from_price else 0,
-            to_price=filters.to_price if filters.to_price else 99999,
-            rarities=filters.rarities if filters.rarities else [rarity for rarity in GiftRarity],
-            types=filters.types if filters.types else [type for type in GiftType],
-            status=OrderStatus.ON_MARKET
-        )
-
 
 class GetOrdersInteractor(Interactor[OrderFilterParams, list[ReadOrderDM]]):
     def __init__(self, market_gateway: OrderReader, user: UserDM) -> None:
@@ -131,9 +120,26 @@ class GetOrdersInteractor(Interactor[OrderFilterParams, list[ReadOrderDM]]):
             limit=filters.limit,
             offset=filters.offset,
             statuses=statuses,
-            buyer_id=self._user.id if filters.order_type is OrderType.BUY else None,
-            seller_id=self._user.id if filters.order_type is OrderType.SELL else None
+            user_id=self._user.id,
+            is_buyer=filters.order_type is OrderType.BUY,
+            is_seller=filters.order_type is OrderType.SELL,
         )
+
+
+class GetOrderInteractor(Interactor[int, ReadOrderDM]):
+    def __init__(self, market_gateway: OrderReader, user: UserDM) -> None:
+        self._market_gateway = market_gateway
+        self._user = user
+
+    async def __call__(self, gift_id: int) -> ReadOrderDM:
+        gift = await self._market_gateway.get_by_id_and_user(
+            order_id=gift_id,
+            user_id=self._user.id,
+            statuses=[OrderStatus.BUY, OrderStatus.GIFT_TRANSFERRED, OrderStatus.GIFT_RECEIVED],
+        )
+        if not gift:
+            raise errors.NotFoundError("Gift not found")
+        return gift
 
 
 class BuyGiftInteractor(Interactor[int, OrderDM]):

@@ -1,7 +1,7 @@
-from sqlalchemy import ColumnExpressionArgument, delete, insert, select, update
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import ColumnExpressionArgument, delete, insert, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.application.common.const import OrderStatus
 from src.application.interfaces.market import OrderSaver
 from src.domain.entities.market import (
     CreateOrderDM,
@@ -43,13 +43,22 @@ class MarketGateway(OrderSaver):
         return order_rm
 
     async def get_all_orders(self, filters: OrderFiltersDM) -> list[ReadOrderDM]:
-        conditions: list[ColumnExpressionArgument[bool]] = [Order.status.in_(filters.statuses)]
-        if filters.buyer_id:
-            conditions.append(Order.buyer_id == filters.buyer_id)
-        elif filters.seller_id:
-            conditions.append(Order.seller_id == filters.seller_id)
+        user_filters = dict()
+        if filters.is_buyer:
+            user_filters["buyer_id"] = filters.user_id
+        elif filters.is_seller:
+            user_filters["seller_id"] = filters.user_id
 
-        stmt = select(Order).where(*conditions).limit(filters.limit).offset(filters.offset)
+        stmt = (
+            select(Order)
+            .where(
+                Order.status.in_(filters.statuses),
+                or_(Order.buyer_id == filters.user_id, Order.seller_id == filters.user_id)
+            )
+            .filter_by(**user_filters)
+            .limit(filters.limit)
+            .offset(filters.offset)
+        )
         result = await self._session.execute(stmt)
         order_rm = []
         for order in result.scalars().all():
@@ -76,6 +85,26 @@ class MarketGateway(OrderSaver):
                 **order.__dict__,
                 seller_name=order.seller.username,
                 buyer_name=None if not order.buyer else order.buyer.username
+            )
+
+    async def get_by_id_and_user(
+        self, order_id: int, user_id: int, statuses: list[OrderStatus]
+    ) -> ReadOrderDM | None:
+        stmt = (
+            select(Order)
+            .where(
+                Order.id == order_id,
+                Order.status.in_(statuses),
+                or_(Order.buyer_id == user_id, Order.seller_id == user_id)
+            )
+        )
+        result = await self._session.execute(stmt)
+        order = result.scalar_one_or_none()
+        if order:
+            return ReadOrderDM(
+                **order.__dict__,
+                seller_name=order.seller.username,
+                buyer_name=order.buyer.username
             )
 
     async def save(self, order_dm: CreateOrderDM) -> None:
