@@ -31,6 +31,7 @@ class ReadOrderDM(CreateOrderDM):
     completed_order_date: datetime | None
     seller_name: str | None
     buyer_name: str | None
+    id: int
 
 
 class UserGiftsDM(BaseModel):

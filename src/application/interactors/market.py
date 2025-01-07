@@ -89,6 +89,28 @@ class GetGiftsInteractor(Interactor[GiftFilterParams, list[ReadOrderDM]]):
         )
 
 
+class GetGiftInteractor(Interactor[int, ReadOrderDM]):
+    def __init__(self, market_gateway: OrderReader) -> None:
+        self._market_gateway = market_gateway
+
+    async def __call__(self, gift_id: int) -> ReadOrderDM:
+        gift = await self._market_gateway.get_by_id(id=gift_id, status=OrderStatus.ON_MARKET)
+        if not gift:
+            raise errors.NotFoundError("Gift not found")
+        return gift
+
+    def _prepare_filters(self, filters: GiftFilterParams) -> GiftFiltersDM:
+        return GiftFiltersDM(
+            limit=filters.limit,
+            offset=filters.offset,
+            from_price=filters.from_price if filters.from_price else 0,
+            to_price=filters.to_price if filters.to_price else 99999,
+            rarities=filters.rarities if filters.rarities else [rarity for rarity in GiftRarity],
+            types=filters.types if filters.types else [type for type in GiftType],
+            status=OrderStatus.ON_MARKET
+        )
+
+
 class GetOrdersInteractor(Interactor[OrderFilterParams, list[ReadOrderDM]]):
     def __init__(self, market_gateway: OrderReader, user: UserDM) -> None:
         self._market_gateway = market_gateway

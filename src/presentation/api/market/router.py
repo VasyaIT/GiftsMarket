@@ -30,6 +30,15 @@ async def get_all_gifts(
     return await interactor(filters)
 
 
+@market_router.get("/gifts/{id}")
+@inject
+async def get_gift_by_id(id: int, interactor: FromDishka[market.GetGiftInteractor]) -> ReadOrderDM:
+    try:
+        return await interactor(id)
+    except NotFoundError as e:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, str(e))
+
+
 @market_router.get("/order/all")
 @inject
 async def get_user_orders(
