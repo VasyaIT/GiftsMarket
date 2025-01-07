@@ -1,6 +1,10 @@
 from src.application.dto.base import BaseDTO
 
 
+class TokenDTO(BaseDTO):
+    token: str
+
+
 class UserDTO(BaseDTO):
     id: int
     username: str | None

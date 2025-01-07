@@ -1,16 +1,14 @@
 from dishka import FromDishka
 from dishka.integrations.fastapi import inject
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, HTTPException
 from starlette import status
 
-from src.application.common.const import COOKIES_MAX_AGE
 from src.application.dto.common import ResponseDTO
 from src.application.dto.market import CreateOrderDTO, OrderDTO
-from src.application.dto.user import LoginDTO, UserDTO
+from src.application.dto.user import LoginDTO, TokenDTO, UserDTO
 from src.application.interactors import user
 from src.application.interactors.errors import InvalidImageUrlError, NotFoundError
 from src.domain.entities.market import UserGiftsDM
-from src.entrypoint.config import Config
 
 
 user_router = APIRouter(prefix="/user", tags=["User"])
@@ -18,17 +16,11 @@ user_router = APIRouter(prefix="/user", tags=["User"])
 
 @user_router.post("/login")
 @inject
-async def user_login(
-    dto: LoginDTO, interactor: FromDishka[user.LoginInteractor], config: FromDishka[Config]
-) -> Response:
+async def user_login(dto: LoginDTO, interactor: FromDishka[user.LoginInteractor]) -> TokenDTO:
     token = await interactor(data=dto)
     if not token:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Init data is not valid")
-    response = Response()
-    response.set_cookie(
-        "token", token, httponly=True, secure=not config.app.DEBUG, samesite=None, max_age=COOKIES_MAX_AGE
-    )
-    return response
+    return TokenDTO(token=token)
 
 
 @user_router.get("/me")

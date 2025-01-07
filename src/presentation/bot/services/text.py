@@ -1,7 +1,7 @@
 def get_buy_gift_text(type_name: str, gift_number: int, buyer_username: str) -> str:
     return (
         f"💰 Your gift was bought - <b>{type_name} #{gift_number}</b>\n\n"
-        f"📤 Transfer your gift {buyer_username}, then go to the market and confirm the transfer of the gift"
+        f"📤 Transfer your gift to the @{buyer_username}, then go to the market and confirm the transfer of the gift"
     )
 
 
