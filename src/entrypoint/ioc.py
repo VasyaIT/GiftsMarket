@@ -10,7 +10,7 @@ from src.application.interactors import market, user
 from src.application.interactors.wallet import WithdrawRequestInteractor
 from src.application.interfaces.auth import InitDataValidator, TokenDecoder, TokenEncoder
 from src.application.interfaces.database import DBSession
-from src.application.interfaces.market import OrderReader, OrderSaver
+from src.application.interfaces.market import OrderManager, OrderReader, OrderSaver
 from src.application.interfaces.user import UserManager, UserReader, UserSaver
 from src.application.interfaces.wallet import WithdrawRequestSaver
 from src.domain.entities.bot import BotInfoDM
@@ -66,7 +66,9 @@ class AppProvider(FastapiProvider):
     user_gateway = provide(
         UserGateway, scope=Scope.REQUEST, provides=AnyOf[UserManager, UserReader, UserSaver]
     )
-    market_gateway = provide(MarketGateway, scope=Scope.REQUEST, provides=AnyOf[OrderSaver, OrderReader])
+    market_gateway = provide(
+        MarketGateway, scope=Scope.REQUEST, provides=AnyOf[OrderManager, OrderSaver, OrderReader]
+    )
     wallet_gateway = provide(WalletGateway, scope=Scope.REQUEST, provides=AnyOf[WithdrawRequestSaver])
 
     login_interactor = provide(user.LoginInteractor, scope=Scope.REQUEST)
