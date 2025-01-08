@@ -112,7 +112,7 @@ class GetOrdersInteractor(Interactor[OrderFilterParams, list[ReadOrderDM]]):
     def _prepare_filters(self, filters: OrderFilterParams) -> OrderFiltersDM:
         statuses = [OrderStatus.BUY, OrderStatus.GIFT_TRANSFERRED]
         if filters.order_type is OrderType.ALL:
-            statuses.append(OrderStatus.GIFT_TRANSFERRED)
+            statuses.append(OrderStatus.GIFT_RECEIVED)
         elif filters.order_type is OrderType.CLOSED:
             statuses = [OrderStatus.GIFT_RECEIVED]
 

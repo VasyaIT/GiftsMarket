@@ -5,7 +5,7 @@ from dishka.integrations.fastapi import inject
 from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
 
-from src.application.dto.common import ResponseDTO
+from src.application.dto.common import GiftImagesDTO, ResponseDTO
 from src.application.dto.market import CreateOrderDTO, OrderIdDTO
 from src.application.interactors import market
 from src.application.interactors.errors import (
@@ -151,3 +151,9 @@ async def accept_gift_receipt(
     except (NotFoundError, NotAccessError) as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
     return ResponseDTO(success=True)
+
+
+@market_router.get("/get-gift-types")
+@inject
+async def get_images_by_gift_type(image_data: FromDishka[GiftImagesDTO]) -> GiftImagesDTO:
+    return image_data
