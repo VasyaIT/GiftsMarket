@@ -29,6 +29,7 @@ class ReadOrderDM(CreateOrderDM):
     status: OrderStatus
     created_order_date: datetime | None
     completed_order_date: datetime | None
+    created_at: datetime
     seller_name: str | None
     buyer_name: str | None
     id: int
