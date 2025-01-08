@@ -23,6 +23,8 @@ class CreateOrderDM(UpdateOrderDM):
 class OrderDM(CreateOrderDM):
     buyer_id: int | None
     status: OrderStatus
+    created_order_date: datetime | None
+    completed_order_date: datetime | None
 
 
 class ReadOrderDM(CreateOrderDM):

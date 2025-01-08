@@ -36,6 +36,10 @@ class OrderReader(Protocol):
     ) -> ReadOrderDM | None:
         ...
 
+    @abstractmethod
+    async def get_cancel_order(self, order_id: int, user_id: int) -> OrderDM | None:
+        ...
+
 
 class OrderSaver(Protocol):
     @abstractmethod
@@ -47,5 +51,13 @@ class OrderSaver(Protocol):
         ...
 
     @abstractmethod
+    async def seller_cancel_order(self, order_id: int, user_id: int, data: dict) -> OrderDM | None:
+        ...
+
+    @abstractmethod
     async def delete_order(self, **filters) -> OrderDM | None:
         ...
+
+
+class OrderManager(OrderReader, OrderSaver):
+    ...

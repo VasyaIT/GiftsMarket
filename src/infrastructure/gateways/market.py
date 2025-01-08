@@ -1,4 +1,4 @@
-from sqlalchemy import ColumnExpressionArgument, delete, insert, or_, select, update
+from sqlalchemy import and_, delete, insert, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.common.const import OrderStatus
@@ -107,12 +107,50 @@ class MarketGateway(OrderSaver):
                 buyer_name=order.buyer.username
             )
 
+    async def get_cancel_order(self, order_id: int, user_id: int) -> OrderDM | None:
+        stmt = (
+            select(Order)
+            .where(
+                and_(
+                    Order.id == order_id,
+                    or_(
+                        and_(Order.status == OrderStatus.BUY, Order.seller_id == user_id),
+                        and_(Order.status == OrderStatus.SELLER_ACCEPT, Order.buyer_id == user_id),
+                    )
+                )
+            )
+        )
+        result = await self._session.execute(stmt)
+        order = result.scalar_one_or_none()
+        if order:
+            return OrderDM(**order.__dict__)
+
     async def save(self, order_dm: CreateOrderDM) -> None:
         stmt = insert(Order).values(order_dm.model_dump())
         await self._session.execute(stmt)
 
     async def update_order(self, data: dict, **filters) -> OrderDM | None:
         stmt = update(Order).filter_by(**filters).values(data).returning(Order)
+        result = await self._session.execute(stmt)
+        order = result.scalar_one_or_none()
+        if order:
+            return OrderDM(**order.__dict__)
+
+    async def seller_cancel_order(self, order_id: int, user_id: int, data: dict) -> OrderDM | None:
+        stmt = (
+            update(Order)
+            .where(
+                and_(
+                    Order.id == order_id,
+                    or_(
+                        and_(Order.status == OrderStatus.BUY, Order.seller_id == user_id),
+                        and_(Order.status == OrderStatus.SELLER_ACCEPT, Order.buyer_id == user_id),
+                    )
+                )
+            )
+            .values(data)
+            .returning(Order)
+        )
         result = await self._session.execute(stmt)
         order = result.scalar_one_or_none()
         if order:

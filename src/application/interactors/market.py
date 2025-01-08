@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from aiogram import Bot
 
@@ -9,7 +9,7 @@ from src.application.dto.market import CreateOrderDTO
 from src.application.interactors import errors
 from src.application.interfaces.database import DBSession
 from src.application.interfaces.interactor import Interactor
-from src.application.interfaces.market import OrderReader, OrderSaver
+from src.application.interfaces.market import OrderManager, OrderReader, OrderSaver
 from src.application.interfaces.user import UserManager, UserSaver
 from src.domain.entities.market import (
     CreateOrderDM,
@@ -287,7 +287,7 @@ class SellerCancelInteractor(Interactor[int, OrderDM]):
     def __init__(
         self,
         db_session: DBSession,
-        market_gateway: OrderSaver,
+        market_gateway: OrderManager,
         user_gateway: UserSaver,
         user: UserDM,
         bot: Bot,
@@ -299,20 +299,17 @@ class SellerCancelInteractor(Interactor[int, OrderDM]):
         self._bot = bot
 
     async def __call__(self, order_id: int) -> OrderDM:
-        values = dict(status=OrderStatus.ON_MARKET, buyer_id=None)
-        order = await self._market_gateway.update_order(
-            values, id=order_id, status=OrderStatus.BUY, seller_id=self._user.id
-        )
+        order = await self._market_gateway.get_cancel_order(order_id, self._user.id)
 
         if not order:
-            await self._db_session.rollback()
             raise errors.NotFoundError("Order not found")
-        if not order.buyer_id:
-            await self._db_session.rollback()
-            logger.error(
-                f"Buyer not found in seller cancel. Order id: {order_id}. Seller id: {order.seller_id}"
-            )
-            raise errors.NotFoundError("Buyer not found")
+
+        if (
+            order.buyer_id == self._user.id
+            and order.created_order_date
+            and datetime.now() - timedelta(minutes=20) < order.created_order_date
+        ):
+            raise errors.NotAccessError("Forbidden")
 
         await self._user_gateway.update_balance(
             UpdateUserBalanceDM(
@@ -320,15 +317,18 @@ class SellerCancelInteractor(Interactor[int, OrderDM]):
                 amount=order.price + PriceList.BUYER_FEE_TON
             )
         )
+        values = dict(status=OrderStatus.ON_MARKET, buyer_id=None, created_order_date=None)
+        await self._market_gateway.update_order(data=values, id=order_id)
 
         await self._db_session.commit()
 
-        await send_photo(
-            self._bot,
-            order.image_url,
-            text.get_seller_cancel_text(order.type.name, order.number),
-            [order.buyer_id]
-        )
+        if order.seller_id == self._user.id:
+            await send_photo(
+                self._bot,
+                order.image_url,
+                text.get_seller_cancel_text(order.type.name, order.number),
+                [order.buyer_id]  # type: ignore
+            )
         return order
 
 
