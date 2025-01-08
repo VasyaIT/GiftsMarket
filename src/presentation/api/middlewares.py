@@ -1,12 +1,10 @@
-from traceback import format_exc, print_exc
+from traceback import format_exc
 
 from aiogram import Bot
 from aiogram.utils.markdown import hpre
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 
 from src.application.common.utils import send_message
 from src.entrypoint.config import BotConfig, Config
@@ -33,11 +31,6 @@ class HandleExceptionMiddleware(BaseHTTPMiddleware):
         try:
             return await call_next(request)
         except Exception:
-            print_exc()
             message = f"{format_exc(chain=False)[1800:1800 + 4096]}"
             await send_message(self._bot, hpre(message), self._bot_config.owners_chat_id)
-            response = JSONResponse(
-                content={"status": HTTP_500_INTERNAL_SERVER_ERROR, "message": "Internal Server Error"},
-                status_code=HTTP_500_INTERNAL_SERVER_ERROR
-            )
-            return response
+            raise
