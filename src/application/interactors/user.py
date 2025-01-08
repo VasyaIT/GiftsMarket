@@ -84,7 +84,7 @@ class GetUserInteractor(Interactor[None, UserDTO]):
 
     async def __call__(self) -> UserDTO:
         payload = encode_payload(str(self._user.id))
-        referral_link = f"https://t.me/{self._bot_data.username}/market?startapp={payload}"
+        referral_link = f"https://t.me/{self._bot_data.username}/store?startapp={payload}"
         count_referrals = await self._user_gateway.get_count_referrals(self._user.id)
         return UserDTO(
             **self._user.model_dump(), referral_link=referral_link, count_referrals=count_referrals

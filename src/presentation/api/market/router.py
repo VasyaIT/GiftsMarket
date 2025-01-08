@@ -97,6 +97,34 @@ async def cancel_order(dto: OrderIdDTO, interactor: FromDishka[market.CancelOrde
     return ResponseDTO(success=True)
 
 
+@market_router.post("/order/seller-accept")
+@inject
+async def accept_order_by_seller(
+    dto: OrderIdDTO, interactor: FromDishka[market.SellerAcceptInteractor]
+) -> ResponseDTO:
+    """Seller accept order when the buyer makes a gift purchase"""
+
+    try:
+        await interactor(dto.id)
+    except NotFoundError as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
+    return ResponseDTO(success=True)
+
+
+@market_router.post("/order/seller-cancel")
+@inject
+async def cancel_order_by_seller(
+    dto: OrderIdDTO, interactor: FromDishka[market.CancelOrderInteractor]
+) -> ResponseDTO:
+    """Seller cancel order when the buyer makes a gift purchase"""
+
+    try:
+        await interactor(dto.id)
+    except NotFoundError as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
+    return ResponseDTO(success=True)
+
+
 @market_router.post("/order/confirm-transfer")
 @inject
 async def confirm_gift_transfer(

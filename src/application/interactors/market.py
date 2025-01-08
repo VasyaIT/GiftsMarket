@@ -161,7 +161,7 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
         if not self._user.username:
             raise errors.NotUsernameError("User does not have a username to buy a gift")
 
-        values = dict(status=OrderStatus.BUY, buyer_id=self._user.id, created_order_date=datetime.now())
+        values = dict(status=OrderStatus.BUY, buyer_id=self._user.id)
         order = await self._market_gateway.update_order(
             values, id=order_id, status=OrderStatus.ON_MARKET, buyer_id=None
         )
@@ -188,11 +188,9 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
         await send_photo(
             self._bot,
             order.image_url,
-            text.get_buy_gift_text(order.type.name, order.number, self._user.username),
+            text.get_buy_gift_text(order.type.name, order.number),
             [order.seller_id]
         )
-
-        logger.info(f"Order id: {order_id} successfully completed")
         return order
 
 
@@ -214,7 +212,7 @@ class CancelOrderInteractor(Interactor[int, OrderDM]):
         self._config = config
 
     async def __call__(self, order_id: int) -> OrderDM:
-        values = dict(status=OrderStatus.ON_MARKET, buyer_id=None, created_order_date=None)
+        values = dict(status=OrderStatus.ON_MARKET, buyer_id=None)
         order = await self._market_gateway.update_order(
             values, id=order_id, status=OrderStatus.BUY, buyer_id=self._user.id
         )
@@ -238,13 +236,99 @@ class CancelOrderInteractor(Interactor[int, OrderDM]):
             text.get_cancel_gift_text(order.type.name, order.number),
             [order.seller_id],
         )
-        await send_message(
-            self._bot,
-            text.get_canceled_text_to_owner(self._user.username, self._user.id),
-            [self._config.bot.DEPOSIT_CHAT_ID],
-        )
 
         logger.info(f"Order id: {order_id} was canceled")
+        return order
+
+
+class SellerAcceptInteractor(Interactor[int, OrderDM]):
+    def __init__(
+        self,
+        db_session: DBSession,
+        market_gateway: OrderSaver,
+        user_gateway: UserSaver,
+        user: UserDM,
+        bot: Bot,
+    ) -> None:
+        self._db_session = db_session
+        self._market_gateway = market_gateway
+        self._user_gateway = user_gateway
+        self._user = user
+        self._bot = bot
+
+    async def __call__(self, order_id: int) -> OrderDM:
+        values = dict(status=OrderStatus.SELLER_ACCEPT, created_order_date=datetime.now())
+        order = await self._market_gateway.update_order(
+            values, id=order_id, status=OrderStatus.BUY, seller_id=self._user.id
+        )
+
+        if not order:
+            await self._db_session.rollback()
+            raise errors.NotFoundError("Order not found")
+        if not order.buyer_id:
+            await self._db_session.rollback()
+            logger.error(
+                f"Buyer not found in seller accept. Order id: {order_id}. Seller id: {order.seller_id}"
+            )
+            raise errors.NotFoundError("Buyer not found")
+
+        await self._db_session.commit()
+
+        await send_photo(
+            self._bot,
+            order.image_url,
+            text.get_seller_accept_text(order.type.name, order.number),
+            [order.buyer_id]
+        )
+        return order
+
+
+class SellerCancelInteractor(Interactor[int, OrderDM]):
+    def __init__(
+        self,
+        db_session: DBSession,
+        market_gateway: OrderSaver,
+        user_gateway: UserSaver,
+        user: UserDM,
+        bot: Bot,
+    ) -> None:
+        self._db_session = db_session
+        self._market_gateway = market_gateway
+        self._user_gateway = user_gateway
+        self._user = user
+        self._bot = bot
+
+    async def __call__(self, order_id: int) -> OrderDM:
+        values = dict(status=OrderStatus.ON_MARKET, buyer_id=None)
+        order = await self._market_gateway.update_order(
+            values, id=order_id, status=OrderStatus.BUY, seller_id=self._user.id
+        )
+
+        if not order:
+            await self._db_session.rollback()
+            raise errors.NotFoundError("Order not found")
+        if not order.buyer_id:
+            await self._db_session.rollback()
+            logger.error(
+                f"Buyer not found in seller cancel. Order id: {order_id}. Seller id: {order.seller_id}"
+            )
+            raise errors.NotFoundError("Buyer not found")
+
+        await self._user_gateway.update_balance(
+            UpdateUserBalanceDM(
+                id=order.buyer_id,
+                amount=order.price + PriceList.BUYER_FEE_TON
+            )
+        )
+
+        await self._db_session.commit()
+
+        await send_photo(
+            self._bot,
+            order.image_url,
+            text.get_seller_cancel_text(order.type.name, order.number),
+            [order.buyer_id]
+        )
         return order
 
 
@@ -258,14 +342,16 @@ class ConfirmTransferInteractor(Interactor[int, OrderDM]):
     async def __call__(self, order_id: int) -> OrderDM:
         values = dict(status=OrderStatus.GIFT_TRANSFERRED)
         order = await self._market_gateway.update_order(
-            values, id=order_id, status=OrderStatus.BUY, seller_id=self._user.id
+            values, id=order_id, status=OrderStatus.SELLER_ACCEPT, seller_id=self._user.id
         )
         if not (order and order.buyer_id):
             await self._db_session.rollback()
             if not order:
                 raise errors.NotFoundError("Order not found")
             elif not order.buyer_id:
-                logger.error(f"Buyer not found in confirm transfer. Order id: {order_id}")
+                logger.error(
+                    f"Buyer not found in confirm transfer. Order id: {order_id}. Seller id: {order.seller_id}"
+                )
                 raise errors.NotFoundError("Buyer not found")
 
         await self._db_session.commit()
@@ -325,4 +411,6 @@ class AcceptTransferInteractor(Interactor[int, OrderDM]):
             text.get_accept_transfer_text(order.type.name, order.number),
             [order.buyer_id, order.seller_id]  # type: ignore
         )
+
+        logger.info(f"Order id: {order_id} successfully completed")
         return order

@@ -1,12 +1,10 @@
 from enum import Enum, StrEnum, auto
 
 
-COOKIES_MAX_AGE = 60 * 60 * 24 * 7
-
-
 class OrderStatus(StrEnum):
     ON_MARKET = auto()
     BUY = auto()
+    SELLER_ACCEPT = auto()
     GIFT_TRANSFERRED = auto()
     GIFT_RECEIVED = auto()
 

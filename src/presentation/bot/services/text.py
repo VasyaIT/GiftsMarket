@@ -1,7 +1,7 @@
-def get_buy_gift_text(type_name: str, gift_number: int, buyer_username: str) -> str:
+def get_buy_gift_text(type_name: str, gift_number: int) -> str:
     return (
         f"💰 Your gift was bought - <b>{type_name} #{gift_number}</b>\n\n"
-        f"📤 Transfer your gift to the @{buyer_username}, then go to the market and confirm the transfer of the gift"
+        f"📤 Confirm or cancel the order in the app"
     )
 
 
@@ -9,6 +9,20 @@ def get_cancel_gift_text(type_name: str, gift_number: int) -> str:
     return (
         f"❗ The buyer canceled the purchase of your gift - <b>{type_name} #{gift_number}</b>\n\n"
         "⚠️ <b>Don't transfer your gift! If the transfer has occurred, please contact support</b>"
+    )
+
+
+def get_seller_accept_text(type_name: str, gift_number: int) -> str:
+    return (
+        f"✅ The seller accepted your deal for a gift - <b>{type_name} #{gift_number}</b>\n\n"
+        f"🕑 Wait for the seller to send you a gift and you will receive a notification in the bot"
+    )
+
+
+def get_seller_cancel_text(type_name: str, gift_number: int) -> str:
+    return (
+        f"❌ The seller canceled your gift order - <b>{type_name} #{gift_number}</b>\n\n"
+        f"💸 The TONs have been returned to your balance in the app"
     )
 
 
