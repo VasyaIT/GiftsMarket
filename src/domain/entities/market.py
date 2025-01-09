@@ -61,6 +61,7 @@ class GiftFiltersDM(BaseModel):
     rarities: list[GiftRarity]
     types: list[GiftType]
     status: OrderStatus
+    user_id: int
 
 
 class OrderFiltersDM(BaseModel):

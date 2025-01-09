@@ -56,3 +56,8 @@ class GiftType(Enum):
     MAGIC_POTION = "magic_potion"
     EVIL_EYE = "evil_eye"
     TRAPPED_HEART = "trapped_heart"
+
+
+GIFT_RARITY_PERCENT = {
+    GiftRarity.COMMON: 2.5, GiftRarity.RARE: 1.7, GiftRarity.MYTHICAL: 0.7, GiftRarity.LEGEND: 0
+}

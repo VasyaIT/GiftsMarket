@@ -5,6 +5,8 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.exceptions import TelegramAPIError
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 
+from src.application.common.const import GIFT_RARITY_PERCENT, GiftRarity
+
 
 def generate_deposit_comment(length: int = 8) -> str:
     return "".join(str(randint(0, 9)) for _ in range(length))
@@ -45,3 +47,14 @@ async def send_photo(
 
 def get_bot(token: str) -> Bot:
     return Bot(token=token, default=DefaultBotProperties(parse_mode="html"))
+
+
+def calculate_gift_rarity(sum_characteristics_percent: float) -> GiftRarity:
+    rarity = GiftRarity.LEGEND
+    if sum_characteristics_percent >= GIFT_RARITY_PERCENT[GiftRarity.COMMON]:
+        rarity = GiftRarity.COMMON
+    elif sum_characteristics_percent >= GIFT_RARITY_PERCENT[GiftRarity.RARE]:
+        rarity = GiftRarity.RARE
+    elif sum_characteristics_percent >= GIFT_RARITY_PERCENT[GiftRarity.MYTHICAL]:
+        rarity = GiftRarity.MYTHICAL
+    return rarity

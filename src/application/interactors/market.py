@@ -1,10 +1,11 @@
 import logging
 from datetime import datetime, timedelta
+from logging.handlers import RotatingFileHandler
 
 from aiogram import Bot
 
 from src.application.common.const import GiftRarity, GiftType, OrderStatus, OrderType, PriceList
-from src.application.common.utils import send_message, send_photo
+from src.application.common.utils import calculate_gift_rarity, send_message, send_photo
 from src.application.dto.market import CreateOrderDTO
 from src.application.interactors import errors
 from src.application.interfaces.database import DBSession
@@ -25,6 +26,16 @@ from src.presentation.bot.services import text
 
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+handler = RotatingFileHandler(
+    filename="src/logs/market.log",
+    maxBytes=1 * 1024 * 1024 * 1024,
+    backupCount=5,
+    encoding="utf-8",
+)
+logger.addHandler(handler)
+formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
 
 
 class CreateOrderInteractor(Interactor[CreateOrderDTO, None]):
@@ -49,13 +60,7 @@ class CreateOrderInteractor(Interactor[CreateOrderDTO, None]):
             raise errors.NotUsernameError("User does not have a username to create an order")
 
         sum_characteristics_percent = sum((data.background, data.model, data.pattern))
-        rarity = GiftRarity.LEGEND
-        if sum_characteristics_percent >= 2.5:
-            rarity = GiftRarity.COMMON
-        elif sum_characteristics_percent >= 1.7:
-            rarity = GiftRarity.RARE
-        elif sum_characteristics_percent >= 1:
-            rarity = GiftRarity.MYTHICAL
+        rarity = calculate_gift_rarity(sum_characteristics_percent)
 
         await self._market_gateway.save(
             CreateOrderDM(**data.model_dump(), rarity=rarity, seller_id=self._user.id)
@@ -68,16 +73,22 @@ class CreateOrderInteractor(Interactor[CreateOrderDTO, None]):
             raise errors.NotEnoughBalanceError("User does not have enough balance")
         await self._db_session.commit()
 
+        logger.info(
+            "CreateOrderInteractor: "
+            f"@{self._user.username} #{self._user.id} created the order"
+        )
+
 
 class GetGiftsInteractor(Interactor[GiftFilterParams, list[ReadOrderDM]]):
-    def __init__(self, market_gateway: OrderReader) -> None:
+    def __init__(self, market_gateway: OrderReader, user: UserDM) -> None:
         self._market_gateway = market_gateway
+        self._user = user
 
     async def __call__(self, data: GiftFilterParams) -> list[ReadOrderDM]:
-        filters = self._prepare_filters(data)
+        filters = self._prepare_filters(data, self._user.id)
         return await self._market_gateway.get_all_gifts(filters)
 
-    def _prepare_filters(self, filters: GiftFilterParams) -> GiftFiltersDM:
+    def _prepare_filters(self, filters: GiftFilterParams, user_id: int) -> GiftFiltersDM:
         return GiftFiltersDM(
             limit=filters.limit,
             offset=filters.offset,
@@ -85,7 +96,8 @@ class GetGiftsInteractor(Interactor[GiftFilterParams, list[ReadOrderDM]]):
             to_price=filters.to_price if filters.to_price else 99999,
             rarities=filters.rarities if filters.rarities else [rarity for rarity in GiftRarity],
             types=filters.types if filters.types else [type for type in GiftType],
-            status=OrderStatus.ON_MARKET
+            status=OrderStatus.ON_MARKET,
+            user_id=user_id,
         )
 
 
@@ -110,7 +122,7 @@ class GetOrdersInteractor(Interactor[OrderFilterParams, list[ReadOrderDM]]):
         return await self._market_gateway.get_all_orders(filters)
 
     def _prepare_filters(self, filters: OrderFilterParams) -> OrderFiltersDM:
-        statuses = [OrderStatus.BUY, OrderStatus.GIFT_TRANSFERRED]
+        statuses = [OrderStatus.BUY, OrderStatus.SELLER_ACCEPT, OrderStatus.GIFT_TRANSFERRED]
         if filters.order_type is OrderType.ALL:
             statuses.append(OrderStatus.GIFT_RECEIVED)
         elif filters.order_type is OrderType.CLOSED:
@@ -191,6 +203,11 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
             text.get_buy_gift_text(order.type.name, order.number),
             [order.seller_id]
         )
+
+        logger.info(
+            "BuyGiftInteractor: "
+            f"@{self._user.username} #{self._user.id} buy the order with id: {order_id}"
+        )
         return order
 
 
@@ -237,7 +254,10 @@ class CancelOrderInteractor(Interactor[int, OrderDM]):
             [order.seller_id],
         )
 
-        logger.info(f"Order id: {order_id} was canceled")
+        logger.info(
+            "CancelOrderInteractor: "
+            f"Buyer @{self._user.username} #{self._user.id} cancel the order with id: {order_id}"
+        )
         return order
 
 
@@ -268,6 +288,7 @@ class SellerAcceptInteractor(Interactor[int, OrderDM]):
         if not order.buyer_id:
             await self._db_session.rollback()
             logger.error(
+                "SellerAcceptInteractor: "
                 f"Buyer not found in seller accept. Order id: {order_id}. Seller id: {order.seller_id}"
             )
             raise errors.NotFoundError("Buyer not found")
@@ -279,6 +300,11 @@ class SellerAcceptInteractor(Interactor[int, OrderDM]):
             order.image_url,
             text.get_seller_accept_text(order.type.name, order.number),
             [order.buyer_id]
+        )
+
+        logger.info(
+            "SellerAcceptInteractor: "
+            f"Seller @{self._user.username} #{self._user.id} accept the order with id: {order_id}"
         )
         return order
 
@@ -329,6 +355,15 @@ class SellerCancelInteractor(Interactor[int, OrderDM]):
                 text.get_seller_cancel_text(order.type.name, order.number),
                 [order.buyer_id]  # type: ignore
             )
+            logger.info(
+                "SellerCancelInteractor: "
+                f"Seller @{self._user.username} #{self._user.id} canceled the order with id: {order_id}"
+            )
+        else:
+            logger.info(
+                "SellerCancelInteractor: "
+                f"Buyer @{self._user.username} #{self._user.id} canceled the order with id: {order_id}"
+            )
         return order
 
 
@@ -350,7 +385,8 @@ class ConfirmTransferInteractor(Interactor[int, OrderDM]):
                 raise errors.NotFoundError("Order not found")
             elif not order.buyer_id:
                 logger.error(
-                    f"Buyer not found in confirm transfer. Order id: {order_id}. Seller id: {order.seller_id}"
+                    "ConfirmTransferInteractor: "
+                    f"Buyer not found. Order id: {order_id}. Seller id: {order.seller_id}"
                 )
                 raise errors.NotFoundError("Buyer not found")
 
@@ -361,6 +397,11 @@ class ConfirmTransferInteractor(Interactor[int, OrderDM]):
             order.image_url,
             text.get_confirm_transfer_text(order.type.name, order.number),
             [order.buyer_id],
+        )
+
+        logger.info(
+            "ConfirmTransferInteractor: "
+            f"Seller @{self._user.username} #{self._user.id} confirmed the transfer order id: {order_id}"
         )
         return order
 
@@ -412,5 +453,8 @@ class AcceptTransferInteractor(Interactor[int, OrderDM]):
             [order.buyer_id, order.seller_id]  # type: ignore
         )
 
-        logger.info(f"Order id: {order_id} successfully completed")
+        logger.info(
+            "AcceptTransferInteractor: "
+            f"Order id: {order_id} successfully completed"
+        )
         return order

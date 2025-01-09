@@ -25,7 +25,7 @@ class MarketGateway(OrderSaver):
             .where(
                 filters.from_price <= Order.price, filters.to_price >= Order.price,
                 Order.rarity.in_(filters.rarities), Order.type.in_(filters.types),
-                Order.status == filters.status
+                Order.status == filters.status, Order.seller_id != filters.user_id,
             )
             .limit(filters.limit)
             .offset(filters.offset)

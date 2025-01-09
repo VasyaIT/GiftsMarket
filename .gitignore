@@ -1,4 +1,6 @@
 # Byte-compiled / optimized / DLL files
+deposit_script.sh
+*.log*
 __pycache__/
 *.py[cod]
 *$py.class
