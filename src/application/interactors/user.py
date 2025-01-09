@@ -1,3 +1,6 @@
+import logging
+from logging.handlers import RotatingFileHandler
+
 from aiogram.utils.payload import decode_payload, encode_payload
 
 from src.application.common.const import GiftRarity, OrderStatus
@@ -14,6 +17,19 @@ from src.domain.entities.bot import BotInfoDM
 from src.domain.entities.market import GetUserGiftsDM, UpdateOrderDM, UserGiftsDM
 from src.domain.entities.user import CreateUserDM, UserDM
 from src.entrypoint.config import Config
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+handler = RotatingFileHandler(
+    filename="src/logs/user.log",
+    maxBytes=1 * 1024 * 1024 * 1024,
+    backupCount=5,
+    encoding="utf-8",
+)
+logger.addHandler(handler)
+formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
 
 
 class LoginInteractor(Interactor[LoginDTO, str]):
@@ -139,6 +155,11 @@ class UpdateUserGiftInteractor:
             await self._db_session.rollback()
             raise NotFoundError("Gift not found")
         await self._db_session.commit()
+
+        logger.info(
+            "UpdateUserGiftInteractor: "
+            f"@{self._user.username} #{self._user.id} updated a gift with id: {id}"
+        )
         return OrderDTO(**updated_order.model_dump())
 
 
@@ -156,3 +177,8 @@ class DeleteUserGiftInteractor(Interactor[int, None]):
             await self._db_session.rollback()
             raise NotFoundError("Gift not found")
         await self._db_session.commit()
+
+        logger.info(
+            "DeleteUserGiftInteractor: "
+            f"@{self._user.username} #{self._user.id} deleted a gift with id: {gift_id}"
+        )
