@@ -147,7 +147,12 @@ class GetOrderInteractor(Interactor[int, ReadOrderDM]):
         gift = await self._market_gateway.get_by_id_and_user(
             order_id=gift_id,
             user_id=self._user.id,
-            statuses=[OrderStatus.BUY, OrderStatus.GIFT_TRANSFERRED, OrderStatus.GIFT_RECEIVED],
+            statuses=[
+                OrderStatus.BUY,
+                OrderStatus.SELLER_ACCEPT,
+                OrderStatus.GIFT_TRANSFERRED,
+                OrderStatus.GIFT_RECEIVED
+            ],
         )
         if not gift:
             raise errors.NotFoundError("Gift not found")
