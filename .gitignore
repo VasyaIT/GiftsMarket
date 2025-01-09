@@ -1,7 +1,7 @@
 deposit_script.sh
 db_dump_script.sh
-*.log*
 db_dump.json
+*.log*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
