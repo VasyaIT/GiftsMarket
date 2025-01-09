@@ -10,6 +10,7 @@ class AppConfig(BaseModel):
     TOKEN_ALGORITHM: str = Field(default="HS256")
     TOKEN_LIFETIME: int = Field(default=86400)
     VIP_USERS_ID: str
+    DB_DUMP_FILE_PATH: str
 
     @property
     def cors_allowed_origins(self) -> list[str]:

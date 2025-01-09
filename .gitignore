@@ -1,6 +1,9 @@
-# Byte-compiled / optimized / DLL files
 deposit_script.sh
+db_dump_script.sh
 *.log*
+db_dump.json
+
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
