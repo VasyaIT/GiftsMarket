@@ -49,7 +49,7 @@ async def ban_handler(message: Message, config: Config) -> Message | None:
 
 
 @router.message(F.text.startswith("/unban"))
-async def ban_handler(message: Message, config: Config) -> Message | None:
+async def unban_handler(message: Message, config: Config) -> Message | None:
     if message.from_user.id not in config.bot.moderators_chat_id:
         return
     try:

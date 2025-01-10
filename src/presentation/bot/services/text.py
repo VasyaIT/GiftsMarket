@@ -1,3 +1,6 @@
+from src.application.common.const import SECONDS_TO_SEND_GIFT
+
+
 def get_buy_gift_text(type_name: str, gift_number: int) -> str:
     return (
         f"💰 Your gift was bought - <b>{type_name} #{gift_number}</b>\n\n"
@@ -82,7 +85,7 @@ def get_admin_text(count_users: int, count_gifts: int) -> str:
 def get_seller_canceled_admin_text(username: str | None, user_id: int) -> str:
     username_text = "" if not username else f"@{username} "
     return (
-        f"❗ {username_text}#<code>{user_id}</code> не отправил подарок в течение 20 минут."
+        f"❗ {username_text}#<code>{user_id}</code> не отправил подарок в течение {SECONDS_TO_SEND_GIFT} минут. "
         "Сделка отменена!"
         "\n\n⚠️ Если этот пользователь часто игнорирует сделку, "
         "вы можете заблокировать его отправив <code>/ban [user id]</code>"

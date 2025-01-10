@@ -4,7 +4,14 @@ from logging.handlers import RotatingFileHandler
 
 from aiogram import Bot
 
-from src.application.common.const import GiftRarity, GiftType, OrderStatus, OrderType, PriceList
+from src.application.common.const import (
+    SECONDS_TO_SEND_GIFT,
+    GiftRarity,
+    GiftType,
+    OrderStatus,
+    OrderType,
+    PriceList
+)
 from src.application.common.utils import calculate_gift_rarity, send_message, send_photo
 from src.application.dto.market import CreateOrderDTO
 from src.application.interactors import errors
@@ -339,9 +346,11 @@ class SellerCancelInteractor(Interactor[int, OrderDM]):
 
         if (
             order.created_order_date
-            and datetime.now() - timedelta(minutes=20) < order.created_order_date
+            and datetime.now() - timedelta(minutes=SECONDS_TO_SEND_GIFT) < order.created_order_date
         ):
             if order.buyer_id == self._user.id:
+                raise errors.NotAccessError("Forbidden")
+            elif order.seller_id == self._user.id and order.status is OrderStatus.SELLER_ACCEPT:
                 raise errors.NotAccessError("Forbidden")
         else:
             await send_message(
