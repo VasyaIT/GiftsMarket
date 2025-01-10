@@ -114,7 +114,7 @@ async def accept_order_by_seller(
 @market_router.post("/order/seller-cancel")
 @inject
 async def cancel_order_by_seller(
-    dto: OrderIdDTO, interactor: FromDishka[market.CancelOrderInteractor]
+    dto: OrderIdDTO, interactor: FromDishka[market.SellerCancelInteractor]
 ) -> ResponseDTO:
     """Seller cancel order when the buyer makes a gift purchase"""
 
