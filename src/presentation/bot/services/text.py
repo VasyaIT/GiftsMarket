@@ -77,3 +77,13 @@ def get_admin_text(count_users: int, count_gifts: int) -> str:
     return (
         f"<b>Количество пользователей</b>: {count_users}\n<b>Количество подарков</b>: {count_gifts}"
     )
+
+
+def get_seller_canceled_admin_text(username: str | None, user_id: int) -> str:
+    username_text = "" if not username else f"@{username} "
+    return (
+        f"❗ {username_text}#<code>{user_id}</code> не отправил подарок в течение 20 минут."
+        "Сделка отменена!"
+        "\n\n⚠️ Если этот пользователь часто игнорирует сделку, "
+        "вы можете заблокировать его отправив <code>/ban [user id]</code>"
+    )

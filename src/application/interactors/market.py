@@ -322,12 +322,14 @@ class SellerCancelInteractor(Interactor[int, OrderDM]):
         user_gateway: UserSaver,
         user: UserDM,
         bot: Bot,
+        config: Config,
     ) -> None:
         self._db_session = db_session
         self._market_gateway = market_gateway
         self._user_gateway = user_gateway
         self._user = user
         self._bot = bot
+        self._config = config
 
     async def __call__(self, order_id: int) -> OrderDM:
         order = await self._market_gateway.get_cancel_order(order_id, self._user.id)
@@ -336,8 +338,7 @@ class SellerCancelInteractor(Interactor[int, OrderDM]):
             raise errors.NotFoundError("Order not found")
 
         if (
-            order.buyer_id == self._user.id
-            and order.created_order_date
+            order.created_order_date
             and datetime.now() - timedelta(minutes=20) < order.created_order_date
         ):
             raise errors.NotAccessError("Forbidden")
@@ -359,6 +360,11 @@ class SellerCancelInteractor(Interactor[int, OrderDM]):
                 order.image_url,
                 text.get_seller_cancel_text(order.type.name, order.number),
                 [order.buyer_id]  # type: ignore
+            )
+            await send_message(
+                self._bot,
+                text.get_seller_canceled_admin_text(self._user.username, self._user.id),
+                [self._config.bot.DEPOSIT_CHAT_ID],
             )
             logger.info(
                 "SellerCancelInteractor: "

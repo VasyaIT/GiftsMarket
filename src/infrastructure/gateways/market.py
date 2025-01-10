@@ -120,7 +120,10 @@ class MarketGateway(OrderSaver):
                     Order.id == order_id,
                     or_(
                         and_(Order.status == OrderStatus.BUY, Order.seller_id == user_id),
-                        and_(Order.status == OrderStatus.SELLER_ACCEPT, Order.buyer_id == user_id),
+                        and_(
+                            Order.status == OrderStatus.SELLER_ACCEPT,
+                            or_(Order.buyer_id == user_id, Order.seller_id == user_id)
+                        ),
                     )
                 )
             )
