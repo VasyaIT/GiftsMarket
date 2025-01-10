@@ -120,7 +120,7 @@ async def cancel_order_by_seller(
 
     try:
         await interactor(dto.id)
-    except NotFoundError as e:
+    except (NotFoundError, NotAccessError) as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
     return ResponseDTO(success=True)
 
