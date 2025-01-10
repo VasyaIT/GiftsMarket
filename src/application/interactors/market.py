@@ -12,7 +12,7 @@ from src.application.common.const import (
     OrderType,
     PriceList
 )
-from src.application.common.utils import calculate_gift_rarity, send_message, send_photo
+from src.application.common.utils import calculate_gift_rarity, send_message
 from src.application.dto.market import CreateOrderDTO
 from src.application.interactors import errors
 from src.application.interfaces.database import DBSession
@@ -209,9 +209,8 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
 
         await self._db_session.commit()
 
-        await send_photo(
+        await send_message(
             self._bot,
-            order.image_url,
             text.get_buy_gift_text(order.type.name, order.number),
             [order.seller_id]
         )
@@ -259,9 +258,8 @@ class CancelOrderInteractor(Interactor[int, OrderDM]):
 
         await self._db_session.commit()
 
-        await send_photo(
+        await send_message(
             self._bot,
-            order.image_url,
             text.get_cancel_gift_text(order.type.name, order.number),
             [order.seller_id],
         )
@@ -307,10 +305,9 @@ class SellerAcceptInteractor(Interactor[int, OrderDM]):
 
         await self._db_session.commit()
 
-        await send_photo(
+        await send_message(
             self._bot,
             order.image_url,
-            text.get_seller_accept_text(order.type.name, order.number),
             [order.buyer_id]
         )
 
@@ -371,10 +368,9 @@ class SellerCancelInteractor(Interactor[int, OrderDM]):
         await self._db_session.commit()
 
         if order.seller_id == self._user.id:
-            await send_photo(
+            await send_message(
                 self._bot,
                 order.image_url,
-                text.get_seller_cancel_text(order.type.name, order.number),
                 [order.buyer_id]  # type: ignore
             )
             logger.info(
@@ -414,10 +410,9 @@ class ConfirmTransferInteractor(Interactor[int, OrderDM]):
 
         await self._db_session.commit()
 
-        await send_photo(
+        await send_message(
             self._bot,
             order.image_url,
-            text.get_confirm_transfer_text(order.type.name, order.number),
             [order.buyer_id],
         )
 
@@ -468,10 +463,9 @@ class AcceptTransferInteractor(Interactor[int, OrderDM]):
             await self._user_gateway.update_referrer_balance(referrer.id, referrer_reward)
         await self._db_session.commit()
 
-        await send_photo(
+        await send_message(
             self._bot,
             order.image_url,
-            text.get_accept_transfer_text(order.type.name, order.number),
             [order.buyer_id, order.seller_id]  # type: ignore
         )
 
