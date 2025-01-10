@@ -27,7 +27,7 @@ class GiftRarity(StrEnum):
 
 
 class PriceList:
-    UP_FOR_SALE = 0.5
+    UP_FOR_SALE = 0.1
     VIP_ORDER = 3
     PIN_VIP_ORDERS = 5
     PIN_COMMON_ORDERS = 3
