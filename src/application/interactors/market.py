@@ -341,7 +341,14 @@ class SellerCancelInteractor(Interactor[int, OrderDM]):
             order.created_order_date
             and datetime.now() - timedelta(minutes=20) < order.created_order_date
         ):
-            raise errors.NotAccessError("Forbidden")
+            if order.buyer_id == self._user.id:
+                raise errors.NotAccessError("Forbidden")
+        else:
+            await send_message(
+                self._bot,
+                text.get_seller_canceled_admin_text(self._user.username, self._user.id),
+                [self._config.bot.DEPOSIT_CHAT_ID],
+            )
 
         await self._user_gateway.update_balance(
             UpdateUserBalanceDM(
@@ -360,11 +367,6 @@ class SellerCancelInteractor(Interactor[int, OrderDM]):
                 order.image_url,
                 text.get_seller_cancel_text(order.type.name, order.number),
                 [order.buyer_id]  # type: ignore
-            )
-            await send_message(
-                self._bot,
-                text.get_seller_canceled_admin_text(self._user.username, self._user.id),
-                [self._config.bot.DEPOSIT_CHAT_ID],
             )
             logger.info(
                 "SellerCancelInteractor: "
