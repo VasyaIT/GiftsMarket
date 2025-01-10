@@ -307,7 +307,7 @@ class SellerAcceptInteractor(Interactor[int, OrderDM]):
 
         await send_message(
             self._bot,
-            order.image_url,
+            text.get_seller_accept_text(order.type.name, order.number),
             [order.buyer_id]
         )
 
@@ -370,7 +370,7 @@ class SellerCancelInteractor(Interactor[int, OrderDM]):
         if order.seller_id == self._user.id:
             await send_message(
                 self._bot,
-                order.image_url,
+                text.get_seller_cancel_text(order.type.name, order.number),
                 [order.buyer_id]  # type: ignore
             )
             logger.info(
@@ -412,7 +412,7 @@ class ConfirmTransferInteractor(Interactor[int, OrderDM]):
 
         await send_message(
             self._bot,
-            order.image_url,
+            text.get_confirm_transfer_text(order.type.name, order.number),
             [order.buyer_id],
         )
 
@@ -465,7 +465,7 @@ class AcceptTransferInteractor(Interactor[int, OrderDM]):
 
         await send_message(
             self._bot,
-            order.image_url,
+            text.get_accept_transfer_text(order.type.name, order.number),
             [order.buyer_id, order.seller_id]  # type: ignore
         )
 

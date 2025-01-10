@@ -10,5 +10,5 @@ class WithdrawRequestSaver(Protocol):
         ...
 
     @abstractmethod
-    async def set_completed(self, request_id: int) -> None:
+    async def set_completed(self, request_id: int) -> WithdrawRequestDM | None:
         ...

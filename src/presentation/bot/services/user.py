@@ -19,8 +19,7 @@ async def get_count_gifts(postgres_config: PostgresConfig) -> int:
 async def ban_user(postgres_config: PostgresConfig, user_id: int) -> bool:
     session_maker = new_session_maker(postgres_config)
     async with session_maker() as session:
-        user = await UserGateway(session).update_user(dict(is_banned=True), id=user_id)
-        if user:
+        if await UserGateway(session).update_user(dict(is_banned=True), id=user_id):
             await session.commit()
             return True
     return False
@@ -29,8 +28,7 @@ async def ban_user(postgres_config: PostgresConfig, user_id: int) -> bool:
 async def unban_user(postgres_config: PostgresConfig, user_id: int) -> bool:
     session_maker = new_session_maker(postgres_config)
     async with session_maker() as session:
-        user = await UserGateway(session).update_user(dict(is_banned=False), id=user_id)
-        if user:
+        if await UserGateway(session).update_user(dict(is_banned=False), id=user_id):
             await session.commit()
             return True
     return False

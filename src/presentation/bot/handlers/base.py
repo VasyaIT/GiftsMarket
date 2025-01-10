@@ -1,6 +1,6 @@
-from aiogram import F, Router
+from aiogram import Bot, F, Router
 from aiogram.filters import Command, CommandStart
-from aiogram.methods import AnswerCallbackQuery
+from aiogram.methods import AnswerCallbackQuery, SendMessage
 from aiogram.types import CallbackQuery, Message
 
 from src.entrypoint.config import Config
@@ -64,10 +64,21 @@ async def unban_handler(message: Message, config: Config) -> Message | None:
 
 
 @router.callback_query(F.data.startswith("withdraw_completed:"))
-async def withdraw_success_callback(call: CallbackQuery, config: Config) -> AnswerCallbackQuery | None:
+async def withdraw_success_callback(
+    call: CallbackQuery, config: Config, bot: Bot,
+) -> AnswerCallbackQuery | SendMessage | None:
     if call.from_user.id not in config.bot.moderators_chat_id:
         return call.answer("У тебя нет прав", show_alert=True)
 
     request_id = call.data.replace("withdraw_completed:", "")
-    await complete_withdraw_request(int(request_id), config.postgres)
+    withdraw_request = await complete_withdraw_request(int(request_id), config.postgres)
+    if not withdraw_request:
+        return call.message.answer(
+            "❌ <b>Ошибка при выводе</b>\n\n"
+            f"Заявки на вывод #{request_id} не существует"
+        )
     await call.message.edit_text(f"{call.message.text}\n\n✅ Вывод исполнен", reply_markup=None)
+    await bot.send_message(
+        withdraw_request.user_id,
+        f"✅ Your withdrawal of {withdraw_request.amount} TON has been successfully completed"
+    )

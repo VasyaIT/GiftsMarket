@@ -15,6 +15,14 @@ class WalletGateway(WithdrawRequestSaver):
         result = await self._session.execute(stmt)
         return WithdrawRequestDM(**result.scalar_one().__dict__)
 
-    async def set_completed(self, request_id: int) -> None:
-        stmt = update(WithdrawRequest).filter_by(id=request_id).values(is_completed=True)
-        await self._session.execute(stmt)
+    async def set_completed(self, request_id: int) -> WithdrawRequestDM | None:
+        stmt = (
+            update(WithdrawRequest)
+            .filter_by(id=request_id)
+            .values(is_completed=True)
+            .returning(WithdrawRequest)
+        )
+        result = await self._session.execute(stmt)
+        withdraw_request = result.scalar_one_or_none()
+        if withdraw_request:
+            return WithdrawRequestDM(**withdraw_request.__dict__)
