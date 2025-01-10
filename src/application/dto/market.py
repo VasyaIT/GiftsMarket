@@ -9,7 +9,7 @@ class OrderIdDTO(BaseDTO):
 
 
 class CreateOrderDTO(BaseDTO):
-    number: int
+    number: int = Field(ge=1)
     image_url: str = Field(examples=["https://example.com"])
     type: GiftType
     price: float = Field(gt=0)

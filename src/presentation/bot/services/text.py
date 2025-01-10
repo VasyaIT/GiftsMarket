@@ -71,3 +71,9 @@ def get_canceled_text_to_owner(username: str | None, user_id: int) -> str:
         f"❗ Пользователь {username_text}#<code>{user_id}</code> отменил покупку подарка!\n\n"
         "⚠️ Если он создаст заявку на вывод в ближайшее время, убедитесь, что продавец не передал ему подарок"
     )
+
+
+def get_admin_text(count_users: int, count_gifts: int) -> str:
+    return (
+        f"<b>Количество пользователей</b>: {count_users}\n<b>Количество подарков</b>: {count_gifts}"
+    )

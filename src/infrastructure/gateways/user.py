@@ -84,3 +84,8 @@ class UserGateway(UserReader, UserSaver):
         stmt = select(func.count()).select_from(UserReferral).filter_by(referrer_id=user_id)
         result = await self._session.execute(stmt)
         return result.scalar_one()
+
+    async def get_count_users(self) -> int:
+        stmt = select(func.count()).select_from(User)
+        result = await self._session.execute(stmt)
+        return result.scalar_one()

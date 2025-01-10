@@ -1,5 +1,6 @@
 from src.entrypoint.config import PostgresConfig
 from src.infrastructure.database.session import new_session_maker
+from src.infrastructure.gateways.user import UserGateway
 from src.infrastructure.gateways.wallet import WalletGateway
 
 

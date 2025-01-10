@@ -106,7 +106,7 @@ class GetGiftInteractor(Interactor[int, ReadOrderDM]):
         self._market_gateway = market_gateway
 
     async def __call__(self, gift_id: int) -> ReadOrderDM:
-        gift = await self._market_gateway.get_by_id(id=gift_id, status=OrderStatus.ON_MARKET)
+        gift = await self._market_gateway.get_one(id=gift_id, status=OrderStatus.ON_MARKET)
         if not gift:
             raise errors.NotFoundError("Gift not found")
         return gift

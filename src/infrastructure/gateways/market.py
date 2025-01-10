@@ -1,4 +1,4 @@
-from sqlalchemy import and_, delete, insert, or_, select, update
+from sqlalchemy import and_, delete, func, insert, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.common.const import OrderStatus
@@ -76,7 +76,12 @@ class MarketGateway(OrderSaver):
         result = await self._session.execute(stmt)
         return [UserGiftsDM(**order.__dict__) for order in result.scalars().all()]
 
-    async def get_by_id(self, **filters) -> ReadOrderDM | None:
+    async def get_count_gifts(self) -> int:
+        stmt = select(func.count()).select_from(Order)
+        result = await self._session.execute(stmt)
+        return result.scalar_one()
+
+    async def get_one(self, **filters) -> ReadOrderDM | None:
         stmt = select(Order).filter_by(**filters)
         result = await self._session.execute(stmt)
         order = result.scalar_one_or_none()

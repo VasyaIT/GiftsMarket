@@ -124,7 +124,7 @@ class GetUserGiftInteractor(Interactor[int, UserGiftsDM]):
         self._user = user
 
     async def __call__(self, gift_id: int) -> UserGiftsDM:
-        gift = await self._market_gateway.get_by_id(
+        gift = await self._market_gateway.get_one(
             id=gift_id, status=OrderStatus.ON_MARKET, seller_id=self._user.id
         )
         if not gift:

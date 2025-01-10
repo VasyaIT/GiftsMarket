@@ -27,7 +27,7 @@ class OrderReader(Protocol):
         ...
 
     @abstractmethod
-    async def get_by_id(self, **filters) -> ReadOrderDM | None:
+    async def get_one(self, **filters) -> ReadOrderDM | None:
         ...
 
     @abstractmethod
