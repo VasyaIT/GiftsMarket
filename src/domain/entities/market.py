@@ -38,6 +38,9 @@ class ReadOrderDM(CreateOrderDM):
     created_order_date: datetime | None
     completed_order_date: datetime | None
     created_at: datetime
+    model: float | None
+    pattern: float | None
+    background: float | None
     seller_name: str | None
     buyer_name: str | None
     id: int
@@ -48,9 +51,9 @@ class UserGiftsDM(BaseModel):
     image_url: str
     type: GiftType
     price: float
-    model: float
-    pattern: float
-    background: float
+    model: float | None
+    pattern: float | None
+    background: float | None
     rarity: GiftRarity
 
 
