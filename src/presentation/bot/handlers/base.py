@@ -112,4 +112,5 @@ async def accept_order_callback(
     await bot.send_message(
         order.seller_id,
         f"✅ Your gift <b>{order.type} - #{order.number}</b> has been successfully put up for sale"
+        "⚠️ Be sure to be online, your gift can be bought at any time!"
     )
