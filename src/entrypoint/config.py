@@ -51,6 +51,7 @@ class BotConfig(BaseModel):
     MODERATION_THREAD_ID: int
     OWNERS_CHAT_ID: str
     MODERATORS_CHAT_ID: str
+    NFT_HOLDERS_ID: str
 
     @property
     def owners_chat_id(self) -> list[int]:
@@ -59,6 +60,10 @@ class BotConfig(BaseModel):
     @property
     def moderators_chat_id(self) -> list[int]:
         return list(map(int, self.MODERATORS_CHAT_ID.split()))
+
+    @property
+    def nft_holders_id(self) -> list[int]:
+        return list(map(int, self.NFT_HOLDERS_ID.split()))
 
 
 class TonapiConfig(BaseModel):

@@ -75,12 +75,13 @@ class CreateOrderInteractor(Interactor[CreateOrderDTO, None]):
         new_order = await self._market_gateway.save(
             CreateOrderDM(**data.model_dump(), rarity=rarity, seller_id=self._user.id)
         )
-        updated_user = await self._user_gateway.update_balance(
-            UpdateUserBalanceDM(id=self._user.id, amount=-PriceList.UP_FOR_SALE)
-        )
-        if not updated_user or updated_user.balance < 0:
-            await self._db_session.rollback()
-            raise errors.NotEnoughBalanceError("User does not have enough balance")
+        if self._user.id not in self._config.bot.nft_holders_id:
+            updated_user = await self._user_gateway.update_balance(
+                UpdateUserBalanceDM(id=self._user.id, amount=-PriceList.UP_FOR_SALE)
+            )
+            if not updated_user or updated_user.balance < 0:
+                await self._db_session.rollback()
+                raise errors.NotEnoughBalanceError("User does not have enough balance")
         await self._db_session.commit()
 
         await send_message(
@@ -463,6 +464,8 @@ class AcceptTransferInteractor(Interactor[int, OrderDM]):
             raise errors.NotFoundError("Order not found")
 
         commission = order.price * PriceList.SELLER_FEE_PERCENT / 100
+        if order.seller_id in self._config.bot.nft_holders_id:
+            commission = 0
         await self._user_gateway.update_balance(
             UpdateUserBalanceDM(id=order.seller_id, amount=order.price - commission)
         )
