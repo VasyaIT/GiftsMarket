@@ -1,5 +1,5 @@
+from src.application.common.const import SECONDS_TO_SEND_GIFT
 from src.domain.entities.user import FullUserInfoDM
-bfrom src.application.common.const import SECONDS_TO_SEND_GIFT
 
 
 def get_buy_gift_text(type_name: str, gift_number: int) -> str:
