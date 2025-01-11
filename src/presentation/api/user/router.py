@@ -9,6 +9,7 @@ from src.application.dto.user import LoginDTO, TokenDTO, UserDTO
 from src.application.interactors import user
 from src.application.interactors.errors import InvalidImageUrlError, NotFoundError
 from src.domain.entities.market import UserGiftsDM
+from src.infrastructure.gateways.errors import InvalidOrderDataError
 
 
 user_router = APIRouter(prefix="/user", tags=["User"])
@@ -53,7 +54,7 @@ async def edit_gift(
 ) -> OrderDTO:
     try:
         return await interactor(id, dto)
-    except (NotFoundError, InvalidImageUrlError) as e:
+    except (NotFoundError, InvalidImageUrlError, InvalidOrderDataError) as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
 
 

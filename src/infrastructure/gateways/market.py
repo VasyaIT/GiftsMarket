@@ -1,4 +1,5 @@
 from sqlalchemy import and_, delete, func, insert, or_, select, update
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.common.const import OrderStatus
@@ -12,6 +13,7 @@ from src.domain.entities.market import (
     ReadOrderDM,
     UserGiftsDM
 )
+from src.infrastructure.gateways.errors import InvalidOrderDataError
 from src.infrastructure.models.order import Order
 
 
@@ -134,7 +136,10 @@ class MarketGateway(OrderSaver):
             return OrderDM(**order.__dict__)
 
     async def save(self, order_dm: CreateOrderDM) -> None:
-        stmt = insert(Order).values(order_dm.model_dump())
+        try:
+            stmt = insert(Order).values(order_dm.model_dump())
+        except DBAPIError:
+            raise InvalidOrderDataError("Order data is invalid")
         await self._session.execute(stmt)
 
     async def update_order(self, data: dict, **filters) -> OrderDM | None:

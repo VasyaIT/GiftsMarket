@@ -16,6 +16,7 @@ from src.application.interactors.errors import (
     NotUsernameError
 )
 from src.domain.entities.market import ReadOrderDM
+from src.infrastructure.gateways.errors import InvalidOrderDataError
 from src.presentation.api.market.params import GiftFilterParams, OrderFilterParams
 
 
@@ -55,7 +56,7 @@ async def get_user_orders(
 async def get_user_order(id: int, interactor: FromDishka[market.GetOrderInteractor]) -> ReadOrderDM:
     try:
         return await interactor(id)
-    except NotFoundError as e:
+    except (NotFoundError, InvalidOrderDataError) as e:
         raise HTTPException(status.HTTP_404_NOT_FOUND, str(e))
 
 
