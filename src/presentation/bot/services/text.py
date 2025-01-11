@@ -82,7 +82,7 @@ def get_new_gift_text(username: str | None, user_id: int, order: OrderDM) -> str
     username_text = "" if not username else f"@{username} "
     return (
         f"➕ Новая заявка на создание подарка от {username_text}#<code>{user_id}</code>\n\n"
-        f"ID: {order.id}\nПодарок: <b>{order.type} - #{order.number}</b>\n"
+        f"ID: {order.id}\nПодарок: <b>{order.type.name} - #{order.number}</b>\n"
         f"Цена: {order.price}\nРедкость: {order.rarity.name}"
     )
 
