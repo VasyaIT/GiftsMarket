@@ -3,6 +3,7 @@ from aiogram.filters import Command, CommandStart
 from aiogram.methods import AnswerCallbackQuery, SendMessage
 from aiogram.types import CallbackQuery, Message
 
+from src.application.common.const import PriceList
 from src.entrypoint.config import Config
 from src.presentation.bot.keyboards.base import open_app_kb
 from src.presentation.bot.services import market, text, user
@@ -121,6 +122,13 @@ async def reject_order_callback(
 ) -> AnswerCallbackQuery | SendMessage | None:
     if call.from_user.id not in config.bot.moderators_chat_id:
         return call.answer("У тебя нет прав", show_alert=True)
+
+    order_id = call.data.replace("reject_order:", "")
+    order = await market.get_one(int(order_id), config.postgres)
+    if not order:
+        return call.message.answer("❌ <b>Подарок уже удалён</b>")
+
+    await user.add_balance_user(config.postgres, order.seller_id, PriceList.UP_FOR_SALE)
     await call.message.edit_text(f"{call.message.text}\n\n❌ Подарок отклонён", reply_markup=None)
 
 
