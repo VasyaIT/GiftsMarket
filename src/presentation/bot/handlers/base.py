@@ -124,7 +124,7 @@ async def reject_order_callback(
         return call.answer("У тебя нет прав", show_alert=True)
 
     order_id = call.data.replace("reject_order:", "")
-    order = await market.get_one(int(order_id), config.postgres)
+    order = await market.delete_order(int(order_id), config.postgres)
     if not order:
         return call.message.answer("❌ <b>Подарок уже удалён</b>")
 

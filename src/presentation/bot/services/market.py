@@ -1,13 +1,13 @@
-from src.domain.entities.market import OrderDM, ReadOrderDM
+from src.domain.entities.market import OrderDM
 from src.entrypoint.config import PostgresConfig
 from src.infrastructure.database.session import new_session_maker
 from src.infrastructure.gateways.market import MarketGateway
 
 
-async def get_one(order_id: int, postgres_config: PostgresConfig) -> ReadOrderDM | None:
+async def delete_order(order_id: int, postgres_config: PostgresConfig) -> OrderDM | None:
     session_maker = new_session_maker(postgres_config)
     async with session_maker() as session:
-        if order := await MarketGateway(session).get_one(id=order_id):
+        if order := await MarketGateway(session).delete_order(id=order_id):
             return order
 
 
