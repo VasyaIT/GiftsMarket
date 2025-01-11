@@ -5,18 +5,23 @@ from pydantic import BaseModel
 from src.application.common.const import GiftRarity, GiftType, OrderStatus
 
 
-class UpdateOrderDM(BaseModel):
-    number: int
-    image_url: str
-    type: GiftType
-    price: float
+class CharacteristicsOrderDM(BaseModel):
     model: float
     pattern: float
     background: float
     rarity: GiftRarity
+    is_active: bool
 
 
-class CreateOrderDM(UpdateOrderDM):
+class UpdateOrderDM(BaseModel):
+    price: float
+
+
+class CreateOrderDM(BaseModel):
+    number: int
+    image_url: str
+    type: GiftType
+    price: float
     seller_id: int
 
 

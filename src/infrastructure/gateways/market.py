@@ -27,8 +27,7 @@ class MarketGateway(OrderSaver):
             .where(
                 filters.from_price <= Order.price, filters.to_price >= Order.price,
                 Order.rarity.in_(filters.rarities), Order.type.in_(filters.types),
-                Order.status == filters.status, Order.seller_id != filters.user_id,
-                Order.is_active == True,
+                Order.status == filters.status, Order.is_active == True,
             )
             .limit(filters.limit)
             .offset(filters.offset)
@@ -84,6 +83,11 @@ class MarketGateway(OrderSaver):
         )
         result = await self._session.execute(stmt)
         return [UserGiftsDM(**order.__dict__) for order in result.scalars().all()]
+
+    async def get_all(self, **filters) -> list[OrderDM]:
+        stmt = select(Order).filter_by(**filters)
+        result = await self._session.execute(stmt)
+        return [OrderDM(**order.__dict__) for order in result.scalars().all()]
 
     async def get_user_orders(self, user_id: int) -> list[OrderDM]:
         stmt = (

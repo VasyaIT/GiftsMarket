@@ -4,6 +4,12 @@ from src.infrastructure.database.session import new_session_maker
 from src.infrastructure.gateways.market import MarketGateway
 
 
+async def get_all_inactive(user_id: int, postgres_config: PostgresConfig) -> list[OrderDM]:
+    session_maker = new_session_maker(postgres_config)
+    async with session_maker() as session:
+        return await MarketGateway(session).get_all(seller_id=user_id, is_active=False)
+
+
 async def delete_order(order_id: int, postgres_config: PostgresConfig) -> OrderDM | None:
     session_maker = new_session_maker(postgres_config)
     async with session_maker() as session:
@@ -11,10 +17,10 @@ async def delete_order(order_id: int, postgres_config: PostgresConfig) -> OrderD
             return order
 
 
-async def activate_order(order_id: int, postgres_config: PostgresConfig) -> OrderDM | None:
+async def update_order(data: dict, order_id: int, postgres_config: PostgresConfig) -> OrderDM | None:
     session_maker = new_session_maker(postgres_config)
     async with session_maker() as session:
-        if order := await MarketGateway(session).update_order(dict(is_active=True), id=order_id):
+        if order := await MarketGateway(session).update_order(data, id=order_id):
             await session.commit()
             return order
 

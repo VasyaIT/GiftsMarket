@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException
 from starlette import status
 
 from src.application.dto.common import ResponseDTO
-from src.application.dto.market import CreateOrderDTO, OrderDTO
+from src.application.dto.market import CreateOrderDTO, OrderDTO, UpdateOrderDTO
 from src.application.dto.user import LoginDTO, TokenDTO, UserDTO
 from src.application.interactors import user
 from src.application.interactors.errors import InvalidImageUrlError, NotFoundError
@@ -50,7 +50,7 @@ async def get_user_gift(id: int, interactor: FromDishka[user.GetUserGiftInteract
 @user_router.post("/gifts/{id}")
 @inject
 async def edit_gift(
-    id: int, dto: CreateOrderDTO, interactor: FromDishka[user.UpdateUserGiftInteractor]
+    id: int, dto: UpdateOrderDTO, interactor: FromDishka[user.UpdateUserGiftInteractor]
 ) -> OrderDTO:
     try:
         return await interactor(id, dto)

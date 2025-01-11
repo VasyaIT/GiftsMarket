@@ -78,13 +78,13 @@ def get_canceled_text_to_owner(username: str | None, user_id: int) -> str:
     )
 
 
-def get_new_gift_text(username: str | None, user_id: int, order: OrderDM) -> str:
-    username_text = "" if not username else f"@{username} "
-    return (
-        f"➕ Новая заявка на создание подарка от {username_text}#<code>{user_id}</code>\n\n"
-        f"ID: {order.id}\nПодарок: <b>{order.type.name} - #{order.number}</b>\n"
-        f"Цена: {order.price}\bМодель: {order.model}%\nФон: {order.background}%\nУзор: {order.pattern}%"
-    )
+# def get_new_gift_text(username: str | None, user_id: int, order: OrderDM) -> str:
+#     username_text = "" if not username else f"@{username} "
+#     return (
+#         f"➕ Новая заявка на создание подарка от {username_text}#<code>{user_id}</code>\n\n"
+#         f"ID: {order.id}\nПодарок: <b>{order.type.name} - #{order.number}</b>\n"
+#         f"Цена: {order.price} TON\nМодель: {order.model}%\nФон: {order.background}%\nУзор: {order.pattern}%"
+#     )
 
 
 def get_admin_text(count_users: int, count_gifts: int, count_completed_gifts: int) -> str:
@@ -94,10 +94,9 @@ def get_admin_text(count_users: int, count_gifts: int, count_completed_gifts: in
     )
 
 
-def get_seller_canceled_admin_text(username: str | None, user_id: int) -> str:
-    username_text = "" if not username else f"@{username} "
+def get_seller_canceled_admin_text(user_id: int) -> str:
     return (
-        f"❗ {username_text}#<code>{user_id}</code> не отправил подарок в течение {MINUTES_TO_SEND_GIFT} минут. "
+        f"❗ Пользователь #<code>{user_id}</code> не отправил подарок в течение {MINUTES_TO_SEND_GIFT} минут. "
         "Сделка отменена!"
         "\n\n⚠️ Если этот пользователь часто игнорирует сделку, "
         "вы можете заблокировать его отправив <code>/ban [user id]</code>"
@@ -120,7 +119,7 @@ def get_full_user_info_text(user_info_data: FullUserInfoDM) -> str:
             completed_date_text = f"\n<b>Дата завершения: </b>{order.completed_order_date}\n"
         orders_text += (
             f"\n<b>ID: </b>{order.id}\n<b>Подарок</b>:  <b>{order.type.name} #{order.number}</b>"
-            f"\n<b>Цена: </b>{order.price}\n<b>Дата создания: </b>{order.created_order_date}"
+            f"\n<b>Цена: </b>{order.price} TON\n<b>Дата создания: </b>{order.created_order_date}"
             f"<b>Статус: </b>{order.status.name}\n<b>Пользователь: </b>{user_text}{completed_date_text}"
         )
     if not user_info_data.orders:

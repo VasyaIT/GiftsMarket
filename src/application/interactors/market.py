@@ -12,7 +12,7 @@ from src.application.common.const import (
     OrderType,
     PriceList
 )
-from src.application.common.utils import calculate_gift_rarity, send_message
+from src.application.common.utils import send_message
 from src.application.dto.market import CreateOrderDTO
 from src.application.interactors import errors
 from src.application.interfaces.database import DBSession
@@ -69,11 +69,8 @@ class CreateOrderInteractor(Interactor[CreateOrderDTO, None]):
         if not self._user.username:
             raise errors.NotUsernameError("User does not have a username to create an order")
 
-        sum_characteristics_percent = sum((data.background, data.model, data.pattern))
-        rarity = calculate_gift_rarity(sum_characteristics_percent)
-
         new_order = await self._market_gateway.save(
-            CreateOrderDM(**data.model_dump(), rarity=rarity, seller_id=self._user.id)
+            CreateOrderDM(**data.model_dump(), seller_id=self._user.id)
         )
         if self._user.id not in self._config.bot.nft_holders_id:
             updated_user = await self._user_gateway.update_balance(
@@ -83,14 +80,6 @@ class CreateOrderInteractor(Interactor[CreateOrderDTO, None]):
                 await self._db_session.rollback()
                 raise errors.NotEnoughBalanceError("User does not have enough balance")
         await self._db_session.commit()
-
-        await send_message(
-            self._bot,
-            text.get_new_gift_text(self._user.username, self._user.id, new_order),
-            [self._config.bot.DEPOSIT_CHAT_ID],
-            reply_markup=activate_order_kb(new_order.id),
-            message_thread_id=self._config.bot.MODERATION_THREAD_ID,
-        )
 
         logger.info(
             "CreateOrderInteractor: "
@@ -364,7 +353,7 @@ class SellerCancelInteractor(Interactor[int, OrderDM]):
         else:
             await send_message(
                 self._bot,
-                text.get_seller_canceled_admin_text(self._user.username, self._user.id),
+                text.get_seller_canceled_admin_text(order.seller_id),
                 [self._config.bot.DEPOSIT_CHAT_ID],
                 message_thread_id=self._config.bot.MODERATION_THREAD_ID,
             )

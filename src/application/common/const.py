@@ -64,3 +64,27 @@ class GiftType(Enum):
 GIFT_RARITY_PERCENT = {
     GiftRarity.COMMON: 2, GiftRarity.RARE: 1, GiftRarity.MYTHICAL: 0.6, GiftRarity.LEGEND: 0
 }
+
+GIFT_TYPE_MAP = {
+    "Santa Hat": GiftType.SANTA_HAT,
+    "Signet Ring": GiftType.SIGNET_RING,
+    "Precious Peach": GiftType.PRECIOUS_PEACH,
+    "Plush Pepe": GiftType.PLUSH_PEPE,
+    "Spiced Wine": GiftType.SPICED_WINE,
+    "Jelly Bunny": GiftType.JELLY_BUNNY,
+    "Durov's Cap": GiftType.DUROV_CAP,
+    "Perfume Bottle": GiftType.PERFUME_BOTTLE,
+    "Eternal Rose": GiftType.ETERNAL_ROSE,
+    "Berry Box": GiftType.BERRY_BOX,
+    "Vintage Cigar": GiftType.VINTAGE_CIGAR,
+    "Magic Potion": GiftType.MAGIC_POTION,
+    "Kissed Frog": GiftType.KISSED_FROG,
+    "Hex Pot": GiftType.HEX_POT,
+    "Evil Eye": GiftType.EVIL_EYE,
+    "Sharp Tongue": GiftType.SHARP_TONGUE,
+    "Trapped Heart": GiftType.TRAPPED_HEART,
+    "Skull Flower": GiftType.SKULL_FLOWER,
+    "Scared Cat": GiftType.SCARED_CAT,
+    "Spy Agaric": GiftType.SPY_AGARIC,
+    "Homemade Cake": GiftType.HOMEMADE_CAKE,
+}

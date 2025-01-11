@@ -102,7 +102,7 @@ async def accept_order_callback(
         return call.answer("У тебя нет прав", show_alert=True)
 
     order_id = call.data.replace("activate_order:", "")
-    order = await market.activate_order(int(order_id), config.postgres)
+    order = await market.update_order(dict(is_active=True), int(order_id), config.postgres)
     if not order:
         return call.message.answer(
             "❌ <b>Ошибка при выставлении подарка</b>\n\n"

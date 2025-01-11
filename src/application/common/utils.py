@@ -55,12 +55,12 @@ def get_bot(token: str) -> Bot:
     return Bot(token=token, default=DefaultBotProperties(parse_mode="html"))
 
 
-def calculate_gift_rarity(sum_characteristics_percent: float) -> GiftRarity:
+def calculate_gift_rarity(model_percent: float) -> GiftRarity:
     rarity = GiftRarity.LEGEND
-    if sum_characteristics_percent >= GIFT_RARITY_PERCENT[GiftRarity.COMMON]:
+    if model_percent >= GIFT_RARITY_PERCENT[GiftRarity.COMMON]:
         rarity = GiftRarity.COMMON
-    elif sum_characteristics_percent >= GIFT_RARITY_PERCENT[GiftRarity.RARE]:
+    elif model_percent >= GIFT_RARITY_PERCENT[GiftRarity.RARE]:
         rarity = GiftRarity.RARE
-    elif sum_characteristics_percent >= GIFT_RARITY_PERCENT[GiftRarity.MYTHICAL]:
+    elif model_percent >= GIFT_RARITY_PERCENT[GiftRarity.MYTHICAL]:
         rarity = GiftRarity.MYTHICAL
     return rarity

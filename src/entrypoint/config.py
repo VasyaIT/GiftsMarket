@@ -52,6 +52,8 @@ class BotConfig(BaseModel):
     OWNERS_CHAT_ID: str
     MODERATORS_CHAT_ID: str
     NFT_HOLDERS_ID: str
+    API_ID: int
+    API_HASH: str
 
     @property
     def owners_chat_id(self) -> list[int]:

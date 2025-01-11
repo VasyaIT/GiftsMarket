@@ -4,10 +4,10 @@ from logging.handlers import RotatingFileHandler
 from aiogram.utils.payload import decode_payload, encode_payload
 
 from src.application.common.const import OrderStatus, PriceList
-from src.application.common.utils import calculate_gift_rarity, generate_deposit_comment
-from src.application.dto.market import CreateOrderDTO, OrderDTO
+from src.application.common.utils import generate_deposit_comment
+from src.application.dto.market import OrderDTO, UpdateOrderDTO
 from src.application.dto.user import LoginDTO, UserDTO
-from src.application.interactors.errors import InvalidImageUrlError, NotFoundError
+from src.application.interactors.errors import NotFoundError
 from src.application.interfaces.auth import InitDataValidator, TokenEncoder
 from src.application.interfaces.database import DBSession
 from src.application.interfaces.interactor import Interactor
@@ -141,13 +141,8 @@ class UpdateUserGiftInteractor:
         self._db_session = db_session
         self._config = config
 
-    async def __call__(self, id: int, data: CreateOrderDTO) -> OrderDTO:
-        if not self._config.app.DEBUG and not data.image_url.startswith(self._config.bot.WEBAPP_URL):
-            raise InvalidImageUrlError("This image does not exist for a gift")
-        sum_characteristics_percent = sum((data.background, data.model, data.pattern))
-        rarity = calculate_gift_rarity(sum_characteristics_percent)
-
-        order = UpdateOrderDM(**data.model_dump(), rarity=rarity)
+    async def __call__(self, id: int, data: UpdateOrderDTO) -> OrderDTO:
+        order = UpdateOrderDM(**data.model_dump())
         updated_order = await self._market_gateway.update_order(
             order.model_dump(), id=id, status=OrderStatus.ON_MARKET, seller_id=self._user.id
         )

@@ -13,9 +13,10 @@ class CreateOrderDTO(BaseDTO):
     image_url: str = Field(examples=["https://example.com"])
     type: GiftType
     price: float = Field(gt=0)
-    model: float = Field(default=0, ge=0.01, le=5)
-    pattern: float = Field(default=0, ge=0.01, le=5)
-    background: float = Field(default=0, ge=0.01, le=5)
+
+
+class UpdateOrderDTO(BaseDTO):
+    price: float = Field(gt=0)
 
 
 class OrderDTO(CreateOrderDTO):
