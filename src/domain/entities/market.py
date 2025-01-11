@@ -54,7 +54,7 @@ class UserGiftsDM(BaseModel):
     model: float | None
     pattern: float | None
     background: float | None
-    rarity: GiftRarity
+    rarity: GiftRarity | None
 
 
 class GetUserGiftsDM(BaseModel):
