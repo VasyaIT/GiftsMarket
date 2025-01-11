@@ -6,7 +6,7 @@ class WalletAddressDTO(BaseModel):
 
 
 class WithdrawRequestDTO(BaseModel):
-    amount: float = Field(gt=0)
+    amount: float = Field(ge=1)
     wallet: str = Field(
         min_length=40, max_length=60, examples=["UQBB7mTV0zUR7OlzoJKLjbTk5c13rngbgpNln3zJVncbuMhb"]
     )
