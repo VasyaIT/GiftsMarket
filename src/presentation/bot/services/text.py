@@ -83,7 +83,7 @@ def get_new_gift_text(username: str | None, user_id: int, order: OrderDM) -> str
     return (
         f"➕ Новая заявка на создание подарка от {username_text}#<code>{user_id}</code>\n\n"
         f"ID: {order.id}\nПодарок: <b>{order.type.name} - #{order.number}</b>\n"
-        f"Цена: {order.price}\nРедкость: {order.rarity.name}"
+        f"Цена: {order.price}\bМодель: {order.model}%\nФон: {order.background}%\nУзор: {order.pattern}%"
     )
 
 

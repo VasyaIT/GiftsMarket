@@ -16,5 +16,8 @@ def withdraw_kb(request_id: int) -> InlineKeyboardMarkup:
 
 def activate_order_kb(order_id: int) -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardBuilder()
-    keyboard.row(InlineKeyboardButton(text="✅ Выставить", callback_data=f"activate_order:{order_id}"))
+    keyboard.row(
+        InlineKeyboardButton(text="✅ Выставить", callback_data=f"activate_order:{order_id}"),
+        InlineKeyboardButton(text="❌ Отклонить", callback_data=f"reject_order:{order_id}"),
+    )
     return keyboard.as_markup()

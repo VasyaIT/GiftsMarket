@@ -1,4 +1,4 @@
-from src.domain.entities.user import FullUserInfoDM
+from src.domain.entities.user import FullUserInfoDM, UpdateUserBalanceDM
 from src.entrypoint.config import PostgresConfig
 from src.infrastructure.database.session import new_session_maker
 from src.infrastructure.gateways.market import MarketGateway
@@ -31,6 +31,15 @@ async def unban_user(postgres_config: PostgresConfig, user_id: int) -> bool:
     session_maker = new_session_maker(postgres_config)
     async with session_maker() as session:
         if await UserGateway(session).update_user(dict(is_banned=False), id=user_id):
+            await session.commit()
+            return True
+    return False
+
+
+async def add_balance_user(postgres_config: PostgresConfig, user_id: int, amount: float) -> bool:
+    session_maker = new_session_maker(postgres_config)
+    async with session_maker() as session:
+        if await UserGateway(session).update_balance(UpdateUserBalanceDM(id=user_id, amount=amount)):
             await session.commit()
             return True
     return False

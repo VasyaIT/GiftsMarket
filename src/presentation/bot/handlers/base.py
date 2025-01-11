@@ -114,3 +114,29 @@ async def accept_order_callback(
         f"✅ Your gift <b>{order.type} - #{order.number}</b> has been successfully put up for sale"
         "⚠️ Be sure to be online, your gift can be bought at any time!"
     )
+
+
+@router.callback_query(F.data.startswith("reject_order:"))
+async def reject_order_callback(
+    call: CallbackQuery, config: Config
+) -> AnswerCallbackQuery | SendMessage | None:
+    if call.from_user.id not in config.bot.moderators_chat_id:
+        return call.answer("У тебя нет прав", show_alert=True)
+    await call.message.edit_text(f"{call.message.text}\n\n❌ Подарок отклонён", reply_markup=None)
+
+
+@router.message(F.text.startswith("/addbalance"))
+async def add_balance_handler(message: Message, config: Config) -> Message | None:
+    if message.from_user.id not in config.bot.moderators_chat_id:
+        return
+    try:
+        user_id, amount = message.text.split("/addbalance")[1].split()
+        user_id, amount = int(user_id), float(amount)
+    except ValueError:
+        return await message.answer(
+            f"❌ Неверный формат команды."
+            "\nОтправь команду в формате <code>/addbalance [user id] [amount]</code>"
+        )
+    if await user.add_balance_user(config.postgres, user_id, amount):
+        return await message.answer(f"✅ Баланс пользователю #{user_id} пополнен на {amount} TON")
+    await message.answer(f"❌ Пользователь с id {user_id} не найден")
