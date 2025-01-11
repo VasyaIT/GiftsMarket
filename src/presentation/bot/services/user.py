@@ -12,12 +12,6 @@ async def get_count_users(postgres_config: PostgresConfig) -> int:
         return await UserGateway(session).get_count_users()
 
 
-async def get_count_gifts(postgres_config: PostgresConfig) -> int:
-    session_maker = new_session_maker(postgres_config)
-    async with session_maker() as session:
-        return await MarketGateway(session).get_count_gifts()
-
-
 async def ban_user(postgres_config: PostgresConfig, user_id: int) -> bool:
     session_maker = new_session_maker(postgres_config)
     async with session_maker() as session:

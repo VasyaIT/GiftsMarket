@@ -87,9 +87,10 @@ def get_new_gift_text(username: str | None, user_id: int, order: OrderDM) -> str
     )
 
 
-def get_admin_text(count_users: int, count_gifts: int) -> str:
+def get_admin_text(count_users: int, count_gifts: int, count_completed_gifts: int) -> str:
     return (
         f"<b>Количество пользователей</b>: {count_users}\n<b>Количество подарков</b>: {count_gifts}"
+        f"\n<b>Количество завершённых сделок</b>: {count_completed_gifts}"
     )
 
 

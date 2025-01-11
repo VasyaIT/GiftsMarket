@@ -32,6 +32,7 @@ class MarketGateway(OrderSaver):
             )
             .limit(filters.limit)
             .offset(filters.offset)
+            .order_by(Order.created_at.desc())
         )
         result = await self._session.execute(stmt)
         order_rm = []
@@ -61,6 +62,7 @@ class MarketGateway(OrderSaver):
             .filter_by(**user_filters)
             .limit(filters.limit)
             .offset(filters.offset)
+            .order_by(Order.created_at.desc())
         )
         result = await self._session.execute(stmt)
         order_rm = []
@@ -75,7 +77,11 @@ class MarketGateway(OrderSaver):
         return order_rm
 
     async def get_user_gifts(self, data: GetUserGiftsDM) -> list[UserGiftsDM]:
-        stmt = select(Order).filter_by(seller_id=data.user_id, status=data.status)
+        stmt = (
+            select(Order)
+            .filter_by(seller_id=data.user_id, status=data.status)
+            .order_by(Order.created_at.desc())
+        )
         result = await self._session.execute(stmt)
         return [UserGiftsDM(**order.__dict__) for order in result.scalars().all()]
 
@@ -93,8 +99,9 @@ class MarketGateway(OrderSaver):
         result = await self._session.execute(stmt)
         return [OrderDM(**order.__dict__) for order in result.scalars().all()]
 
-    async def get_count_gifts(self) -> int:
-        stmt = select(func.count()).select_from(Order)
+    async def get_count_gifts(self, is_completed: bool = False) -> int:
+        filters = dict(status=OrderStatus.GIFT_RECEIVED) if is_completed else dict()
+        stmt = select(func.count()).select_from(Order).filter_by(**filters)
         result = await self._session.execute(stmt)
         return result.scalar_one()
 

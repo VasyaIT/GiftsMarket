@@ -5,8 +5,7 @@ from aiogram.types import CallbackQuery, Message
 
 from src.entrypoint.config import Config
 from src.presentation.bot.keyboards.base import open_app_kb
-from src.presentation.bot.services import text, user
-from src.presentation.bot.services.market import activate_order
+from src.presentation.bot.services import market, text, user
 from src.presentation.bot.services.wallet import complete_withdraw_request
 
 
@@ -23,9 +22,9 @@ async def admin_handler(message: Message, config: Config) -> None:
     if message.from_user.id not in config.bot.moderators_chat_id:
         return
     count_users = await user.get_count_users(config.postgres)
-    count_gifts = await user.get_count_gifts(config.postgres)
+    count_all_gifts, count_completed_gifts = await market.get_count_gifts(config.postgres)
 
-    await message.answer(text.get_admin_text(count_users, count_gifts))
+    await message.answer(text.get_admin_text(count_users, count_all_gifts, count_completed_gifts))
 
 
 @router.message(F.text.startswith("/user"))
@@ -102,7 +101,7 @@ async def accept_order_callback(
         return call.answer("У тебя нет прав", show_alert=True)
 
     order_id = call.data.replace("activate_order:", "")
-    order = await activate_order(int(order_id), config.postgres)
+    order = await market.activate_order(int(order_id), config.postgres)
     if not order:
         return call.message.answer(
             "❌ <b>Ошибка при выставлении подарка</b>\n\n"
