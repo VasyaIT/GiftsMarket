@@ -102,13 +102,13 @@ def get_full_user_info_text(user_info_data: FullUserInfoDM) -> str:
         first_name_text = ""
 
     orders_text = f"\n🛍️ <b>Последние ордера: </b>"
-    for order in user_info_data.orders[:7]:
+    for order in user_info_data.orders[:5]:
         user_text = "покупатель" if order.buyer_id == user_info_data.id else "продавец"
         completed_date_text = "\n"
         if order.completed_order_date:
             completed_date_text = f"\n<b>Дата завершения: </b>{order.completed_order_date}\n"
         orders_text += (
-            f"\n<b>ID: </b>{order.id}\n<b>Подарок</b>:  <b>{order.type} #{order.number}</b>"
+            f"\n<b>ID: </b>{order.id}\n<b>Подарок</b>:  <b>{order.type.name} #{order.number}</b>"
             f"\n<b>Цена: </b>{order.price}\n<b>Дата создания: </b>{order.created_order_date}"
             f"<b>Статус: </b>{order.status.name}\n<b>Пользователь: </b>{user_text}{completed_date_text}"
         )
@@ -117,7 +117,8 @@ def get_full_user_info_text(user_info_data: FullUserInfoDM) -> str:
 
     withdraws_text = f"\n👛 <b>Последние выводы:</b>"
     for withdraw in user_info_data.withdraw_requests[:5]:
-        withdraws_text += f"\n<code>{withdraw.wallet}</code> - {withdraw.amount} TON"
+        withdraws_text += f"\n<code>{withdraw.wallet}</code> - {withdraw.amount:.2f} TON"
+    withdraws_text += "\n"
     if not user_info_data.withdraw_requests:
         withdraws_text = ""
 
@@ -127,7 +128,7 @@ def get_full_user_info_text(user_info_data: FullUserInfoDM) -> str:
         f"{first_name_text}"
         f"💰 <b>Баланс: </b>{user_info_data.balance:.2f} TON\n"
         f"📅 <b>Дата регистрации: </b>{user_info_data.created_at.strftime("%d.%m.%y, %H:%M")}\n"
-        f"{orders_text.rstrip()}"
-        f"{withdraws_text}\n"
-        f"💸 <b>Общая выведенная сумма: </b>{user_info_data.total_withdrawn} TON"
+        f"{orders_text}"
+        f"{withdraws_text}"
+        f"\n💸 <b>Общая выведенная сумма: </b>{user_info_data.total_withdrawn} TON"
     )
