@@ -62,5 +62,5 @@ class GiftType(Enum):
 
 
 GIFT_RARITY_PERCENT = {
-    GiftRarity.COMMON: 2.5, GiftRarity.RARE: 1.7, GiftRarity.MYTHICAL: 0.7, GiftRarity.LEGEND: 0
+    GiftRarity.COMMON: 2, GiftRarity.RARE: 1, GiftRarity.MYTHICAL: 0.6, GiftRarity.LEGEND: 0
 }
