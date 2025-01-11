@@ -41,6 +41,7 @@ class ReadOrderDM(CreateOrderDM):
     model: float | None
     pattern: float | None
     background: float | None
+    rarity: GiftRarity | None
     seller_name: str | None
     buyer_name: str | None
     id: int
