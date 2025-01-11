@@ -78,6 +78,20 @@ class MarketGateway(OrderSaver):
         result = await self._session.execute(stmt)
         return [UserGiftsDM(**order.__dict__) for order in result.scalars().all()]
 
+    async def get_user_orders(self, user_id: int) -> list[OrderDM]:
+        stmt = (
+            select(Order).where(
+                and_(
+                    Order.status.in_(
+                        [OrderStatus.SELLER_ACCEPT, OrderStatus.GIFT_TRANSFERRED, OrderStatus.GIFT_RECEIVED]
+                    ),
+                    or_(Order.seller_id == user_id, Order.buyer_id == user_id)
+                )
+            )
+        )
+        result = await self._session.execute(stmt)
+        return [OrderDM(**order.__dict__) for order in result.scalars().all()]
+
     async def get_count_gifts(self) -> int:
         stmt = select(func.count()).select_from(Order)
         result = await self._session.execute(stmt)

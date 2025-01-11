@@ -21,6 +21,7 @@ class CreateOrderDM(UpdateOrderDM):
 
 
 class OrderDM(CreateOrderDM):
+    id: int
     buyer_id: int | None
     status: OrderStatus
     created_order_date: datetime | None

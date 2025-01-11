@@ -31,6 +31,6 @@ class HandleExceptionMiddleware(BaseHTTPMiddleware):
         try:
             return await call_next(request)
         except Exception:
-            message = f"{format_exc(chain=False)[1800:1800 + 4096]}"
+            message = f"{format_exc(chain=False)[2600:2600 + 4096]}"
             await send_message(self._bot, hpre(message), self._bot_config.owners_chat_id)
             raise

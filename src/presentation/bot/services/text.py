@@ -1,4 +1,5 @@
 from src.application.common.const import SECONDS_TO_SEND_GIFT
+from src.domain.entities.user import FullUserInfoDM
 
 
 def get_buy_gift_text(type_name: str, gift_number: int) -> str:
@@ -89,4 +90,44 @@ def get_seller_canceled_admin_text(username: str | None, user_id: int) -> str:
         "Сделка отменена!"
         "\n\n⚠️ Если этот пользователь часто игнорирует сделку, "
         "вы можете заблокировать его отправив <code>/ban [user id]</code>"
+    )
+
+
+def get_full_user_info_text(user_info_data: FullUserInfoDM) -> str:
+    username_text = f"👨‍🦱 <b>Username</b>: <b>@{user_info_data.username}</b>\n"
+    first_name_text = f"🗿 <b>Имя</b>: <b>@{user_info_data.first_name}</b>\n"
+    if not user_info_data.username:
+        username_text = ""
+    if not user_info_data.first_name:
+        first_name_text = ""
+
+    orders_text = f"\n<b>Последние ордера: </b>"
+    for order in user_info_data.orders[:7]:
+        user_text = "покупатель" if order.buyer_id == user_info_data.id else "продавец"
+        completed_date_text = "\n"
+        if order.completed_order_date:
+            completed_date_text = f"\n<b>Дата завершения: </b>{order.completed_order_date}\n"
+        orders_text += (
+            f"\n- ID: {order.id}\n<b>Подарок</b>:  <b>{order.type} #{order.number}</b>"
+            f"\n<b>Цена: </b>{order.price}\n<b>Дата создания: </b>{order.created_order_date}"
+            f"<b>Статус: </b>{order.status}\n<b>Пользователь: </b>{user_text}{completed_date_text}"
+        )
+    if not user_info_data.orders:
+        orders_text = ""
+
+    withdraws_text = f"\n<b>Последние выводы:</b>"
+    for withdraw in user_info_data.withdraw_requests[:5]:
+        withdraws_text += f"\n- <code>{withdraw.wallet}</code> - {withdraw.amount} TON"
+    if not user_info_data.withdraw_requests:
+        withdraws_text = "\n"
+
+    return (
+        f"🔒 ID: <code>{user_info_data.id}</code>\n"
+        f"{username_text}"
+        f"{first_name_text}"
+        f"💰 <b>Баланс: </b>{user_info_data.balance:.2f} TON\n"
+        f"📅 <b>Дата регистрации: </b>{user_info_data.created_at.strftime("%d.%m.%y, %H:%M")}\n"
+        f"{orders_text}"
+        f"{withdraws_text}"
+        f"\n💸 <b>Общая выведенная сумма: </b>{user_info_data.total_withdrawn} TON"
     )

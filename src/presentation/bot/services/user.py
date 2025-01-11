@@ -1,7 +1,9 @@
+from src.domain.entities.user import FullUserInfoDM
 from src.entrypoint.config import PostgresConfig
 from src.infrastructure.database.session import new_session_maker
 from src.infrastructure.gateways.market import MarketGateway
 from src.infrastructure.gateways.user import UserGateway
+from src.infrastructure.gateways.wallet import WalletGateway
 
 
 async def get_count_users(postgres_config: PostgresConfig) -> int:
@@ -32,3 +34,20 @@ async def unban_user(postgres_config: PostgresConfig, user_id: int) -> bool:
             await session.commit()
             return True
     return False
+
+
+async def get_full_user_info(postgres_config: PostgresConfig, user_id: int) -> FullUserInfoDM | None:
+    session_maker = new_session_maker(postgres_config)
+    async with session_maker() as session:
+        gateway = UserGateway(session)
+        if not (user := await gateway.get_by_id(user_id)):
+            return
+        orders = await MarketGateway(session).get_user_orders(user_id)
+        withdraw_requests, total_withdrawn = await WalletGateway(session).get_by_user_id(user_id)
+
+    return FullUserInfoDM(
+        **user.model_dump(),
+        orders=orders,
+        withdraw_requests=withdraw_requests,
+        total_withdrawn=total_withdrawn,
+    )

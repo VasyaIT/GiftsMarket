@@ -1,4 +1,4 @@
-from sqlalchemy import insert, update
+from sqlalchemy import insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.interfaces.wallet import WithdrawRequestSaver
@@ -26,3 +26,12 @@ class WalletGateway(WithdrawRequestSaver):
         withdraw_request = result.scalar_one_or_none()
         if withdraw_request:
             return WithdrawRequestDM(**withdraw_request.__dict__)
+
+    async def get_by_user_id(self, user_id: int) -> tuple[list[WithdrawRequestDM], float]:
+        stmt = select(WithdrawRequest).filter_by(user_id=user_id)
+        result = await self._session.execute(stmt)
+        requests, total_withdrawn = [], 0
+        for request in result.scalars().all():
+            total_withdrawn += request.amount
+            requests.append(WithdrawRequestDM(**request.__dict__))
+        return requests, total_withdrawn

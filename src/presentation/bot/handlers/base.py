@@ -5,13 +5,7 @@ from aiogram.types import CallbackQuery, Message
 
 from src.entrypoint.config import Config
 from src.presentation.bot.keyboards.base import open_app_kb
-from src.presentation.bot.services.text import get_admin_text, get_start_text
-from src.presentation.bot.services.user import (
-    ban_user,
-    get_count_gifts,
-    get_count_users,
-    unban_user
-)
+from src.presentation.bot.services import text, user
 from src.presentation.bot.services.wallet import complete_withdraw_request
 
 
@@ -20,17 +14,32 @@ router = Router()
 
 @router.message(CommandStart())
 async def start_handler(message: Message, config: Config) -> None:
-    await message.answer(get_start_text(), reply_markup=open_app_kb(config.bot.WEBAPP_URL))
+    await message.answer(text.get_start_text(), reply_markup=open_app_kb(config.bot.WEBAPP_URL))
 
 
 @router.message(Command("admin"))
 async def admin_handler(message: Message, config: Config) -> None:
     if message.from_user.id not in config.bot.moderators_chat_id:
         return
-    count_users = await get_count_users(config.postgres)
-    count_gifts = await get_count_gifts(config.postgres)
+    count_users = await user.get_count_users(config.postgres)
+    count_gifts = await user.get_count_gifts(config.postgres)
 
-    await message.answer(get_admin_text(count_users, count_gifts))
+    await message.answer(text.get_admin_text(count_users, count_gifts))
+
+
+@router.message(F.text.startswith("/user"))
+async def user_info_handler(message: Message, config: Config) -> Message | None:
+    if message.from_user.id not in config.bot.moderators_chat_id:
+        return
+    try:
+        user_id = int(message.text.split("/user")[1].strip())
+    except ValueError:
+        return await message.answer(
+            f"❌ Неверный формат команды.\nОтправь команду в формате <code>/user [user id]</code>"
+        )
+    if not (user_info := await user.get_full_user_info(config.postgres, user_id)):
+        return await message.answer(f"✅ Пользователь #{user_id} заблокирован")
+    await message.answer(text.get_full_user_info_text(user_info))
 
 
 @router.message(F.text.startswith("/ban"))
@@ -43,7 +52,7 @@ async def ban_handler(message: Message, config: Config) -> Message | None:
         return await message.answer(
             f"❌ Неверный формат команды.\nОтправь команду в формате <code>/ban [user id]</code>"
         )
-    if await ban_user(config.postgres, user_id):
+    if await user.ban_user(config.postgres, user_id):
         return await message.answer(f"✅ Пользователь #{user_id} заблокирован")
     await message.answer(f"❌ Пользователь с id {user_id} не найден")
 
@@ -58,7 +67,7 @@ async def unban_handler(message: Message, config: Config) -> Message | None:
         return await message.answer(
             f"❌ Неверный формат команды.\nОтправь команду в формате <code>/unban [user id]</code>"
         )
-    if await unban_user(config.postgres, user_id):
+    if await user.unban_user(config.postgres, user_id):
         return await message.answer(f"✅ Пользователь #{user_id} разблокирован")
     await message.answer(f"❌ Пользователь с id {user_id} не найден")
 
