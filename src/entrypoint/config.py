@@ -48,6 +48,7 @@ class BotConfig(BaseModel):
     BOT_TOKEN: str
     WEBAPP_URL: str
     DEPOSIT_CHAT_ID: str
+    MODERATION_THREAD_ID: int
     OWNERS_CHAT_ID: str
     MODERATORS_CHAT_ID: str
 

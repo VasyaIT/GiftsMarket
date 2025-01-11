@@ -1,4 +1,5 @@
 from src.application.common.const import MINUTES_TO_SEND_GIFT
+from src.domain.entities.market import OrderDM
 from src.domain.entities.user import FullUserInfoDM
 
 
@@ -74,6 +75,15 @@ def get_canceled_text_to_owner(username: str | None, user_id: int) -> str:
     return (
         f"❗ Пользователь {username_text}#<code>{user_id}</code> отменил покупку подарка!\n\n"
         "⚠️ Если он создаст заявку на вывод в ближайшее время, убедитесь, что продавец не передал ему подарок"
+    )
+
+
+def get_new_gift_text(username: str | None, user_id: int, order: OrderDM) -> str:
+    username_text = "" if not username else f"@{username} "
+    return (
+        f"➕ Новая заявка на создание подарка от {username_text}#<code>{user_id}</code>\n\n"
+        f"ID: {order.id}\nПодарок: <b>{order.type} - #{order.number}</b>\n"
+        f"Цена: {order.price}\nРедкость: {order.rarity.name}"
     )
 
 

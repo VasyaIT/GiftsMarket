@@ -43,7 +43,7 @@ class OrderReader(Protocol):
 
 class OrderSaver(Protocol):
     @abstractmethod
-    async def save(self, order_dm: CreateOrderDM) -> None:
+    async def save(self, order_dm: CreateOrderDM) -> OrderDM:
         ...
 
     @abstractmethod

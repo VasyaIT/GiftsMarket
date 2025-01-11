@@ -6,6 +6,7 @@ from aiogram.types import CallbackQuery, Message
 from src.entrypoint.config import Config
 from src.presentation.bot.keyboards.base import open_app_kb
 from src.presentation.bot.services import text, user
+from src.presentation.bot.services.market import activate_order
 from src.presentation.bot.services.wallet import complete_withdraw_request
 
 
@@ -90,4 +91,25 @@ async def withdraw_success_callback(
     await bot.send_message(
         withdraw_request.user_id,
         f"✅ Your withdrawal of {withdraw_request.amount} TON has been successfully completed"
+    )
+
+
+@router.callback_query(F.data.startswith("activate_order:"))
+async def accept_order_callback(
+    call: CallbackQuery, config: Config, bot: Bot,
+) -> AnswerCallbackQuery | SendMessage | None:
+    if call.from_user.id not in config.bot.moderators_chat_id:
+        return call.answer("У тебя нет прав", show_alert=True)
+
+    order_id = call.data.replace("activate_order:", "")
+    order = await activate_order(int(order_id), config.postgres)
+    if not order:
+        return call.message.answer(
+            "❌ <b>Ошибка при выставлении подарка</b>\n\n"
+            f"Подарка с id: {order_id} не существует"
+        )
+    await call.message.edit_text(f"{call.message.text}\n\n✅ Подарок выставлен", reply_markup=None)
+    await bot.send_message(
+        order.seller_id,
+        f"✅ Your gift <b>{order.type} - #{order.number}</b> has been successfully put up for sale"
     )

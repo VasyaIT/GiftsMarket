@@ -44,7 +44,12 @@ async def run_tracker(config: Config, bot: Bot) -> None:
             message = get_deposit_text(
                 user.username, user.id, config.tonapi.IS_TESTNET, ton_amount, transaction.hash
             )
-            await send_message(bot, message, [config.bot.DEPOSIT_CHAT_ID])
+            await send_message(
+                bot,
+                message,
+                [config.bot.DEPOSIT_CHAT_ID],
+                message_thread_id=config.bot.MODERATION_THREAD_ID,
+            )
 
 
 async def update_user_balance_and_lt(

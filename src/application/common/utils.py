@@ -18,11 +18,17 @@ async def send_message(
     chats_id: list[int] | list[str],
     parse_mode: str | None = "html",
     reply_markup: InlineKeyboardMarkup | None = None,
+    message_thread_id: int | None = None
 ) -> None:
     try:
         for chat_id in chats_id:
             await bot.send_message(
-                chat_id, message, reply_markup=reply_markup, parse_mode=parse_mode, disable_web_page_preview=True
+                chat_id,
+                message,
+                reply_markup=reply_markup,
+                parse_mode=parse_mode,
+                message_thread_id=message_thread_id,
+                disable_web_page_preview=True,
             )
     except TelegramAPIError:
         pass

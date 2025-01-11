@@ -28,6 +28,7 @@ class MarketGateway(OrderSaver):
                 filters.from_price <= Order.price, filters.to_price >= Order.price,
                 Order.rarity.in_(filters.rarities), Order.type.in_(filters.types),
                 Order.status == filters.status, Order.seller_id != filters.user_id,
+                Order.is_active == True,
             )
             .limit(filters.limit)
             .offset(filters.offset)
@@ -149,12 +150,14 @@ class MarketGateway(OrderSaver):
         if order:
             return OrderDM(**order.__dict__)
 
-    async def save(self, order_dm: CreateOrderDM) -> None:
+    async def save(self, order_dm: CreateOrderDM) -> OrderDM:
         try:
-            stmt = insert(Order).values(order_dm.model_dump())
+            stmt = insert(Order).values(order_dm.model_dump()).returning(Order)
         except DBAPIError:
             raise InvalidOrderDataError("Order data is invalid")
-        await self._session.execute(stmt)
+
+        result = await self._session.execute(stmt)
+        return OrderDM(**result.scalar_one().__dict__)
 
     async def update_order(self, data: dict, **filters) -> OrderDM | None:
         stmt = update(Order).filter_by(**filters).values(data).returning(Order)

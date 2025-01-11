@@ -47,5 +47,9 @@ class WithdrawRequestInteractor(Interactor[WithdrawRequestDTO, None]):
 
         message = get_withdraw_request_text(self._user.username, self._user.id, data.amount, data.wallet)
         await send_message(
-            self._bot, message, [self._config.bot.DEPOSIT_CHAT_ID], reply_markup=withdraw_kb(withdraw_request.id)
+            self._bot,
+            message,
+            [self._config.bot.DEPOSIT_CHAT_ID],
+            reply_markup=withdraw_kb(withdraw_request.id),
+            message_thread_id=self._config.bot.MODERATION_THREAD_ID,
         )

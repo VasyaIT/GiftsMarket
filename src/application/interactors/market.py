@@ -29,6 +29,7 @@ from src.domain.entities.market import (
 from src.domain.entities.user import UpdateUserBalanceDM, UserDM
 from src.entrypoint.config import Config
 from src.presentation.api.market.params import GiftFilterParams, OrderFilterParams
+from src.presentation.bot.keyboards.base import activate_order_kb
 from src.presentation.bot.services import text
 
 
@@ -71,7 +72,7 @@ class CreateOrderInteractor(Interactor[CreateOrderDTO, None]):
         sum_characteristics_percent = sum((data.background, data.model, data.pattern))
         rarity = calculate_gift_rarity(sum_characteristics_percent)
 
-        await self._market_gateway.save(
+        new_order = await self._market_gateway.save(
             CreateOrderDM(**data.model_dump(), rarity=rarity, seller_id=self._user.id)
         )
         updated_user = await self._user_gateway.update_balance(
@@ -82,12 +83,14 @@ class CreateOrderInteractor(Interactor[CreateOrderDTO, None]):
             raise errors.NotEnoughBalanceError("User does not have enough balance")
         await self._db_session.commit()
 
-        if data.price <= 1:
-            await send_message(
-                self._bot,
-                f"{self._user.username}#<code>{self._user.id}</code> создал подарок за {data.price} TON",
-                [self._config.bot.DEPOSIT_CHAT_ID]
-            )
+        await send_message(
+            self._bot,
+            text.get_new_gift_text(self._user.username, self._user.id, new_order),
+            [self._config.bot.DEPOSIT_CHAT_ID],
+            reply_markup=activate_order_kb(new_order.id),
+            message_thread_id=self._config.bot.MODERATION_THREAD_ID,
+        )
+
         logger.info(
             "CreateOrderInteractor: "
             f"@{self._user.username} #{self._user.id} created the order"
@@ -362,6 +365,7 @@ class SellerCancelInteractor(Interactor[int, OrderDM]):
                 self._bot,
                 text.get_seller_canceled_admin_text(self._user.username, self._user.id),
                 [self._config.bot.DEPOSIT_CHAT_ID],
+                message_thread_id=self._config.bot.MODERATION_THREAD_ID,
             )
 
         await self._user_gateway.update_balance(

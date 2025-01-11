@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import TIMESTAMP, Float, ForeignKey, Integer, String
+from sqlalchemy import TIMESTAMP, Boolean, Float, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -22,6 +22,7 @@ class Order(Base):
     status: Mapped[OrderStatus] = mapped_column(ENUM(OrderStatus), default=OrderStatus.ON_MARKET)
     created_order_date: Mapped[datetime | None] = mapped_column(TIMESTAMP, nullable=True)
     completed_order_date: Mapped[datetime | None] = mapped_column(TIMESTAMP, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=False)
 
     seller_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     buyer_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
