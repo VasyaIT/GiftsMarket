@@ -21,4 +21,3 @@ class UpdateOrderDTO(BaseDTO):
 
 class OrderDTO(CreateOrderDTO):
     image_url: str
-    rarity: GiftRarity
