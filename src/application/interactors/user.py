@@ -3,7 +3,7 @@ from logging.handlers import RotatingFileHandler
 
 from aiogram.utils.payload import decode_payload, encode_payload
 
-from src.application.common.const import GiftRarity, OrderStatus
+from src.application.common.const import OrderStatus, PriceList
 from src.application.common.utils import calculate_gift_rarity, generate_deposit_comment
 from src.application.dto.market import CreateOrderDTO, OrderDTO
 from src.application.dto.user import LoginDTO, UserDTO
@@ -12,10 +12,10 @@ from src.application.interfaces.auth import InitDataValidator, TokenEncoder
 from src.application.interfaces.database import DBSession
 from src.application.interfaces.interactor import Interactor
 from src.application.interfaces.market import OrderReader, OrderSaver
-from src.application.interfaces.user import UserManager, UserReader
+from src.application.interfaces.user import UserManager, UserReader, UserSaver
 from src.domain.entities.bot import BotInfoDM
 from src.domain.entities.market import GetUserGiftsDM, UpdateOrderDM, UserGiftsDM
-from src.domain.entities.user import CreateUserDM, UserDM
+from src.domain.entities.user import CreateUserDM, UpdateUserBalanceDM, UserDM
 from src.entrypoint.config import Config
 
 
@@ -164,8 +164,11 @@ class UpdateUserGiftInteractor:
 
 
 class DeleteUserGiftInteractor(Interactor[int, None]):
-    def __init__(self, market_gateway: OrderSaver, user: UserDM, db_session: DBSession) -> None:
+    def __init__(
+        self, market_gateway: OrderSaver, user: UserDM, db_session: DBSession, user_gateway: UserSaver
+    ) -> None:
         self._market_gateway = market_gateway
+        self._user_gateway = user_gateway
         self._user = user
         self._db_session = db_session
 
@@ -176,6 +179,10 @@ class DeleteUserGiftInteractor(Interactor[int, None]):
         if not deleted_order:
             await self._db_session.rollback()
             raise NotFoundError("Gift not found")
+
+        await self._user_gateway.update_balance(
+            UpdateUserBalanceDM(id=self._user.id, amount=PriceList.UP_FOR_SALE)
+        )
         await self._db_session.commit()
 
         logger.info(
