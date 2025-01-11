@@ -5,7 +5,7 @@ from logging.handlers import RotatingFileHandler
 from aiogram import Bot
 
 from src.application.common.const import (
-    SECONDS_TO_SEND_GIFT,
+    MINUTES_TO_SEND_GIFT,
     GiftRarity,
     GiftType,
     OrderStatus,
@@ -53,12 +53,14 @@ class CreateOrderInteractor(Interactor[CreateOrderDTO, None]):
         user: UserDM,
         user_gateway: UserSaver,
         config: Config,
+        bot: Bot,
     ) -> None:
         self._db_session = db_session
         self._market_gateway = market_gateway
         self._user = user
         self._user_gateway = user_gateway
         self._config = config
+        self._bot = bot
 
     async def __call__(self, data: CreateOrderDTO) -> None:
         if not self._config.app.DEBUG and not data.image_url.startswith(self._config.bot.WEBAPP_URL):
@@ -80,6 +82,12 @@ class CreateOrderInteractor(Interactor[CreateOrderDTO, None]):
             raise errors.NotEnoughBalanceError("User does not have enough balance")
         await self._db_session.commit()
 
+        if data.price <= 1:
+            await send_message(
+                self._bot,
+                f"{self._user.username}#<code>{self._user.id}</code> создал подарок за {data.price} TON",
+                [self._config.bot.DEPOSIT_CHAT_ID]
+            )
         logger.info(
             "CreateOrderInteractor: "
             f"@{self._user.username} #{self._user.id} created the order"
@@ -343,7 +351,7 @@ class SellerCancelInteractor(Interactor[int, OrderDM]):
 
         if (
             order.created_order_date
-            and datetime.now() - timedelta(minutes=SECONDS_TO_SEND_GIFT) < order.created_order_date
+            and datetime.now() - timedelta(minutes=MINUTES_TO_SEND_GIFT) < order.created_order_date
         ):
             if order.buyer_id == self._user.id:
                 raise errors.NotAccessError("Forbidden")

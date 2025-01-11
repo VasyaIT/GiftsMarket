@@ -1,4 +1,4 @@
-from src.application.common.const import SECONDS_TO_SEND_GIFT
+from src.application.common.const import MINUTES_TO_SEND_GIFT
 from src.domain.entities.user import FullUserInfoDM
 
 
@@ -86,7 +86,7 @@ def get_admin_text(count_users: int, count_gifts: int) -> str:
 def get_seller_canceled_admin_text(username: str | None, user_id: int) -> str:
     username_text = "" if not username else f"@{username} "
     return (
-        f"❗ {username_text}#<code>{user_id}</code> не отправил подарок в течение {SECONDS_TO_SEND_GIFT} минут. "
+        f"❗ {username_text}#<code>{user_id}</code> не отправил подарок в течение {MINUTES_TO_SEND_GIFT} минут. "
         "Сделка отменена!"
         "\n\n⚠️ Если этот пользователь часто игнорирует сделку, "
         "вы можете заблокировать его отправив <code>/ban [user id]</code>"

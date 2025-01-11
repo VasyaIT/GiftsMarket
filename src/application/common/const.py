@@ -1,7 +1,7 @@
 from enum import Enum, StrEnum, auto
 
 
-SECONDS_TO_SEND_GIFT = 20
+MINUTES_TO_SEND_GIFT = 20
 
 
 class OrderStatus(StrEnum):
