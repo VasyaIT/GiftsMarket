@@ -105,7 +105,7 @@ def get_seller_canceled_admin_text(username: str | None, user_id: int) -> str:
 
 def get_full_user_info_text(user_info_data: FullUserInfoDM) -> str:
     username_text = f"👨‍🦱 <b>Username</b>: <b>@{user_info_data.username}</b>\n"
-    first_name_text = f"🗿 <b>Имя</b>: <b>@{user_info_data.first_name}</b>\n"
+    first_name_text = f"🗿 <b>Имя</b>: <b>{user_info_data.first_name}</b>\n"
     if not user_info_data.username:
         username_text = ""
     if not user_info_data.first_name:
