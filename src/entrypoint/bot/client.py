@@ -39,50 +39,52 @@ async def check_user_gifts(client: Client, message: Message) -> Message | None:
             "Your newly created gifts were not found in the application"
         )
 
-    first_gift, gift_is_exist = gifts[0], False
     pattern = model = background = 0
-    async for gift in client.get_user_gifts(user.username):
-        if (
-            gift.number == first_gift.number and gift.title
-            and GIFT_TYPE_MAP.get(gift.title) == first_gift.type
-        ):
-            if not gift.attributes:
-                return None
-            for attribute in gift.attributes:
-                attribute_rarity = attribute.rarity / 10 if attribute.rarity else 0
-                if attribute.type is GiftAttributeType.MODEL:
-                    model = attribute_rarity
-                elif attribute.type is GiftAttributeType.BACKDROP:
-                    background = attribute_rarity
-                elif attribute.type is GiftAttributeType.SYMBOL:
-                    pattern = attribute_rarity
-            characteristics = CharacteristicsOrderDM(
-                pattern=pattern,
-                model=model,
-                background=background,
-                rarity=calculate_gift_rarity(model),
-                is_active=True,
+    gift_is_exist = False
+    for user_gift in gifts:
+        async for gift in client.get_user_gifts(user.username):
+            if (
+                gift.number == user_gift.number and gift.title
+                and GIFT_TYPE_MAP.get(gift.title) == user_gift.type
+            ):
+                if not gift.attributes:
+                    continue
+                for attribute in gift.attributes:
+                    attribute_rarity = attribute.rarity / 10 if attribute.rarity else 0
+                    if attribute.type is GiftAttributeType.MODEL:
+                        model = attribute_rarity
+                    elif attribute.type is GiftAttributeType.BACKDROP:
+                        background = attribute_rarity
+                    elif attribute.type is GiftAttributeType.SYMBOL:
+                        pattern = attribute_rarity
+                characteristics = CharacteristicsOrderDM(
+                    pattern=pattern,
+                    model=model,
+                    background=background,
+                    rarity=calculate_gift_rarity(model),
+                    is_active=True,
+                )
+                gift_is_exist = True
+                await update_order(characteristics.model_dump(), user_gift.id, config.postgres)
+                await client.send_message(
+                    user.id,
+                    f"✅ Gift <b>{user_gift.type.name} - #{user_gift.number}</b> "
+                    "has been successfully placed in the store!"
+                )
+                await send_message(
+                    bot,
+                    f"➕ @{user.username} #<code>{user.id}</code> выставил новый подарок: "
+                    f"<b>{user_gift.type.name} - #{user_gift.number}</b>",
+                    [config.bot.DEPOSIT_CHAT_ID],
+                    message_thread_id=config.bot.MODERATION_THREAD_ID,
+                )
+        if not gift_is_exist:
+            await client.send_message(
+                user.id,
+                f"❌ The gifts you created in the app are not found in your profile\n"
+                "⚠️ Make sure you entered the gift number and type correctly in the app\n\n"
+                "<i>Perhaps they are hidden, try to turn on the visibility of gifts</i>"
             )
-            gift_is_exist = True
-            await update_order(characteristics.model_dump(), first_gift.id, config.postgres)
-    if not gift_is_exist:
-        return await client.send_message(
-            user.id,
-            "No gifts were found in your profile.\n"
-            "Perhaps they are hidden, try to turn on the visibility of gifts"
-        )
-    await client.send_message(
-        user.id,
-        f"✅ Gift <b>{first_gift.type.name} - #{first_gift.number}</b> "
-        "has been successfully placed in the store!"
-    )
-    await send_message(
-        bot,
-        f"➕ @{user.username} #<code>{user.id}</code> выставил новый подарок: "
-        f"<b>{first_gift.type.name} - #{first_gift.number}</b>",
-        [config.bot.DEPOSIT_CHAT_ID],
-        message_thread_id=config.bot.MODERATION_THREAD_ID,
-    )
 
 
 app.run()
