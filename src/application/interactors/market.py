@@ -204,7 +204,7 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
         buyer = await self._user_gateway.update_balance(
             UpdateUserBalanceDM(
                 id=self._user.id,
-                amount=-order.price
+                amount=-(order.price + PriceList.BUYER_FEE_TON)
             )
         )
         if buyer.balance < 0:  # type: ignore
@@ -256,7 +256,7 @@ class CancelOrderInteractor(Interactor[int, OrderDM]):
         await self._user_gateway.update_balance(
             UpdateUserBalanceDM(
                 id=self._user.id,
-                amount=order.price
+                amount=order.price + PriceList.BUYER_FEE_TON
             )
         )
 
@@ -364,7 +364,7 @@ class SellerCancelInteractor(Interactor[int, OrderDM]):
         await self._user_gateway.update_balance(
             UpdateUserBalanceDM(
                 id=order.buyer_id,
-                amount=order.price
+                amount=order.price + PriceList.BUYER_FEE_TON
             )
         )
         values = dict(status=OrderStatus.ON_MARKET, buyer_id=None, created_order_date=None)
