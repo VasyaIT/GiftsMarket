@@ -52,4 +52,5 @@ async def cancel_order(order_id: int, postgres_config: PostgresConfig) -> bool:
             )
         )
         await gateway.update_order(data, id=order_id)
+        await session.commit()
     return True
