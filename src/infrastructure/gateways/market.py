@@ -1,5 +1,5 @@
 from sqlalchemy import and_, delete, func, insert, or_, select, update
-from sqlalchemy.exc import DBAPIError
+from sqlalchemy.exc import DBAPIError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.common.const import OrderStatus
@@ -165,7 +165,7 @@ class MarketGateway(OrderSaver):
         try:
             stmt = insert(Order).values(order_dm.model_dump()).returning(Order)
         except DBAPIError:
-            raise InvalidOrderDataError("Order data is invalid")
+            raise InvalidOrderDataError("Order already exist")
 
         result = await self._session.execute(stmt)
         return OrderDM(**result.scalar_one().__dict__)

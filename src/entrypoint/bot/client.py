@@ -78,7 +78,7 @@ async def check_user_gifts(client: Client, message: Message) -> Message | None:
     )
     await send_message(
         bot,
-        f"➕ @{user.username}#<code>{user.id}</code> выставил новый подарок: "
+        f"➕ @{user.username} #<code>{user.id}</code> выставил новый подарок: "
         f"<b>{first_gift.type.name} - #{first_gift.number}</b>",
         [config.bot.DEPOSIT_CHAT_ID],
         message_thread_id=config.bot.MODERATION_THREAD_ID,
