@@ -120,7 +120,7 @@ def get_full_user_info_text(user_info_data: FullUserInfoDM) -> str:
         orders_text += (
             f"\n<b>ID: </b>{order.id}\n<b>Подарок</b>:  <b>{order.type.name} #{order.number}</b>"
             f"\n<b>Цена: </b>{order.price} TON\n<b>Дата создания: </b>{order.created_order_date}"
-            f"<b>Статус: </b>{order.status.name}\n<b>Пользователь: </b>{user_text}{completed_date_text}"
+            f"\n<b>Статус: </b>{order.status.name}\n<b>Пользователь: </b>{user_text}{completed_date_text}"
         )
     if not user_info_data.orders:
         orders_text = ""

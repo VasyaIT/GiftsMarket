@@ -163,3 +163,19 @@ async def cancel_order_handler(message: Message, config: Config) -> Message | No
     if await market.cancel_order(order_id, config.postgres):
         return await message.answer(f"✅ Ордер #{order_id} отменён")
     await message.answer(f"❌ Ордер #{order_id} не найден")
+
+
+@router.message(F.text.startswith("/confirm"))
+async def confirm_order_handler(message: Message, config: Config) -> Message | None:
+    if message.from_user.id not in config.bot.moderators_chat_id:
+        return
+    try:
+        order_id = int(message.text.split("/confirm")[1].strip())
+    except ValueError:
+        return await message.answer(
+            f"❌ Неверный формат команды.\nОтправь команду в формате <code>/confirm [order id]</code>"
+        )
+
+    if await market.confirm_order(order_id, config):
+        return await message.answer(f"✅ Ордер #{order_id} завершён")
+    await message.answer(f"❌ Ордер #{order_id} не найден")
