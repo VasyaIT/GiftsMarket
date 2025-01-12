@@ -20,3 +20,7 @@ class NotUsernameError(Exception):
 
 class InvalidImageUrlError(Exception):
     pass
+
+
+class AlreadyExistError(Exception):
+    pass

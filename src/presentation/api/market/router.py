@@ -9,6 +9,7 @@ from src.application.dto.common import GiftImagesDTO, ResponseDTO
 from src.application.dto.market import CreateOrderDTO, OrderIdDTO
 from src.application.interactors import market
 from src.application.interactors.errors import (
+    AlreadyExistError,
     InvalidImageUrlError,
     NotAccessError,
     NotEnoughBalanceError,
@@ -69,7 +70,7 @@ async def create_order(
 
     try:
         await interactor(dto)
-    except (NotEnoughBalanceError, NotUsernameError, InvalidImageUrlError) as e:
+    except (NotEnoughBalanceError, NotUsernameError, InvalidImageUrlError, AlreadyExistError) as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
     return ResponseDTO(success=True)
 

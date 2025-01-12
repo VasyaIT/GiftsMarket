@@ -50,7 +50,7 @@ class CreateOrderInteractor(Interactor[CreateOrderDTO, None]):
     def __init__(
         self,
         db_session: DBSession,
-        market_gateway: OrderSaver,
+        market_gateway: OrderManager,
         user: UserDM,
         user_gateway: UserSaver,
         config: Config,
@@ -69,7 +69,10 @@ class CreateOrderInteractor(Interactor[CreateOrderDTO, None]):
         if not self._user.username:
             raise errors.NotUsernameError("User does not have a username to create an order")
 
-        new_order = await self._market_gateway.save(
+        if await self._market_gateway.get_one(type=data.type, number=data.number, is_active=False):
+            raise errors.AlreadyExistError("Order already exist")
+
+        await self._market_gateway.save(
             CreateOrderDM(**data.model_dump(), seller_id=self._user.id)
         )
         if self._user.id not in self._config.bot.nft_holders_id:

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import TIMESTAMP, Boolean, Float, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import TIMESTAMP, Boolean, Float, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -31,7 +31,3 @@ class Order(Base):
         "User", lazy="selectin", foreign_keys="Order.seller_id"
     )
     buyer: Mapped[User] = relationship("User", lazy="selectin", foreign_keys="Order.buyer_id")
-
-    __table_args__ = (
-        UniqueConstraint('type', 'number', name='_type_number_uc'),
-    )
