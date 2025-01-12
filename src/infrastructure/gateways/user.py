@@ -18,6 +18,11 @@ class UserGateway(UserReader, UserSaver):
         if user:
             return UserDM(**user.__dict__)
 
+    async def get_all(self) -> list[UserDM]:
+        stmt = select(User)
+        result = await self._session.execute(stmt)
+        return [UserDM(**user.__dict__) for user in result.scalars().all()]
+
     async def save(self, user: CreateUserDM) -> UserDM:
         stmt = insert(User).values(user.model_dump()).returning(User)
         result = await self._session.execute(stmt)

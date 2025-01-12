@@ -42,6 +42,7 @@ class ReadOrderDM(CreateOrderDM):
     pattern: float | None
     background: float | None
     rarity: GiftRarity | None
+    buyer_id: int | None
     seller_name: str | None
     buyer_name: str | None
     id: int
@@ -51,11 +52,13 @@ class UserGiftsDM(BaseModel):
     id: int
     image_url: str
     type: GiftType
+    number: int
     price: float
     model: float | None
     pattern: float | None
     background: float | None
     rarity: GiftRarity | None
+    is_active: bool
 
 
 class GetUserGiftsDM(BaseModel):

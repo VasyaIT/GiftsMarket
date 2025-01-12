@@ -20,8 +20,8 @@ async def send_message(
     reply_markup: InlineKeyboardMarkup | None = None,
     message_thread_id: int | None = None
 ) -> None:
-    try:
-        for chat_id in chats_id:
+    for chat_id in chats_id:
+        try:
             await bot.send_message(
                 chat_id,
                 message,
@@ -30,8 +30,8 @@ async def send_message(
                 message_thread_id=message_thread_id,
                 disable_web_page_preview=True,
             )
-    except TelegramAPIError:
-        pass
+        except TelegramAPIError:
+            pass
 
 
 async def send_photo(
@@ -42,13 +42,13 @@ async def send_photo(
     parse_mode: str | None = "html",
     reply_markup: InlineKeyboardMarkup | None = None,
 ) -> None:
-    try:
-        for chat_id in chats_id:
+    for chat_id in chats_id:
+        try:
             await bot.send_photo(
                 chat_id, photo=photo, caption=caption, parse_mode=parse_mode, reply_markup=reply_markup
             )
-    except TelegramAPIError:
-        pass
+        except TelegramAPIError:
+            pass
 
 
 def get_bot(token: str) -> Bot:

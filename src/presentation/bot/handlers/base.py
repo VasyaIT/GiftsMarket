@@ -147,3 +147,19 @@ async def add_balance_handler(message: Message, config: Config) -> Message | Non
     if await user.add_balance_user(config.postgres, user_id, amount):
         return await message.answer(f"✅ Баланс пользователю #{user_id} пополнен на {amount} TON")
     await message.answer(f"❌ Пользователь с id {user_id} не найден")
+
+
+@router.message(F.text.startswith("/cancel"))
+async def cancel_order_handler(message: Message, config: Config) -> Message | None:
+    if message.from_user.id not in config.bot.moderators_chat_id:
+        return
+    try:
+        order_id = int(message.text.split("/cancel")[1].strip())
+    except ValueError:
+        return await message.answer(
+            f"❌ Неверный формат команды.\nОтправь команду в формате <code>/cancel [order id]</code>"
+        )
+
+    if await market.cancel_order(order_id, config.postgres):
+        return await message.answer(f"✅ Ордер #{order_id} отменён")
+    await message.answer(f"❌ Ордер #{order_id} не найден")
