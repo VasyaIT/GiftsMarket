@@ -1,12 +1,21 @@
 from datetime import datetime
 
-from src.application.common.const import OrderStatus, PriceList
-from src.domain.entities.market import OrderDM
+from src.application.common.const import GiftType, OrderStatus, PriceList
+from src.domain.entities.market import OrderDM, ReadOrderDM
 from src.domain.entities.user import UpdateUserBalanceDM
 from src.entrypoint.config import Config, PostgresConfig
 from src.infrastructure.database.session import new_session_maker
 from src.infrastructure.gateways.market import MarketGateway
 from src.infrastructure.gateways.user import UserGateway
+
+
+async def get_order_info(
+    gift_type: str, gift_number: int, postgres_config: PostgresConfig
+) -> ReadOrderDM | None:
+    session_maker = new_session_maker(postgres_config)
+    async with session_maker() as session:
+        if order := await MarketGateway(session).get_one(type=GiftType[gift_type], number=gift_number):
+            return order
 
 
 async def get_all_inactive(user_id: int, postgres_config: PostgresConfig) -> list[OrderDM]:

@@ -29,7 +29,6 @@ from src.domain.entities.market import (
 from src.domain.entities.user import UpdateUserBalanceDM, UserDM
 from src.entrypoint.config import Config
 from src.presentation.api.market.params import GiftFilterParams, OrderFilterParams
-from src.presentation.bot.keyboards.base import activate_order_kb
 from src.presentation.bot.services import text
 
 

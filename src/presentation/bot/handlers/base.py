@@ -85,49 +85,13 @@ async def withdraw_success_callback(
         return call.message.answer(f"❌ <b>Заявка на вывод #{request_id} уже исполнена</b>")
     await wallet.complete_withdraw_request(int(request_id), config.postgres)
     await wallet.send_transaction(withdraw_request, config.tonapi)
-    await call.message.edit_text(f"{call.message.text}\n\n✅ Вывод исполнен", reply_markup=None)
+    await call.message.edit_text(
+        f"{call.message.text}\n\n✅ Вывод исполнен", reply_markup=None, parse_mode="html"
+    )
     await bot.send_message(
         withdraw_request.user_id,
         f"✅ Your withdrawal of {withdraw_request.amount} TON has been successfully completed"
     )
-
-
-@router.callback_query(F.data.startswith("activate_order:"))
-async def accept_order_callback(
-    call: CallbackQuery, config: Config, bot: Bot,
-) -> AnswerCallbackQuery | SendMessage | None:
-    if call.from_user.id not in config.bot.moderators_chat_id:
-        return call.answer("У тебя нет прав", show_alert=True)
-
-    order_id = call.data.replace("activate_order:", "")
-    order = await market.update_order(dict(is_active=True), int(order_id), config.postgres)
-    if not order:
-        return call.message.answer(
-            "❌ <b>Ошибка при выставлении подарка</b>\n\n"
-            f"Подарка с id: {order_id} не существует"
-        )
-    await call.message.edit_text(f"{call.message.text}\n\n✅ Подарок выставлен", reply_markup=None)
-    await bot.send_message(
-        order.seller_id,
-        f"✅ Your gift <b>{order.type} - #{order.number}</b> has been successfully put up for sale"
-        "⚠️ Be sure to be online, your gift can be bought at any time!"
-    )
-
-
-@router.callback_query(F.data.startswith("reject_order:"))
-async def reject_order_callback(
-    call: CallbackQuery, config: Config
-) -> AnswerCallbackQuery | SendMessage | None:
-    if call.from_user.id not in config.bot.moderators_chat_id:
-        return call.answer("У тебя нет прав", show_alert=True)
-
-    order_id = call.data.replace("reject_order:", "")
-    order = await market.delete_order(int(order_id), config.postgres)
-    if not order:
-        return call.message.answer("❌ <b>Подарок уже удалён</b>")
-
-    await user.add_balance_user(config.postgres, order.seller_id, PriceList.UP_FOR_SALE)
-    await call.message.edit_text(f"{call.message.text}\n\n❌ Подарок отклонён", reply_markup=None)
 
 
 @router.message(F.text.startswith("/addbalance"))
@@ -159,8 +123,8 @@ async def cancel_order_handler(message: Message, config: Config) -> Message | No
         )
 
     if await market.cancel_order(order_id, config.postgres):
-        return await message.answer(f"✅ Ордер #{order_id} отменён")
-    await message.answer(f"❌ Ордер #{order_id} не найден")
+        return await message.answer(f"✅ Ордер с ID {order_id} отменён")
+    await message.answer(f"❌ Ордер с ID {order_id} не найден")
 
 
 @router.message(F.text.startswith("/confirm"))
@@ -175,5 +139,39 @@ async def confirm_order_handler(message: Message, config: Config) -> Message | N
         )
 
     if await market.confirm_order(order_id, config):
-        return await message.answer(f"✅ Ордер #{order_id} завершён")
-    await message.answer(f"❌ Ордер #{order_id} не найден")
+        return await message.answer(f"✅ Ордер с ID {order_id} завершён")
+    await message.answer(f"❌ Ордер с ID {order_id} не найден")
+
+
+@router.message(F.text.startswith("/order"))
+async def order_info_handler(message: Message, config: Config) -> Message | None:
+    if message.from_user.id not in config.bot.moderators_chat_id:
+        return
+    try:
+        gift_type, gift_number = message.text.split("/order")[1].split()
+        gift_number = int(gift_number)
+    except ValueError:
+        return await message.answer(
+            f"❌ Неверный формат команды.\n"
+            "Отправь команду в формате <code>/order [gift_type] [gift number]</code>"
+        )
+
+    if not (order := await market.get_order_info(gift_type, gift_number, config.postgres)):
+        return await message.answer(f"❌ Ордер {gift_type} - #{gift_number} не найден")
+    await message.answer(text.get_order_info_text(order))
+
+
+@router.message(F.text.startswith("/delete"))
+async def delete_order_handler(message: Message, config: Config) -> Message | None:
+    if message.from_user.id not in config.bot.moderators_chat_id:
+        return
+    try:
+        order_id = int(message.text.split("/delete")[1].strip())
+    except ValueError:
+        return await message.answer(
+            f"❌ Неверный формат команды.\nОтправь команду в формате <code>/delete [order id]</code>"
+        )
+
+    if await market.delete_order(order_id, config.postgres):
+        return await message.answer(f"✅ Ордер с ID {order_id} удалён")
+    await message.answer(f"❌ Ордер с ID {order_id} не найден")
