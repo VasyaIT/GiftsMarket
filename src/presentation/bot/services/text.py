@@ -147,7 +147,7 @@ def get_full_user_info_text(user_info_data: FullUserInfoDM) -> str:
 def get_order_info_text(order_info: ReadOrderDM) -> str:
     buyer_text = ""
     if order_info.buyer_id:
-        buyer_text = f"<b>Продавец: </b>@{order_info.buyer_name} #{order_info.buyer_id}\n"
+        buyer_text = f"👨‍🦱 <b>Продавец: </b>@{order_info.buyer_name} #<code>{order_info.buyer_id}</code>\n"
     created_order_text = ""
     if order_info.created_order_date:
         created_order_text = (
@@ -164,11 +164,11 @@ def get_order_info_text(order_info: ReadOrderDM) -> str:
         f"🔎 Тип: <code>{order_info.type.name}</code>\n"
         f"➕ Номер: <code>{order_info.number}</code>\n"
         f"💰 <b>Цена: </b>{order_info.price} TON\n\n"
-        f"<b>Продавец: </b>@{order_info.seller_name} #{order_info.seller_id}\n"
+        f"🛍️ <b>Продавец: </b>@{order_info.seller_name} #<code>{order_info.seller_id}</code>\n"
         f"{buyer_text}"
-        f"<b>Модель: </b>{order_info.model}\n"
-        f"<b>Фон: </b>{order_info.background}\n"
-        f"<b>Узор: </b>{order_info.pattern}\n\n"
+        f"🔦 <b>Модель: </b>{order_info.model}%\n"
+        f"❄️ <b>Фон: </b>{order_info.background}%\n"
+        f"🎃 <b>Узор: </b>{order_info.pattern}%\n\n"
         f"📅 <b>Дата создания подарка: </b>{order_info.created_at.strftime("%d.%m.%y, %H:%M")}\n"
         f"{created_order_text}"
         f"{completed_order_text}"
