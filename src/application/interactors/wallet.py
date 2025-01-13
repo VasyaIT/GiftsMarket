@@ -50,6 +50,6 @@ class WithdrawRequestInteractor(Interactor[WithdrawRequestDTO, None]):
             self._bot,
             message,
             [self._config.bot.DEPOSIT_CHAT_ID],
-            reply_markup=withdraw_kb(withdraw_request.id),
+            reply_markup=withdraw_kb(withdraw_request.id, withdraw_request.amount),
             message_thread_id=self._config.bot.MODERATION_THREAD_ID,
         )

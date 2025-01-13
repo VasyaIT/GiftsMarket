@@ -72,6 +72,7 @@ class TonapiConfig(BaseModel):
     TONAPI_TOKEN: str
     DEPOSIT_ADDRESS: str
     IS_TESTNET: bool
+    WALLET_MNEMONICS: str
 
 
 class Config(BaseModel):

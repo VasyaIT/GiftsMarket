@@ -18,7 +18,7 @@ class WalletGateway(WithdrawRequestSaver):
     async def set_completed(self, request_id: int) -> WithdrawRequestDM | None:
         stmt = (
             update(WithdrawRequest)
-            .filter_by(id=request_id)
+            .filter_by(id=request_id, is_completed=False)
             .values(is_completed=True)
             .returning(WithdrawRequest)
         )
@@ -35,3 +35,10 @@ class WalletGateway(WithdrawRequestSaver):
             total_withdrawn += request.amount
             requests.append(WithdrawRequestDM(**request.__dict__))
         return requests, total_withdrawn
+
+    async def get_one(self, **filters) -> WithdrawRequestDM | None:
+        stmt = select(WithdrawRequest).filter_by(**filters)
+        result = await self._session.execute(stmt)
+        request = result.scalar_one_or_none()
+        if request:
+            return WithdrawRequestDM(**request.__dict__)

@@ -6,8 +6,7 @@ from aiogram.types import CallbackQuery, Message
 from src.application.common.const import PriceList
 from src.entrypoint.config import Config
 from src.presentation.bot.keyboards.base import open_app_kb
-from src.presentation.bot.services import market, text, user
-from src.presentation.bot.services.wallet import complete_withdraw_request
+from src.presentation.bot.services import market, text, user, wallet
 
 
 router = Router()
@@ -73,20 +72,19 @@ async def unban_handler(message: Message, config: Config) -> Message | None:
     await message.answer(f"❌ Пользователь с id {user_id} не найден")
 
 
-@router.callback_query(F.data.startswith("withdraw_completed:"))
+@router.callback_query(F.data.startswith("complete_withdraw:"))
 async def withdraw_success_callback(
     call: CallbackQuery, config: Config, bot: Bot,
 ) -> AnswerCallbackQuery | SendMessage | None:
     if call.from_user.id not in config.bot.moderators_chat_id:
         return call.answer("У тебя нет прав", show_alert=True)
 
-    request_id = call.data.replace("withdraw_completed:", "")
-    withdraw_request = await complete_withdraw_request(int(request_id), config.postgres)
+    request_id = call.data.replace("complete_withdraw:", "")
+    withdraw_request = await wallet.get_withdraw_request(int(request_id), config.postgres)
     if not withdraw_request:
-        return call.message.answer(
-            "❌ <b>Ошибка при выводе</b>\n\n"
-            f"Заявки на вывод #{request_id} не существует"
-        )
+        return call.message.answer(f"❌ <b>Заявка на вывод #{request_id} уже исполнена</b>")
+    await wallet.complete_withdraw_request(int(request_id), config.postgres)
+    await wallet.send_transaction(withdraw_request, config.tonapi)
     await call.message.edit_text(f"{call.message.text}\n\n✅ Вывод исполнен", reply_markup=None)
     await bot.send_message(
         withdraw_request.user_id,

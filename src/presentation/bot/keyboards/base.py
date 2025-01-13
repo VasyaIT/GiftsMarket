@@ -8,9 +8,12 @@ def open_app_kb(webapp_url: str) -> InlineKeyboardMarkup:
     return keyboard.as_markup()
 
 
-def withdraw_kb(request_id: int) -> InlineKeyboardMarkup:
+def withdraw_kb(request_id: int, amount: float) -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardBuilder()
-    keyboard.row(InlineKeyboardButton(text="✅ Исполнен", callback_data=f"withdraw_completed:{request_id}"))
+    keyboard.row(InlineKeyboardButton(
+        text=f"✅ Вывести {amount} TON", callback_data=f"complete_withdraw:{request_id}"
+    ))
+
     return keyboard.as_markup()
 
 
