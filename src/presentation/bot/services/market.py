@@ -27,7 +27,7 @@ async def get_all_inactive(user_id: int, postgres_config: PostgresConfig) -> lis
 async def delete_order(order_id: int, postgres_config: PostgresConfig) -> OrderDM | None:
     session_maker = new_session_maker(postgres_config)
     async with session_maker() as session:
-        if order := await MarketGateway(session).delete_order(id=order_id):
+        if order := await MarketGateway(session).delete_order(id=order_id, status=OrderStatus.ON_MARKET):
             return order
 
 
