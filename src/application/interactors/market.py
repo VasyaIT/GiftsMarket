@@ -68,7 +68,7 @@ class CreateOrderInteractor(Interactor[CreateOrderDTO, None]):
         if not self._user.username:
             raise errors.NotUsernameError("User does not have a username to create an order")
 
-        if await self._market_gateway.get_one(type=data.type, number=data.number, is_active=False):
+        if await self._market_gateway.get_one(type=data.type, number=data.number):
             raise errors.AlreadyExistError("Order already exist")
 
         await self._market_gateway.save(
