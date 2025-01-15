@@ -33,9 +33,9 @@ async def inline_query(inline_query: InlineQuery, config: Config, bot_username: 
             message_text=(
                 f"💸 <b>{order.type.name} - #{order.number}</b> in Nest Store!\n\n"
                 f"💎 Price: {order.price:.2f} TON\n"
-                f"🔦 Background: {order.background} TON\n"
-                f"❄️ Pattern: {order.pattern} TON\n"
-                f"🎃 Model: {order.model} TON\n"
+                f"🔦 Background: {order.background}%\n"
+                f"❄️ Pattern: {order.pattern}%\n"
+                f"🎃 Model: {order.model}%\n"
                 f"{rarity_text}"
             )
         ),
