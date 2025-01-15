@@ -23,6 +23,7 @@ class CreateOrderDM(BaseModel):
     type: GiftType
     price: float
     seller_id: int
+    is_vip: bool
 
 
 class OrderDM(CreateOrderDM):

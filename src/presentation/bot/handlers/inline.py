@@ -1,7 +1,7 @@
 from aiogram import Router
 from aiogram.types import InlineQuery, InlineQueryResultArticle, InputTextMessageContent
 
-from src.application.common.const import GIFT_TYPE_MAP
+from src.application.common.const import GIFT_TYPE_MAP, INLINE_IMAGE_URL
 from src.application.common.utils import build_direct_link
 from src.entrypoint.config import Config
 from src.presentation.bot.keyboards.base import order_kb
@@ -9,7 +9,6 @@ from src.presentation.bot.services.market import get_gift
 
 
 inline_router = Router()
-INLINE_IMAGE_URL = "https://store.nestdex.dev/media/inline_image.jpg"
 
 
 @inline_router.inline_query()

@@ -76,9 +76,13 @@ class CreateOrderInteractor(Interactor[CreateOrderDTO, None]):
         await self._market_gateway.save(
             CreateOrderDM(**data.model_dump(), seller_id=self._user.id)
         )
+
+        amount = PriceList.VIP_ORDER if data.is_vip else 0
         if self._user.id not in self._config.bot.nft_holders_id:
+            amount += PriceList.UP_FOR_SALE
+        if amount:
             updated_user = await self._user_gateway.update_balance(
-                UpdateUserBalanceDM(id=self._user.id, amount=-PriceList.UP_FOR_SALE)
+                UpdateUserBalanceDM(id=self._user.id, amount=-amount)
             )
             if not updated_user or updated_user.balance < 0:
                 await self._db_session.rollback()

@@ -23,6 +23,7 @@ class Order(Base):
     created_order_date: Mapped[datetime | None] = mapped_column(TIMESTAMP, nullable=True)
     completed_order_date: Mapped[datetime | None] = mapped_column(TIMESTAMP, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_vip: Mapped[bool] = mapped_column(Boolean)
 
     seller_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     buyer_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=True)

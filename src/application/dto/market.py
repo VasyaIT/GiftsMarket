@@ -13,6 +13,7 @@ class CreateOrderDTO(BaseDTO):
     image_url: str = Field(examples=["https://example.com"])
     type: GiftType
     price: float = Field(gt=0)
+    is_vip: bool = False
 
 
 class UpdateOrderDTO(BaseDTO):
