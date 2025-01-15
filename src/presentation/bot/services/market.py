@@ -54,7 +54,7 @@ async def cancel_order(order_id: int, postgres_config: PostgresConfig) -> bool:
 
     async with session_maker() as session:
         gateway = MarketGateway(session)
-        if not (order := await gateway.get_one(id=order_id, status=OrderStatus.GIFT_TRANSFERRED)):
+        if not (order := await gateway.get_one(id=order_id)):
             return False
         await UserGateway(session).update_balance(
             UpdateUserBalanceDM(
