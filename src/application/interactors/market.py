@@ -94,7 +94,7 @@ class GetGiftsInteractor:
         self._market_gateway = market_gateway
         self._user = user
 
-    async def __call__(self, data: GiftFilterParams, sort_by: GiftSortParams) -> list[ReadOrderDM]:
+    async def __call__(self, data: GiftFilterParams, sort_by: GiftSortParams | None) -> list[ReadOrderDM]:
         filters = self._prepare_filters(data, self._user.id)
         return await self._market_gateway.get_all_gifts(filters, sort_by)
 

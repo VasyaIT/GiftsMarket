@@ -28,8 +28,8 @@ market_router = APIRouter(prefix="/market", tags=["Market"])
 @inject
 async def get_all_gifts(
     filters: Annotated[GiftFilterParams, Depends()],
-    sort_by: GiftSortParams,
-    interactor: FromDishka[market.GetGiftsInteractor]
+    interactor: FromDishka[market.GetGiftsInteractor],
+    sort_by: GiftSortParams | None = None,
 ) -> list[ReadOrderDM]:
     return await interactor(filters, sort_by)
 
