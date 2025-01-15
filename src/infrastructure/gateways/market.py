@@ -128,6 +128,11 @@ class MarketGateway(OrderSaver):
                 buyer_name=None if not order.buyer else order.buyer.username
             )
 
+    async def is_exist(self, **filters) -> bool:
+        stmt = select(Order).filter_by(**filters).where(Order.status != OrderStatus.GIFT_RECEIVED)
+        result = await self._session.execute(stmt)
+        return result.scalar_one_or_none() is not None
+
     async def get_by_id_and_user(
         self, order_id: int, user_id: int, statuses: list[OrderStatus]
     ) -> ReadOrderDM | None:

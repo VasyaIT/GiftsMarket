@@ -32,6 +32,10 @@ class OrderReader(Protocol):
         ...
 
     @abstractmethod
+    async def is_exist(self, **filters) -> bool:
+        ...
+
+    @abstractmethod
     async def get_by_id_and_user(
         self, order_id: int, user_id: int, statuses: list[OrderStatus]
     ) -> ReadOrderDM | None:
