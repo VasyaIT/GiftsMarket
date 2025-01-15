@@ -1,5 +1,5 @@
 from sqlalchemy import and_, delete, func, insert, or_, select, update
-from sqlalchemy.exc import DBAPIError, IntegrityError
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.common.const import OrderStatus
@@ -15,13 +15,21 @@ from src.domain.entities.market import (
 )
 from src.infrastructure.gateways.errors import InvalidOrderDataError
 from src.infrastructure.models.order import Order
+from src.presentation.api.market.params import GiftSortParams
 
 
 class MarketGateway(OrderSaver):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def get_all_gifts(self, filters: GiftFiltersDM) -> list[ReadOrderDM]:
+    async def get_all_gifts(self, filters: GiftFiltersDM, sort_by: GiftSortParams) -> list[ReadOrderDM]:
+        order_by = Order.created_at.desc()
+        if sort_by is GiftSortParams.OLDEST:
+            order_by = Order.created_at.asc()
+        elif sort_by is GiftSortParams.PRICE_LOW_TO_HIGH:
+            order_by = Order.price.asc()
+        elif sort_by is GiftSortParams.PRICE_HIGH_TO_LOW:
+            order_by = Order.created_at.desc()
         stmt = (
             select(Order)
             .where(
@@ -31,7 +39,7 @@ class MarketGateway(OrderSaver):
             )
             .limit(filters.limit)
             .offset(filters.offset)
-            .order_by(Order.created_at.desc())
+            .order_by(order_by)
         )
         result = await self._session.execute(stmt)
         order_rm = []

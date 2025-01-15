@@ -11,11 +11,12 @@ from src.domain.entities.market import (
     ReadOrderDM,
     UserGiftsDM
 )
+from src.presentation.api.market.params import GiftSortParams
 
 
 class OrderReader(Protocol):
     @abstractmethod
-    async def get_all_gifts(self, filters: GiftFiltersDM) -> list[ReadOrderDM]:
+    async def get_all_gifts(self, filters: GiftFiltersDM, sort_by: GiftSortParams) -> list[ReadOrderDM]:
         ...
 
     @abstractmethod

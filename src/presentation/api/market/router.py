@@ -18,7 +18,7 @@ from src.application.interactors.errors import (
 )
 from src.domain.entities.market import ReadOrderDM
 from src.infrastructure.gateways.errors import InvalidOrderDataError
-from src.presentation.api.market.params import GiftFilterParams, OrderFilterParams
+from src.presentation.api.market.params import GiftFilterParams, GiftSortParams, OrderFilterParams
 
 
 market_router = APIRouter(prefix="/market", tags=["Market"])
@@ -27,9 +27,11 @@ market_router = APIRouter(prefix="/market", tags=["Market"])
 @market_router.get("/gifts")
 @inject
 async def get_all_gifts(
-    filters: Annotated[GiftFilterParams, Depends()], interactor: FromDishka[market.GetGiftsInteractor]
+    filters: Annotated[GiftFilterParams, Depends()],
+    sort_by: GiftSortParams,
+    interactor: FromDishka[market.GetGiftsInteractor]
 ) -> list[ReadOrderDM]:
-    return await interactor(filters)
+    return await interactor(filters, sort_by)
 
 
 @market_router.get("/gifts/{id}")

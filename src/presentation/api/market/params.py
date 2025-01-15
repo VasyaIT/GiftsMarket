@@ -1,3 +1,5 @@
+from enum import StrEnum, auto
+
 from fastapi import Query
 
 from src.application.common.const import GiftRarity, GiftType, OrderType
@@ -31,3 +33,10 @@ class OrderFilterParams:
         self.offset = offset
         self.limit = limit
         self.order_type = order_type
+
+
+class GiftSortParams(StrEnum):
+    PRICE_LOW_TO_HIGH = auto()
+    PRICE_HIGH_TO_LOW = auto()
+    RECENTLY_ADDED = auto()
+    OLDEST = auto()

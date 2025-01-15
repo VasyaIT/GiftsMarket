@@ -28,7 +28,7 @@ from src.domain.entities.market import (
 )
 from src.domain.entities.user import UpdateUserBalanceDM, UserDM
 from src.entrypoint.config import Config
-from src.presentation.api.market.params import GiftFilterParams, OrderFilterParams
+from src.presentation.api.market.params import GiftFilterParams, GiftSortParams, OrderFilterParams
 from src.presentation.bot.services import text
 
 
@@ -89,14 +89,14 @@ class CreateOrderInteractor(Interactor[CreateOrderDTO, None]):
         )
 
 
-class GetGiftsInteractor(Interactor[GiftFilterParams, list[ReadOrderDM]]):
+class GetGiftsInteractor:
     def __init__(self, market_gateway: OrderReader, user: UserDM) -> None:
         self._market_gateway = market_gateway
         self._user = user
 
-    async def __call__(self, data: GiftFilterParams) -> list[ReadOrderDM]:
+    async def __call__(self, data: GiftFilterParams, sort_by: GiftSortParams) -> list[ReadOrderDM]:
         filters = self._prepare_filters(data, self._user.id)
-        return await self._market_gateway.get_all_gifts(filters)
+        return await self._market_gateway.get_all_gifts(filters, sort_by)
 
     def _prepare_filters(self, filters: GiftFilterParams, user_id: int) -> GiftFiltersDM:
         return GiftFiltersDM(
