@@ -12,13 +12,14 @@ from src.application.common.const import (
     OrderType,
     PriceList
 )
-from src.application.common.utils import send_message
+from src.application.common.utils import build_direct_link, send_message
 from src.application.dto.market import CreateOrderDTO
 from src.application.interactors import errors
 from src.application.interfaces.database import DBSession
 from src.application.interfaces.interactor import Interactor
 from src.application.interfaces.market import OrderManager, OrderReader, OrderSaver
 from src.application.interfaces.user import UserManager, UserSaver
+from src.domain.entities.bot import BotInfoDM
 from src.domain.entities.market import (
     CreateOrderDM,
     GiftFiltersDM,
@@ -29,6 +30,7 @@ from src.domain.entities.market import (
 from src.domain.entities.user import UpdateUserBalanceDM, UserDM
 from src.entrypoint.config import Config
 from src.presentation.api.market.params import GiftFilterParams, GiftSortParams, OrderFilterParams
+from src.presentation.bot.keyboards.base import order_kb
 from src.presentation.bot.services import text
 
 
@@ -177,12 +179,14 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
         user_gateway: UserSaver,
         user: UserDM,
         bot: Bot,
+        bot_info: BotInfoDM
     ) -> None:
         self._db_session = db_session
         self._market_gateway = market_gateway
         self._user_gateway = user_gateway
         self._user = user
         self._bot = bot
+        self._bot_info = bot_info
 
     async def __call__(self, order_id: int) -> OrderDM:
         if not self._user.username:
@@ -212,10 +216,12 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
 
         await self._db_session.commit()
 
+        direct_link = build_direct_link(self._bot_info.username, f"order_{order.id}")
         await send_message(
             self._bot,
             text.get_buy_gift_text(order.type.name, order.number),
-            [order.seller_id]
+            [order.seller_id],
+            reply_markup=order_kb(order.type, order.number, direct_link)
         )
 
         logger.info(
@@ -282,12 +288,14 @@ class SellerAcceptInteractor(Interactor[int, OrderDM]):
         user_gateway: UserSaver,
         user: UserDM,
         bot: Bot,
+        bot_info: BotInfoDM,
     ) -> None:
         self._db_session = db_session
         self._market_gateway = market_gateway
         self._user_gateway = user_gateway
         self._user = user
         self._bot = bot
+        self._bot_info = bot_info
 
     async def __call__(self, order_id: int) -> OrderDM:
         values = dict(status=OrderStatus.SELLER_ACCEPT, created_order_date=datetime.now())
@@ -308,10 +316,12 @@ class SellerAcceptInteractor(Interactor[int, OrderDM]):
 
         await self._db_session.commit()
 
+        direct_link = build_direct_link(self._bot_info.username, f"order_{order.id}")
         await send_message(
             self._bot,
             text.get_seller_accept_text(order.type.name, order.number),
-            [order.buyer_id]
+            [order.buyer_id],
+            reply_markup=order_kb(order.type, order.number, direct_link)
         )
 
         logger.info(
@@ -390,11 +400,14 @@ class SellerCancelInteractor(Interactor[int, OrderDM]):
 
 
 class ConfirmTransferInteractor(Interactor[int, OrderDM]):
-    def __init__(self, db_session: DBSession, market_gateway: OrderSaver, user: UserDM, bot: Bot) -> None:
+    def __init__(
+        self, db_session: DBSession, market_gateway: OrderSaver, user: UserDM, bot: Bot, bot_info: BotInfoDM
+    ) -> None:
         self._db_session = db_session
         self._user = user
         self._market_gateway = market_gateway
         self._bot = bot
+        self._bot_info = bot_info
 
     async def __call__(self, order_id: int) -> OrderDM:
         values = dict(status=OrderStatus.GIFT_TRANSFERRED)
@@ -414,10 +427,12 @@ class ConfirmTransferInteractor(Interactor[int, OrderDM]):
 
         await self._db_session.commit()
 
+        direct_link = build_direct_link(self._bot_info.username, f"order_{order.id}")
         await send_message(
             self._bot,
             text.get_confirm_transfer_text(order.type.name, order.number),
             [order.buyer_id],
+            reply_markup=order_kb(order.type, order.number, direct_link)
         )
 
         logger.info(
@@ -435,6 +450,7 @@ class AcceptTransferInteractor(Interactor[int, OrderDM]):
         user_gateway: UserManager,
         user: UserDM,
         bot: Bot,
+        bot_info: BotInfoDM,
         config: Config,
     ) -> None:
         self._db_session = db_session
@@ -442,6 +458,7 @@ class AcceptTransferInteractor(Interactor[int, OrderDM]):
         self._user_gateway = user_gateway
         self._user = user
         self._bot = bot
+        self._bot_info = bot_info
         self._config = config
 
     async def __call__(self, order_id: int) -> OrderDM:
@@ -469,10 +486,12 @@ class AcceptTransferInteractor(Interactor[int, OrderDM]):
             await self._user_gateway.update_referrer_balance(referrer.id, referrer_reward)
         await self._db_session.commit()
 
+        direct_link = build_direct_link(self._bot_info.username, f"order_{order.id}")
         await send_message(
             self._bot,
             text.get_accept_transfer_text(order.type.name, order.number),
-            [order.buyer_id, order.seller_id]  # type: ignore
+            [order.buyer_id, order.seller_id],  # type: ignore
+            reply_markup=order_kb(order.type, order.number, direct_link)
         )
 
         logger.info(

@@ -64,3 +64,7 @@ def calculate_gift_rarity(model_percent: float) -> GiftRarity:
     elif model_percent >= GIFT_RARITY_PERCENT[GiftRarity.MYTHICAL]:
         rarity = GiftRarity.MYTHICAL
     return rarity
+
+
+def build_direct_link(bot_username: str, parameter: str) -> str:
+    return f"https://t.me/{bot_username}/store?startapp={parameter}"

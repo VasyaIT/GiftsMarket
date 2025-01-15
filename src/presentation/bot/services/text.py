@@ -78,15 +78,6 @@ def get_canceled_text_to_owner(username: str | None, user_id: int) -> str:
     )
 
 
-# def get_new_gift_text(username: str | None, user_id: int, order: OrderDM) -> str:
-#     username_text = "" if not username else f"@{username} "
-#     return (
-#         f"➕ Новая заявка на создание подарка от {username_text}#<code>{user_id}</code>\n\n"
-#         f"ID: {order.id}\nПодарок: <b>{order.type.name} - #{order.number}</b>\n"
-#         f"Цена: {order.price} TON\nМодель: {order.model}%\nФон: {order.background}%\nУзор: {order.pattern}%"
-#     )
-
-
 def get_admin_text(count_users: int, count_gifts: int, count_completed_gifts: int) -> str:
     return (
         f"<b>Количество пользователей</b>: {count_users}\n<b>Количество подарков</b>: {count_gifts}"
