@@ -54,3 +54,9 @@ async def get_full_user_info(postgres_config: PostgresConfig, user_id: int) -> F
         withdraw_requests=withdraw_requests,
         total_withdrawn=total_withdrawn,
     )
+
+
+async def get_total_balance(postgres_config: PostgresConfig) -> float:
+    session_maker = new_session_maker(postgres_config)
+    async with session_maker() as session:
+        return await UserGateway(session).get_sum_users_balance()

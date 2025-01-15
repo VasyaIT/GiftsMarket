@@ -78,10 +78,13 @@ def get_canceled_text_to_owner(username: str | None, user_id: int) -> str:
     )
 
 
-def get_admin_text(count_users: int, count_gifts: int, count_completed_gifts: int) -> str:
+def get_admin_text(
+    count_users: int, count_gifts: int, count_completed_gifts: int, total_balance: float
+) -> str:
     return (
         f"<b>Количество пользователей</b>: {count_users}\n<b>Количество подарков</b>: {count_gifts}"
-        f"\n<b>Количество завершённых сделок</b>: {count_completed_gifts}"
+        f"\n<b>Количество завершённых сделок</b>: {count_completed_gifts}\n"
+        f"<b>Общий баланс пользователей: </b>{total_balance:.1f} TON"
     )
 
 

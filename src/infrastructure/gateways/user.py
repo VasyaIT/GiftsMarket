@@ -23,6 +23,11 @@ class UserGateway(UserReader, UserSaver):
         result = await self._session.execute(stmt)
         return [UserDM(**user.__dict__) for user in result.scalars().all()]
 
+    async def get_sum_users_balance(self) -> float:
+        stmt = select(func.sum(User.balance))
+        result = await self._session.execute(stmt)
+        return result.scalar_one()
+
     async def save(self, user: CreateUserDM) -> UserDM:
         stmt = insert(User).values(user.model_dump()).returning(User)
         result = await self._session.execute(stmt)

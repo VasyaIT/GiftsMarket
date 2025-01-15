@@ -2,6 +2,7 @@ from enum import Enum, StrEnum, auto
 
 
 MINUTES_TO_SEND_GIFT = 20
+INLINE_IMAGE_URL = "https://store.nestdex.dev/media/inline_image.jpg"
 
 
 class OrderStatus(StrEnum):

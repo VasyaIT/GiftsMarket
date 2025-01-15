@@ -23,8 +23,11 @@ async def admin_handler(message: Message, config: Config) -> None:
         return
     count_users = await user.get_count_users(config.postgres)
     count_all_gifts, count_completed_gifts = await market.get_count_gifts(config.postgres)
+    total_balance = await user.get_total_balance(config.postgres)
 
-    await message.answer(text.get_admin_text(count_users, count_all_gifts, count_completed_gifts))
+    await message.answer(
+        text.get_admin_text(count_users, count_all_gifts, count_completed_gifts, total_balance)
+    )
 
 
 @router.message(F.text.startswith("/user"))
