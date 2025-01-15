@@ -18,10 +18,10 @@ async def get_orders_info(
             return orders
 
 
-async def get_order(order_id: int, postgres_config: PostgresConfig) -> ReadOrderDM | None:
+async def get_gift(order_id: int, postgres_config: PostgresConfig) -> ReadOrderDM | None:
     session_maker = new_session_maker(postgres_config)
     async with session_maker() as session:
-        return await MarketGateway(session).get_one(id=order_id)
+        return await MarketGateway(session).get_one(id=order_id, status=OrderStatus.ON_MARKET)
 
 
 async def get_all_inactive(user_id: int, postgres_config: PostgresConfig) -> list[ReadOrderDM]:
