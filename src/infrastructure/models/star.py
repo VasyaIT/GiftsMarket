@@ -21,6 +21,6 @@ class Star(Base):
     buyer_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
 
     seller: Mapped[User] = relationship(
-        "User", lazy="selectin", foreign_keys="Order.seller_id"
+        "User", lazy="selectin", foreign_keys="Star.seller_id"
     )
-    buyer: Mapped[User] = relationship("User", lazy="selectin", foreign_keys="Order.buyer_id")
+    buyer: Mapped[User] = relationship("User", lazy="selectin", foreign_keys="Star.buyer_id")

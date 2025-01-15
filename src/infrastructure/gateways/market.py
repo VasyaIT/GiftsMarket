@@ -39,7 +39,7 @@ class MarketGateway(OrderSaver):
             )
             .limit(filters.limit)
             .offset(filters.offset)
-            .order_by(order_by)
+            .order_by(Order.is_vip.desc(), order_by)
         )
         result = await self._session.execute(stmt)
         order_rm = []
