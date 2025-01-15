@@ -161,6 +161,7 @@ async def order_info_handler(message: Message, config: Config) -> Message | None
     answer_text = ""
     for order in orders:
         answer_text += f"{text.get_order_info_text(order)}\n\n"
+        answer_text += "--------------------\n\n"
     await message.answer(answer_text.strip())
 
 
