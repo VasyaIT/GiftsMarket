@@ -8,7 +8,7 @@ from src.presentation.bot.services.market import get_gift
 
 
 inline_router = Router()
-INLINE_IMAGE_URL = ""
+INLINE_IMAGE_URL = "https://store.nestdex.dev/media/inline_image.jpg"
 
 
 @inline_router.inline_query()
