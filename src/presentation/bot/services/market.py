@@ -11,14 +11,14 @@ from src.infrastructure.gateways.user import UserGateway
 
 async def get_order_info(
     gift_type: str, gift_number: int, postgres_config: PostgresConfig
-) -> ReadOrderDM | None:
+) -> list[ReadOrderDM] | None:
     session_maker = new_session_maker(postgres_config)
     async with session_maker() as session:
-        if order := await MarketGateway(session).get_one(type=GiftType[gift_type], number=gift_number):
-            return order
+        if orders := await MarketGateway(session).get_all(type=GiftType[gift_type], number=gift_number):
+            return orders
 
 
-async def get_all_inactive(user_id: int, postgres_config: PostgresConfig) -> list[OrderDM]:
+async def get_all_inactive(user_id: int, postgres_config: PostgresConfig) -> list[ReadOrderDM]:
     session_maker = new_session_maker(postgres_config)
     async with session_maker() as session:
         return await MarketGateway(session).get_all(seller_id=user_id, is_active=False)

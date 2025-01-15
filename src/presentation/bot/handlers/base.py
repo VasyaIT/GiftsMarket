@@ -156,9 +156,12 @@ async def order_info_handler(message: Message, config: Config) -> Message | None
             "Отправь команду в формате <code>/order [gift_type] [gift number]</code>"
         )
 
-    if not (order := await market.get_order_info(gift_type, gift_number, config.postgres)):
+    if not (orders := await market.get_order_info(gift_type, gift_number, config.postgres)):
         return await message.answer(f"❌ Ордер {gift_type} - #{gift_number} не найден")
-    await message.answer(text.get_order_info_text(order))
+    answer_text = ""
+    for order in orders:
+        answer_text += f"{text.get_order_info_text(order)}\n\n"
+    await message.answer(answer_text.strip())
 
 
 @router.message(F.text.startswith("/delete"))

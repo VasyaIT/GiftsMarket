@@ -92,10 +92,16 @@ class MarketGateway(OrderSaver):
         result = await self._session.execute(stmt)
         return [UserGiftsDM(**order.__dict__) for order in result.scalars().all()]
 
-    async def get_all(self, **filters) -> list[OrderDM]:
+    async def get_all(self, **filters) -> list[ReadOrderDM]:
         stmt = select(Order).filter_by(**filters)
         result = await self._session.execute(stmt)
-        return [OrderDM(**order.__dict__) for order in result.scalars().all()]
+        return [
+            ReadOrderDM(
+                **order.__dict__,
+                seller_name=order.seller.username,
+                buyer_name=None if not order.buyer else order.buyer.username,
+            ) for order in result.scalars().all()
+        ]
 
     async def get_user_orders(self, user_id: int) -> list[OrderDM]:
         stmt = (
