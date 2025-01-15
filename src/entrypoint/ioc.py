@@ -9,10 +9,12 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from src.application.common.fixtures import get_gift_images
 from src.application.dto.common import GiftImagesDTO
 from src.application.interactors import market, user
+from src.application.interactors.star import CreateStarOrderInteractor
 from src.application.interactors.wallet import WithdrawRequestInteractor
 from src.application.interfaces.auth import InitDataValidator, TokenDecoder, TokenEncoder
 from src.application.interfaces.database import DBSession
 from src.application.interfaces.market import OrderManager, OrderReader, OrderSaver
+from src.application.interfaces.star import StarOrderReader, StarOrderSaver
 from src.application.interfaces.user import UserManager, UserReader, UserSaver
 from src.application.interfaces.wallet import WithdrawRequestSaver
 from src.domain.entities.bot import BotInfoDM
@@ -21,6 +23,7 @@ from src.entrypoint.config import Config
 from src.infrastructure.database.session import new_session_maker
 from src.infrastructure.gateways.auth import TelegramGateway, TokenGateway
 from src.infrastructure.gateways.market import MarketGateway
+from src.infrastructure.gateways.star import StarGateway
 from src.infrastructure.gateways.user import UserGateway
 from src.infrastructure.gateways.wallet import WalletGateway
 from src.presentation.api.authentication import get_user_by_token
@@ -76,6 +79,9 @@ class AppProvider(FastapiProvider):
         MarketGateway, scope=Scope.REQUEST, provides=AnyOf[OrderManager, OrderSaver, OrderReader]
     )
     wallet_gateway = provide(WalletGateway, scope=Scope.REQUEST, provides=AnyOf[WithdrawRequestSaver])
+    star_gateway = provide(
+        StarGateway, scope=Scope.REQUEST, provides=AnyOf[StarOrderReader, StarOrderSaver]
+    )
 
     login_interactor = provide(user.LoginInteractor, scope=Scope.REQUEST)
     get_user_interactor = provide(user.GetUserInteractor, scope=Scope.REQUEST)
@@ -95,3 +101,4 @@ class AppProvider(FastapiProvider):
     get_orders_interactor = provide(market.GetOrdersInteractor, scope=Scope.REQUEST)
     get_order_interactor = provide(market.GetOrderInteractor, scope=Scope.REQUEST)
     withdraw_request_interactor = provide(WithdrawRequestInteractor, scope=Scope.REQUEST)
+    create_star_interactor = provide(CreateStarOrderInteractor, scope=Scope.REQUEST)

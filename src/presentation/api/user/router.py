@@ -43,7 +43,7 @@ async def get_user_gifts(interactor: FromDishka[user.GetUserGiftsInteractor]) ->
 async def get_user_gift(id: int, interactor: FromDishka[user.GetUserGiftInteractor]) -> UserGiftsDM:
     try:
         return await interactor(id)
-    except (NotFoundError) as e:
+    except NotFoundError as e:
         raise HTTPException(status.HTTP_404_NOT_FOUND, str(e))
 
 

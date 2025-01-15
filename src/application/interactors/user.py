@@ -4,7 +4,7 @@ from logging.handlers import RotatingFileHandler
 from aiogram.utils.payload import decode_payload, encode_payload
 
 from src.application.common.const import OrderStatus, PriceList
-from src.application.common.utils import generate_deposit_comment
+from src.application.common.utils import build_direct_link, generate_deposit_comment
 from src.application.dto.market import OrderDTO, UpdateOrderDTO
 from src.application.dto.user import LoginDTO, UserDTO
 from src.application.interactors.errors import NotFoundError
@@ -99,8 +99,7 @@ class GetUserInteractor(Interactor[None, UserDTO]):
         self._bot_data = bot_data
 
     async def __call__(self) -> UserDTO:
-        payload = encode_payload(str(self._user.id))
-        referral_link = f"https://t.me/{self._bot_data.username}/store?startapp={payload}"
+        referral_link = build_direct_link(self._bot_data.username, encode_payload(str(self._user.id)))
         count_referrals = await self._user_gateway.get_count_referrals(self._user.id)
         return UserDTO(
             **self._user.model_dump(), referral_link=referral_link, count_referrals=count_referrals
