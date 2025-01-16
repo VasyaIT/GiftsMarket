@@ -6,6 +6,7 @@ from src.application.common.const import OrderStatus
 
 
 class StarOrderDM(BaseModel):
+    id: int
     amount: float
     price: float
     seller_id: int
