@@ -6,7 +6,7 @@ from starlette import status
 from src.application.dto.common import ResponseDTO
 from src.application.dto.star import CreateStarOrderDTO, StarsIdDTO
 from src.application.interactors import star
-from src.application.interactors.errors import NotAccessError, NotFoundError
+from src.application.interactors.errors import NotAccessError, NotEnoughBalanceError, NotFoundError
 from src.domain.entities.star import StarOrderDM
 
 
@@ -35,7 +35,7 @@ async def create_star_order(
 async def buy_stars(dto: StarsIdDTO, interactor: FromDishka[star.BuyStarsInteractor]) -> ResponseDTO:
     try:
         await interactor(dto)
-    except (NotFoundError, NotAccessError) as e:
+    except (NotFoundError, NotAccessError, NotEnoughBalanceError) as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
     return ResponseDTO(success=True)
 

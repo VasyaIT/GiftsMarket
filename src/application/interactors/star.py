@@ -3,24 +3,18 @@ from datetime import datetime, timedelta
 from logging.handlers import RotatingFileHandler
 
 from aiogram import Bot
-from aiogram.utils.payload import decode_payload, encode_payload
 
 from src.application.common.const import MINUTES_TO_SEND_GIFT, OrderStatus, PriceList
-from src.application.common.utils import build_direct_link, generate_deposit_comment, send_message
-from src.application.dto.market import OrderDTO, UpdateOrderDTO
+from src.application.common.utils import build_direct_link, send_message
 from src.application.dto.star import CreateStarOrderDTO, StarsIdDTO
-from src.application.dto.user import LoginDTO, UserDTO
 from src.application.interactors import errors
-from src.application.interfaces.auth import InitDataValidator, TokenEncoder
 from src.application.interfaces.database import DBSession
 from src.application.interfaces.interactor import Interactor
-from src.application.interfaces.market import OrderReader, OrderSaver
 from src.application.interfaces.star import StarManager, StarOrderReader, StarOrderSaver
-from src.application.interfaces.user import UserManager, UserReader, UserSaver
+from src.application.interfaces.user import UserManager, UserSaver
 from src.domain.entities.bot import BotInfoDM
-from src.domain.entities.market import GetUserGiftsDM, UpdateOrderDM, UserGiftsDM
 from src.domain.entities.star import CreateStarOrderDM, StarOrderDM
-from src.domain.entities.user import CreateUserDM, UpdateUserBalanceDM, UserDM
+from src.domain.entities.user import UpdateUserBalanceDM, UserDM
 from src.entrypoint.config import Config
 from src.presentation.bot.keyboards.base import stars_order_kb
 from src.presentation.bot.services import text
