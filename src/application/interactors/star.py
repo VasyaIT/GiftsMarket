@@ -11,7 +11,6 @@ from src.application.dto.market import OrderDTO, UpdateOrderDTO
 from src.application.dto.star import CreateStarOrderDTO, StarsIdDTO
 from src.application.dto.user import LoginDTO, UserDTO
 from src.application.interactors import errors
-from src.application.interactors.errors import NotAccessError, NotFoundError
 from src.application.interfaces.auth import InitDataValidator, TokenEncoder
 from src.application.interfaces.database import DBSession
 from src.application.interfaces.interactor import Interactor
@@ -406,12 +405,12 @@ class GetStarOrderInteractor(Interactor[int, StarOrderDM]):
     async def __call__(self, order_id: int) -> StarOrderDM:
         order = await self._star_gateway.get_one(id=order_id)
         if not order:
-            raise NotFoundError("Star order not found")
+            raise errors.NotFoundError("Star order not found")
         if (
             order.status != OrderStatus.ON_MARKET
             and self._user.id not in (order.seller_id, order.buyer_id)
         ):
-            raise NotAccessError("Forbidden")
+            raise errors.NotAccessError("Forbidden")
         return order
 
 
@@ -460,7 +459,7 @@ class UpdateStarOrderInteractor:
             data.model_dump(), id=order_id, seller_id=self._user.id, status=OrderStatus.ON_MARKET
         )
         if not order:
-            raise NotFoundError("Star order not found")
+            raise errors.NotFoundError("Star order not found")
         await self._db_session.commit()
         return order
 
@@ -483,5 +482,5 @@ class DeleteStarOrderInteractor(Interactor[int, None]):
             id=order_id, seller_id=self._user.id, status=OrderStatus.ON_MARKET
         )
         if not order:
-            raise NotFoundError("Star order not found")
+            raise errors.NotFoundError("Star order not found")
         await self._db_session.commit()

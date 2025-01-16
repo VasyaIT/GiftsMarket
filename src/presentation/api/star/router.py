@@ -35,7 +35,7 @@ async def create_star_order(
 async def buy_stars(dto: StarsIdDTO, interactor: FromDishka[star.BuyStarsInteractor]) -> ResponseDTO:
     try:
         await interactor(dto)
-    except NotFoundError as e:
+    except (NotFoundError, NotAccessError) as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
     return ResponseDTO(success=True)
 
@@ -71,7 +71,7 @@ async def seller_accept_stars_order(
 ) -> ResponseDTO:
     try:
         await interactor(dto)
-    except NotFoundError as e:
+    except (NotFoundError, NotAccessError) as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
     return ResponseDTO(success=True)
 
