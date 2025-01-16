@@ -416,6 +416,23 @@ class GetStarOrderInteractor(Interactor[int, StarOrderDM]):
         return order
 
 
+class GetAllStarOrderInteractor(Interactor[None, list[StarOrderDM]]):
+    def __init__(
+        self,
+        db_session: DBSession,
+        star_gateway: StarOrderReader,
+        user_gateway: UserSaver,
+        user: UserDM,
+    ) -> None:
+        self._db_session = db_session
+        self._star_gateway = star_gateway
+        self._user_gateway = user_gateway
+        self._user = user
+
+    async def __call__(self) -> list[StarOrderDM]:
+        return await self._star_gateway.get_all()
+
+
 class UpdateStarOrderInteractor:
     def __init__(
         self,

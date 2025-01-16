@@ -2,10 +2,13 @@ from abc import abstractmethod
 from typing import Protocol
 
 from src.domain.entities.star import CreateStarOrderDM, StarOrderDM
-from src.domain.entities.user import CreateUserDM, UpdateUserBalanceDM, UserDM
 
 
 class StarOrderReader(Protocol):
+    @abstractmethod
+    async def get_all(self, **filters) -> list[StarOrderDM]:
+        ...
+
     @abstractmethod
     async def get_one(self, **filters) -> StarOrderDM:
         ...

@@ -112,6 +112,7 @@ class AppProvider(FastapiProvider):
     confirm_star_order_interactor = provide(star.ConfirmStarOrderInteractor, scope=Scope.REQUEST)
     accept_transfer_star_order_interactor = provide(star.AcceptTransferStarOrderInteractor, scope=Scope.REQUEST)
     get_star_order_interactor = provide(star.GetStarOrderInteractor, scope=Scope.REQUEST)
+    get_all_star_order_interactor = provide(star.GetAllStarOrderInteractor, scope=Scope.REQUEST)
     update_star_order_interactor = provide(star.UpdateStarOrderInteractor, scope=Scope.REQUEST)
     delete_star_order_interactor = provide(star.DeleteStarOrderInteractor, scope=Scope.REQUEST)
 

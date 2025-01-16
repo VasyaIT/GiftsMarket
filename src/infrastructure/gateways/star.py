@@ -11,6 +11,11 @@ class StarGateway(StarOrderSaver):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    async def get_all(self, **filters) -> list[StarOrderDM]:
+        stmt = select(Star).filter_by(**filters)
+        result = await self._session.execute(stmt)
+        return [StarOrderDM(**order.__dict__) for order in result.scalars().all()]
+
     async def get_one(self, **filters) -> StarOrderDM | None:
         stmt = select(Star).filter_by(**filters)
         result = await self._session.execute(stmt)

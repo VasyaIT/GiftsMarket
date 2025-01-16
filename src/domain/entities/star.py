@@ -11,7 +11,9 @@ class StarOrderDM(BaseModel):
     seller_id: int
     buyer_id: int | None
     status: OrderStatus
-    created_order_date: datetime
+    created_order_date: datetime | None
+    completed_order_date: datetime | None
+    created_at: datetime
 
 
 class CreateStarOrderDM(BaseModel):
