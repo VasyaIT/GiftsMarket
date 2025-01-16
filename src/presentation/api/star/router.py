@@ -15,8 +15,10 @@ start_router = APIRouter(prefix="/star", tags=["Stars"])
 
 @start_router.post("/all")
 @inject
-async def get_all_stars_order(interactor: FromDishka[star.GetAllStarOrderInteractor]) -> list[StarOrderDM]:
-    return await interactor()
+async def get_all_stars_order(
+    interactor: FromDishka[star.GetAllStarOrderInteractor], on_market: bool
+) -> list[StarOrderDM]:
+    return await interactor(on_market)
 
 
 @start_router.post("/create")

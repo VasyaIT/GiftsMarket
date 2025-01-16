@@ -55,7 +55,6 @@ class CreateStarOrderInteractor(Interactor[CreateStarOrderDTO, None]):
 
     async def __call__(self, data: CreateStarOrderDTO) -> None:
         await self._star_gateway.save(CreateStarOrderDM(**data.model_dump(), seller_id=self._user.id))
-
         await self._db_session.commit()
 
 
@@ -429,8 +428,18 @@ class GetAllStarOrderInteractor(Interactor[None, list[StarOrderDM]]):
         self._user_gateway = user_gateway
         self._user = user
 
-    async def __call__(self) -> list[StarOrderDM]:
-        return await self._star_gateway.get_all()
+    async def __call__(self, on_market: bool) -> list[StarOrderDM]:
+        orders = await self._star_gateway.get_all()
+        result = []
+        for order in orders:
+            if (
+                not on_market and order.status != OrderStatus.ON_MARKET
+                and self._user.id in (order.seller_id, order.buyer_id)
+            ):
+                result.append(order)
+            elif on_market and order.status == OrderStatus.ON_MARKET:
+                result.append(order)
+        return result
 
 
 class UpdateStarOrderInteractor:
