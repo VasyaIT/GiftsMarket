@@ -11,6 +11,8 @@ class StarOrderDM(BaseModel):
     price: float
     seller_id: int
     buyer_id: int | None
+    seller_name: str | None = None
+    buyer_name: str | None = None
     status: OrderStatus
     created_order_date: datetime | None
     completed_order_date: datetime | None

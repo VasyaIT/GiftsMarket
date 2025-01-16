@@ -80,7 +80,7 @@ def get_confirm_transfer_stars_text(amount: float) -> str:
 
 
 def get_accept_transfer_stars_text(amount: float) -> str:
-    return f"✅ The order for {amount:.2f} was completed successfully"
+    return f"✅ The order for {amount:.2f} Stars was completed successfully"
 
 
 def get_withdraw_request_text(username: str | None, user_id: int, amount: float, wallet: str) -> str:

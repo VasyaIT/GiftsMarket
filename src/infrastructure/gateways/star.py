@@ -14,19 +14,25 @@ class StarGateway(StarOrderSaver):
     async def get_all(self, **filters) -> list[StarOrderDM]:
         stmt = select(Star).filter_by(**filters)
         result = await self._session.execute(stmt)
-        return [StarOrderDM(**order.__dict__) for order in result.scalars().all()]
-
-    async def get_all_orders(self, **filters) -> list[StarOrderDM]:
-        stmt = select(Star).filter_by(**filters)
-        result = await self._session.execute(stmt)
-        return [StarOrderDM(**order.__dict__) for order in result.scalars().all()]
+        return [
+            StarOrderDM(
+                **order.__dict__,
+                seller_name=order.seller.username,
+                buyer_name=None if not order.buyer else order.buyer.username
+            )
+            for order in result.scalars().all()
+        ]
 
     async def get_one(self, **filters) -> StarOrderDM | None:
         stmt = select(Star).filter_by(**filters)
         result = await self._session.execute(stmt)
         order = result.scalar_one_or_none()
         if order:
-            return StarOrderDM(**order.__dict__)
+            return StarOrderDM(
+                **order.__dict__,
+                seller_name=order.seller.username,
+                buyer_name=None if not order.buyer else order.buyer.username
+            )
 
     async def get_cancel_order(self, order_id: int, user_id: int) -> StarOrderDM | None:
         stmt = (
