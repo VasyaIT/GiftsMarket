@@ -13,7 +13,7 @@ from src.domain.entities.star import StarOrderDM
 start_router = APIRouter(prefix="/star", tags=["Stars"])
 
 
-@start_router.post("/all")
+@start_router.get("/all")
 @inject
 async def get_all_stars_order(
     interactor: FromDishka[star.GetAllStarOrderInteractor], on_market: bool
