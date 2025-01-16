@@ -37,7 +37,6 @@ def upgrade() -> None:
                     sa.ForeignKeyConstraint(['seller_id'], ['users.id'], ondelete='CASCADE'),
                     sa.PrimaryKeyConstraint('id')
                     )
-    op.add_column('orders', sa.Column('is_vip', sa.Boolean(), nullable=False))
     op.drop_constraint('_type_number_uc', 'orders', type_='unique')
     # ### end Alembic commands ###
 
