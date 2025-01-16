@@ -1,6 +1,7 @@
-from sqlalchemy import delete, insert, select, update
+from sqlalchemy import and_, delete, insert, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.application.common.const import OrderStatus
 from src.application.interfaces.star import StarOrderSaver
 from src.domain.entities.star import CreateStarOrderDM, StarOrderDM
 from src.infrastructure.models.star import Star
@@ -12,6 +13,27 @@ class StarGateway(StarOrderSaver):
 
     async def get_one(self, **filters) -> StarOrderDM | None:
         stmt = select(Star).filter_by(**filters)
+        result = await self._session.execute(stmt)
+        order = result.scalar_one_or_none()
+        if order:
+            return StarOrderDM(**order.__dict__)
+
+    async def get_cancel_order(self, order_id: int, user_id: int) -> StarOrderDM | None:
+        stmt = (
+            select(Star)
+            .where(
+                and_(
+                    Star.id == order_id,
+                    or_(
+                        and_(Star.status == OrderStatus.BUY, Star.seller_id == user_id),
+                        and_(
+                            Star.status == OrderStatus.SELLER_ACCEPT,
+                            or_(Star.buyer_id == user_id, Star.seller_id == user_id)
+                        ),
+                    )
+                )
+            )
+        )
         result = await self._session.execute(stmt)
         order = result.scalar_one_or_none()
         if order:

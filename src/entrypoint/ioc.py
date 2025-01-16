@@ -14,7 +14,7 @@ from src.application.interactors.wallet import WithdrawRequestInteractor
 from src.application.interfaces.auth import InitDataValidator, TokenDecoder, TokenEncoder
 from src.application.interfaces.database import DBSession
 from src.application.interfaces.market import OrderManager, OrderReader, OrderSaver
-from src.application.interfaces.star import StarOrderReader, StarOrderSaver
+from src.application.interfaces.star import StarManager, StarOrderReader, StarOrderSaver
 from src.application.interfaces.user import UserManager, UserReader, UserSaver
 from src.application.interfaces.wallet import WithdrawRequestSaver
 from src.domain.entities.bot import BotInfoDM
@@ -80,7 +80,7 @@ class AppProvider(FastapiProvider):
     )
     wallet_gateway = provide(WalletGateway, scope=Scope.REQUEST, provides=AnyOf[WithdrawRequestSaver])
     star_gateway = provide(
-        StarGateway, scope=Scope.REQUEST, provides=AnyOf[StarOrderReader, StarOrderSaver]
+        StarGateway, scope=Scope.REQUEST, provides=AnyOf[StarManager, StarOrderReader, StarOrderSaver]
     )
 
     login_interactor = provide(user.LoginInteractor, scope=Scope.REQUEST)

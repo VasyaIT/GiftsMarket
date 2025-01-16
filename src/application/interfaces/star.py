@@ -10,6 +10,10 @@ class StarOrderReader(Protocol):
     async def get_one(self, **filters) -> StarOrderDM:
         ...
 
+    @abstractmethod
+    async def get_cancel_order(self, order_id: int, user_id: int) -> StarOrderDM | None:
+        ...
+
 
 class StarOrderSaver(Protocol):
     @abstractmethod
@@ -23,3 +27,7 @@ class StarOrderSaver(Protocol):
     @abstractmethod
     async def delete(self, **filters) -> StarOrderDM | None:
         ...
+
+
+class StarManager(StarOrderReader, StarOrderSaver):
+    ...

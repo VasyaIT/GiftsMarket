@@ -44,6 +44,45 @@ def get_accept_transfer_text(type_name: str, gift_number: int) -> str:
     return f"✅ The order was completed successfully - <b>{type_name} #{gift_number}</b>"
 
 
+def get_buy_stars_text(amount: float) -> str:
+    return (
+        f"💰 Your stars was bought - <b>{amount:.2f} ⭐</b>\n\n"
+        f"📤 Confirm or cancel the order in the app"
+    )
+
+
+def get_cancel_star_text(amount: float) -> str:
+    return (
+        f"❗ The buyer canceled the purchase of your stars - <b>{amount:.2f} ⭐</b>"
+    )
+
+
+def get_seller_accept_star_text(amount: float) -> str:
+    return (
+        f"✅ The seller accepted your deal for a {amount:.2f} Stars\n\n"
+        f"🕑 Wait for the seller to send you a Stars and you will receive a notification in the bot"
+    )
+
+
+def get_seller_cancel_star_text(amount: float) -> str:
+    return (
+        f"❌ The seller canceled order for buy {amount:.2f} Stars\n\n"
+        f"💸 The TONs have been returned to your balance in the app"
+    )
+
+
+def get_confirm_transfer_stars_text(amount: float) -> str:
+    return (
+        f"✅ The seller transferred you {amount:.2f} Stars\n\n"
+        "Go to the market and confirm receipt of the Stars\n\n"
+        "⚠️ <i>Be sure to check if you have received the Stars for real!</i>"
+    )
+
+
+def get_accept_transfer_stars_text(amount: float) -> str:
+    return f"✅ The order for {amount:.2f} was completed successfully"
+
+
 def get_withdraw_request_text(username: str | None, user_id: int, amount: float, wallet: str) -> str:
     username_text = "" if not username else f"@{username} "
     return (

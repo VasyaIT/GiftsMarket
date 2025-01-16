@@ -23,3 +23,9 @@ def order_kb(gift_type: GiftType, gift_number: int, direct_link: str) -> InlineK
     keyboard = InlineKeyboardBuilder()
     keyboard.row(InlineKeyboardButton(text=f"🎁 {gift_type.name} - #{gift_number}", url=direct_link))
     return keyboard.as_markup()
+
+
+def stars_order_kb(amount: float, direct_link: str) -> InlineKeyboardMarkup:
+    keyboard = InlineKeyboardBuilder()
+    keyboard.row(InlineKeyboardButton(text=f"⭐ Order for {amount:.2f} Stars", url=direct_link))
+    return keyboard.as_markup()
