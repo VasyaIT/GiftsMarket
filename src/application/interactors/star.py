@@ -40,14 +40,27 @@ class CreateStarOrderInteractor(Interactor[CreateStarOrderDTO, None]):
         star_gateway: StarOrderSaver,
         user_gateway: UserSaver,
         user: UserDM,
+        config: Config,
     ) -> None:
         self._db_session = db_session
         self._star_gateway = star_gateway
         self._user_gateway = user_gateway
         self._user = user
+        self._config = config
 
     async def __call__(self, data: CreateStarOrderDTO) -> None:
+        if not self._user.username:
+            raise errors.NotUsernameError("User does not have a username to create an order")
+
         await self._star_gateway.save(CreateStarOrderDM(**data.model_dump(), seller_id=self._user.id))
+
+        if self._user.id not in self._config.bot.nft_holders_id:
+            updated_user = await self._user_gateway.update_balance(
+                UpdateUserBalanceDM(id=self._user.id, amount=-PriceList.UP_FOR_SALE)
+            )
+            if not updated_user or updated_user.balance < 0:
+                await self._db_session.rollback()
+                raise errors.NotEnoughBalanceError("User does not have enough balance")
         await self._db_session.commit()
 
 
