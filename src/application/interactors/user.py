@@ -83,7 +83,7 @@ class LoginInteractor(Interactor[LoginDTO, str]):
                 dict(username=user_data.get("username")), id=user_id
             )
             await self._db_session.commit()
-        if not is_subscriber(self._bot, self._config.bot.CHANNEL_ID, user_id):
+        if not await is_subscriber(self._bot, self._config.bot.CHANNEL_ID, user_id):
             raise NotAccessError("User is not subscriber")
         return self._token_gateway.encode(user_id)
 
