@@ -2,6 +2,7 @@ from random import randint
 
 from aiogram import Bot
 from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ChatMemberStatus
 from aiogram.exceptions import TelegramAPIError
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
 
@@ -49,6 +50,14 @@ async def send_photo(
             )
         except TelegramAPIError:
             pass
+
+
+async def is_subscriber(bot: Bot, channel_id: int | str, user_id: int) -> bool:
+    try:
+        chat_member = await bot.get_chat_member(channel_id, user_id)
+    except TelegramAPIError:
+        return False
+    return chat_member.status not in (ChatMemberStatus.LEFT, ChatMemberStatus.KICKED)
 
 
 def get_bot(token: str) -> Bot:

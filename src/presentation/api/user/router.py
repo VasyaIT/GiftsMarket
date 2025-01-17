@@ -4,10 +4,10 @@ from fastapi import APIRouter, HTTPException
 from starlette import status
 
 from src.application.dto.common import ResponseDTO
-from src.application.dto.market import CreateOrderDTO, OrderDTO, UpdateOrderDTO
+from src.application.dto.market import OrderDTO, UpdateOrderDTO
 from src.application.dto.user import LoginDTO, TokenDTO, UserDTO
 from src.application.interactors import user
-from src.application.interactors.errors import InvalidImageUrlError, NotFoundError
+from src.application.interactors.errors import InvalidImageUrlError, NotAccessError, NotFoundError
 from src.domain.entities.market import UserGiftsDM
 from src.infrastructure.gateways.errors import InvalidOrderDataError
 
@@ -18,7 +18,10 @@ user_router = APIRouter(prefix="/user", tags=["User"])
 @user_router.post("/login")
 @inject
 async def user_login(dto: LoginDTO, interactor: FromDishka[user.LoginInteractor]) -> TokenDTO:
-    token = await interactor(data=dto)
+    try:
+        token = await interactor(data=dto)
+    except NotAccessError as e:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, str(e))
     if not token:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Init data is not valid")
     return TokenDTO(token=token)

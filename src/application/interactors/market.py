@@ -77,9 +77,10 @@ class CreateOrderInteractor(Interactor[CreateOrderDTO, None]):
             CreateOrderDM(**data.model_dump(), seller_id=self._user.id)
         )
 
-        amount = PriceList.VIP_ORDER if data.is_vip else 0
+        amount = 0
         if self._user.id not in self._config.bot.nft_holders_id:
-            amount += PriceList.UP_FOR_SALE
+            amount = PriceList.UP_FOR_SALE
+        amount = PriceList.VIP_ORDER if data.is_vip else amount
         if amount:
             updated_user = await self._user_gateway.update_balance(
                 UpdateUserBalanceDM(id=self._user.id, amount=-amount)

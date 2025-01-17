@@ -1,13 +1,14 @@
 import logging
 from logging.handlers import RotatingFileHandler
 
+from aiogram import Bot
 from aiogram.utils.payload import decode_payload, encode_payload
 
 from src.application.common.const import OrderStatus, PriceList
-from src.application.common.utils import build_direct_link, generate_deposit_comment
+from src.application.common.utils import build_direct_link, generate_deposit_comment, is_subscriber
 from src.application.dto.market import OrderDTO, UpdateOrderDTO
 from src.application.dto.user import LoginDTO, UserDTO
-from src.application.interactors.errors import NotFoundError
+from src.application.interactors.errors import NotAccessError, NotFoundError
 from src.application.interfaces.auth import InitDataValidator, TokenEncoder
 from src.application.interfaces.database import DBSession
 from src.application.interfaces.interactor import Interactor
@@ -39,11 +40,15 @@ class LoginInteractor(Interactor[LoginDTO, str]):
         token_gateway: TokenEncoder,
         telegram_gateway: InitDataValidator,
         user_gateway: UserManager,
+        bot: Bot,
+        config: Config,
     ) -> None:
         self._db_session = db_session
         self._token_gateway = token_gateway
         self._telegram_gateway = telegram_gateway
         self._user_gateway = user_gateway
+        self._bot = bot
+        self._config = config
 
     async def __call__(self, data: LoginDTO) -> str | None:
         try:
@@ -78,6 +83,8 @@ class LoginInteractor(Interactor[LoginDTO, str]):
                 dict(username=user_data.get("username")), id=user_id
             )
             await self._db_session.commit()
+        if not is_subscriber(self._bot, self._config.bot.CHANNEL_ID, user_id):
+            raise NotAccessError("User is not subscriber")
         return self._token_gateway.encode(user_id)
 
     def _get_referrer_id(self, decoded_payload: str | None) -> int | None:
