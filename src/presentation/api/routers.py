@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 
 from src.presentation.api.market.router import market_router
-from src.presentation.api.star.router import start_router
+from src.presentation.api.star.router import star_router
+from src.presentation.api.sticker.router import sticker_router
 from src.presentation.api.user.router import user_router
 from src.presentation.api.wallet.router import wallet_router
 
@@ -10,4 +11,5 @@ def setup_routers(app: FastAPI) -> None:
     app.include_router(user_router)
     app.include_router(market_router)
     app.include_router(wallet_router)
-    app.include_router(start_router)
+    app.include_router(sticker_router)
+    app.include_router(star_router)

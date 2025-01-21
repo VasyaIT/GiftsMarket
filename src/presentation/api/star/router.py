@@ -15,10 +15,10 @@ from src.application.interactors.errors import (
 from src.domain.entities.star import StarOrderDM
 
 
-start_router = APIRouter(prefix="/star", tags=["Stars"])
+star_router = APIRouter(prefix="/star", tags=["Stars"])
 
 
-@start_router.get("/all")
+@star_router.get("/all")
 @inject
 async def get_all_stars_order(
     interactor: FromDishka[star.GetAllStarOrderInteractor], on_market: bool
@@ -26,7 +26,7 @@ async def get_all_stars_order(
     return await interactor(on_market)
 
 
-@start_router.post("/create")
+@star_router.post("/create")
 @inject
 async def create_star_order(
     dto: CreateStarOrderDTO, interactor: FromDishka[star.CreateStarOrderInteractor]
@@ -38,7 +38,7 @@ async def create_star_order(
     return ResponseDTO(success=True)
 
 
-@start_router.post("/buy")
+@star_router.post("/buy")
 @inject
 async def buy_stars(dto: StarsIdDTO, interactor: FromDishka[star.BuyStarsInteractor]) -> ResponseDTO:
     try:
@@ -48,7 +48,7 @@ async def buy_stars(dto: StarsIdDTO, interactor: FromDishka[star.BuyStarsInterac
     return ResponseDTO(success=True)
 
 
-@start_router.post("/cancel")
+@star_router.post("/cancel")
 @inject
 async def cancel_stars_order(
     dto: StarsIdDTO, interactor: FromDishka[star.CancelStarOrderInteractor]
@@ -60,7 +60,7 @@ async def cancel_stars_order(
     return ResponseDTO(success=True)
 
 
-@start_router.post("/seller-accept")
+@star_router.post("/seller-accept")
 @inject
 async def accept_stars_order(
     dto: StarsIdDTO, interactor: FromDishka[star.SellerAcceptStarOrderInteractor]
@@ -72,7 +72,7 @@ async def accept_stars_order(
     return ResponseDTO(success=True)
 
 
-@start_router.post("/seller-cancel")
+@star_router.post("/seller-cancel")
 @inject
 async def seller_accept_stars_order(
     dto: StarsIdDTO, interactor: FromDishka[star.SellerCancelStarOrderInteractor]
@@ -84,7 +84,7 @@ async def seller_accept_stars_order(
     return ResponseDTO(success=True)
 
 
-@start_router.post("/confirm")
+@star_router.post("/confirm")
 @inject
 async def confirm_stars_order(
     dto: StarsIdDTO, interactor: FromDishka[star.ConfirmStarOrderInteractor]
@@ -96,7 +96,7 @@ async def confirm_stars_order(
     return ResponseDTO(success=True)
 
 
-@start_router.post("/accept-receipt")
+@star_router.post("/accept-receipt")
 @inject
 async def accept_transfer(
     dto: StarsIdDTO, interactor: FromDishka[star.AcceptTransferStarOrderInteractor]
@@ -108,7 +108,7 @@ async def accept_transfer(
     return ResponseDTO(success=True)
 
 
-@start_router.get("/{id}")
+@star_router.get("/{id}")
 @inject
 async def get_star_order_gift(id: int, interactor: FromDishka[star.GetStarOrderInteractor]) -> StarOrderDM:
     try:
@@ -117,7 +117,7 @@ async def get_star_order_gift(id: int, interactor: FromDishka[star.GetStarOrderI
         raise HTTPException(status.HTTP_404_NOT_FOUND, str(e))
 
 
-@start_router.post("/{id}")
+@star_router.post("/{id}")
 @inject
 async def edit_star_order(
     id: int, dto: CreateStarOrderDTO, interactor: FromDishka[star.UpdateStarOrderInteractor]
@@ -128,7 +128,7 @@ async def edit_star_order(
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
 
 
-@start_router.delete("/{id}")
+@star_router.delete("/{id}")
 @inject
 async def delete_star_order(id: int, interactor: FromDishka[star.DeleteStarOrderInteractor]) -> ResponseDTO:
     try:
