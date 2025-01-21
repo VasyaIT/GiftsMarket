@@ -18,3 +18,7 @@ class AuctionSaver(Protocol):
     @abstractmethod
     async def new_bid(self, data: NewBidDM) -> StickerOrderDM | None:
         ...
+
+    @abstractmethod
+    async def save(self, data: dict) -> None:
+        ...

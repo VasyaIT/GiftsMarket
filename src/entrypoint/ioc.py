@@ -66,6 +66,7 @@ class StarInteractorProvider:
 
 
 class StickerInteractorProvider:
+    create_auction_interactor = provide(sticker.CreateAuctionInteractor, scope=Scope.REQUEST)
     new_bid_interactor = provide(sticker.NewBidInteractor, scope=Scope.REQUEST)
     get_all_auctions_interactor = provide(sticker.GetAllAuctionsInteractor, scope=Scope.REQUEST)
     get_auction_interactor = provide(sticker.GetAuctionInteractor, scope=Scope.REQUEST)

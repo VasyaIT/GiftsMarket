@@ -19,4 +19,5 @@ class NewBidDM(BaseModel):
 
 
 class AuctionDM(StickerOrderDM):
+    pack_id: str
     last_bid: float

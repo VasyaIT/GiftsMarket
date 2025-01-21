@@ -34,6 +34,7 @@ class PriceList:
     SELLER_FEE_PERCENT = 5
     REFERRAL_PERCENT = 25
     VIP_REFERRAL_PERCENT = 40
+    CREATE_AUCTION = 20
 
 
 class GiftType(Enum):

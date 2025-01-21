@@ -33,3 +33,7 @@ class StickerGateway(StarOrderSaver):
         auction = result.scalar_one_or_none()
         if auction:
             return StickerOrderDM(**auction.__dict__)
+
+    async def save(self, data: dict) -> None:
+        stmt = insert(Auction).values(data)
+        await self._session.execute(stmt)

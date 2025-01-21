@@ -4,13 +4,25 @@ from fastapi import APIRouter, HTTPException
 from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 from src.application.dto.common import ResponseDTO
-from src.application.dto.sticker import BidDTO
+from src.application.dto.sticker import BidDTO, CreateAuctionDTO
 from src.application.interactors import sticker
 from src.application.interactors.errors import NotFoundError
 from src.domain.entities.sticker import AuctionDM
 
 
 sticker_router = APIRouter(prefix="/auction", tags=["Auction"])
+
+
+@sticker_router.post("/create")
+@inject
+async def create_auction(
+    dto: CreateAuctionDTO, interactor: FromDishka[sticker.CreateAuctionInteractor]
+) -> ResponseDTO:
+    try:
+        await interactor(dto)
+    except NotFoundError as e:
+        raise HTTPException(HTTP_400_BAD_REQUEST, str(e))
+    return ResponseDTO(success=True)
 
 
 @sticker_router.post("/bid")

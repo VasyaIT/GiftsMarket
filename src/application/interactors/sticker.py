@@ -1,10 +1,36 @@
-from src.application.dto.sticker import BidDTO
+from src.application.common.const import PriceList
+from src.application.dto.sticker import BidDTO, CreateAuctionDTO
 from src.application.interactors import errors
 from src.application.interfaces.database import DBSession
 from src.application.interfaces.interactor import Interactor
 from src.application.interfaces.sticker import AuctionReader, AuctionSaver
+from src.application.interfaces.user import UserSaver
 from src.domain.entities.sticker import AuctionDM, NewBidDM
-from src.domain.entities.user import UserDM
+from src.domain.entities.user import UpdateUserBalanceDM, UserDM
+
+
+class CreateAuctionInteractor(Interactor[CreateAuctionDTO, None]):
+    def __init__(
+        self,
+        db_session: DBSession,
+        sticker_gateway: AuctionSaver,
+        user_gateway: UserSaver,
+        user: UserDM,
+    ) -> None:
+        self._db_session = db_session
+        self._sticker_gateway = sticker_gateway
+        self._user_gateway = user_gateway
+        self._user = user
+
+    async def __call__(self, data: CreateAuctionDTO) -> None:
+        updated_user = await self._user_gateway.update_balance(
+            UpdateUserBalanceDM(id=self._user.id, amount=-PriceList.CREATE_AUCTION)
+        )
+        if not updated_user or updated_user.balance < 0:
+            await self._db_session.rollback()
+            raise errors.NotEnoughBalanceError("User does not have enough balance")
+        await self._sticker_gateway.save(data.model_dump())
+        await self._db_session.commit()
 
 
 class NewBidInteractor(Interactor[BidDTO, None]):
