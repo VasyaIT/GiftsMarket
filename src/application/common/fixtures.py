@@ -88,5 +88,25 @@ def get_gift_images(webapp_url: str) -> GiftImagesDTO:
             f"{webapp_url}/images/{GiftType.HOMEMADE_CAKE.value}/{GiftType.HOMEMADE_CAKE.value}_{number}.json"
             for number in range(1, 100)
         ],
+        GiftType.LUNAR_SNAKE: [
+            f"{webapp_url}/images/{GiftType.LUNAR_SNAKE.value}/{GiftType.LUNAR_SNAKE.value}_{number}.json"
+            for number in range(1, 101)
+        ],
+        GiftType.PARTY_SPARKLER: [
+            f"{webapp_url}/images/{GiftType.PARTY_SPARKLER.value}/{GiftType.PARTY_SPARKLER.value}_{number}.json"
+            for number in range(1, 101)
+        ],
+        GiftType.JESTER_HAT: [
+            f"{webapp_url}/images/{GiftType.JESTER_HAT.value}/{GiftType.JESTER_HAT.value}_{number}.json"
+            for number in range(1, 101)
+        ],
+        GiftType.GENIE_LAMP: [
+            f"{webapp_url}/images/{GiftType.GENIE_LAMP.value}/{GiftType.GENIE_LAMP.value}_{number}.json"
+            for number in range(1, 50)
+        ],
+        GiftType.WITCH_HAT: [
+            f"{webapp_url}/images/{GiftType.WITCH_HAT.value}/{GiftType.WITCH_HAT.value}_{number}.json"
+            for number in range(1, 89)
+        ],
     }
     return GiftImagesDTO(data=data)

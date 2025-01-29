@@ -59,6 +59,11 @@ class GiftType(Enum):
     MAGIC_POTION = "magic_potion"
     EVIL_EYE = "evil_eye"
     TRAPPED_HEART = "trapped_heart"
+    LUNAR_SNAKE = "lunar_snake"
+    PARTY_SPARKLER = "party_sparkler"
+    JESTER_HAT = "jester_hat"
+    GENIE_LAMP = "genie_lamp"
+    WITCH_HAT = "witch_hat"
 
 
 GIFT_RARITY_PERCENT = {
@@ -87,4 +92,9 @@ GIFT_TYPE_MAP = {
     "Scared Cat": GiftType.SCARED_CAT,
     "Spy Agaric": GiftType.SPY_AGARIC,
     "Homemade Cake": GiftType.HOMEMADE_CAKE,
+    "Lunar Snake": GiftType.LUNAR_SNAKE,
+    "Party Sparkler": GiftType.PARTY_SPARKLER,
+    "Jester Hat": GiftType.JESTER_HAT,
+    "Genie Lamp": GiftType.GENIE_LAMP,
+    "Witch Hat": GiftType.WITCH_HAT,
 }
