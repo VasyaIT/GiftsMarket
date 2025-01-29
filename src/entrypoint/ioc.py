@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from src.application.common.fixtures import get_gift_images
 from src.application.dto.common import GiftImagesDTO
-from src.application.interactors import market, star, sticker, user
+from src.application.interactors import market, star, user
 from src.application.interactors.wallet import WithdrawRequestInteractor
 from src.application.interfaces.auth import InitDataValidator, TokenDecoder, TokenEncoder
 from src.application.interfaces.database import DBSession
@@ -26,50 +26,6 @@ from src.infrastructure.gateways.star import StarGateway
 from src.infrastructure.gateways.user import UserGateway
 from src.infrastructure.gateways.wallet import WalletGateway
 from src.presentation.api.authentication import get_user_by_token
-
-
-class UserInteractorProvider:
-    login_interactor = provide(user.LoginInteractor, scope=Scope.REQUEST)
-    get_user_interactor = provide(user.GetUserInteractor, scope=Scope.REQUEST)
-    get_user_gifts_interactor = provide(user.GetUserGiftsInteractor, scope=Scope.REQUEST)
-    get_user_gift_interactor = provide(user.GetUserGiftInteractor, scope=Scope.REQUEST)
-    update_user_gift_interactor = provide(user.UpdateUserGiftInteractor, scope=Scope.REQUEST)
-    delete_user_gift_interactor = provide(user.DeleteUserGiftInteractor, scope=Scope.REQUEST)
-
-
-class GiftInteractorProvider:
-    create_order_interactor = provide(market.CreateOrderInteractor, scope=Scope.REQUEST)
-    buy_gift_interactor = provide(market.BuyGiftInteractor, scope=Scope.REQUEST)
-    cancel_order_interactor = provide(market.CancelOrderInteractor, scope=Scope.REQUEST)
-    seller_accept_interactor = provide(market.SellerAcceptInteractor, scope=Scope.REQUEST)
-    seller_cancel_interactor = provide(market.SellerCancelInteractor, scope=Scope.REQUEST)
-    confirm_transfer_interactor = provide(market.ConfirmTransferInteractor, scope=Scope.REQUEST)
-    accept_transfer_interactor = provide(market.AcceptTransferInteractor, scope=Scope.REQUEST)
-    get_gifts_interactor = provide(market.GetGiftsInteractor, scope=Scope.REQUEST)
-    get_gift_interactor = provide(market.GetGiftInteractor, scope=Scope.REQUEST)
-    get_orders_interactor = provide(market.GetOrdersInteractor, scope=Scope.REQUEST)
-    get_order_interactor = provide(market.GetOrderInteractor, scope=Scope.REQUEST)
-
-
-class StarInteractorProvider:
-    create_star_interactor = provide(star.CreateStarOrderInteractor, scope=Scope.REQUEST)
-    buy_stars_interactor = provide(star.BuyStarsInteractor, scope=Scope.REQUEST)
-    cancel_star_order_interactor = provide(star.CancelStarOrderInteractor, scope=Scope.REQUEST)
-    seller_accept_star_order_interactor = provide(star.SellerAcceptStarOrderInteractor, scope=Scope.REQUEST)
-    seller_cancel_star_order_interactor = provide(star.SellerCancelStarOrderInteractor, scope=Scope.REQUEST)
-    confirm_star_order_interactor = provide(star.ConfirmStarOrderInteractor, scope=Scope.REQUEST)
-    accept_transfer_star_order_interactor = provide(star.AcceptTransferStarOrderInteractor, scope=Scope.REQUEST)
-    get_star_order_interactor = provide(star.GetStarOrderInteractor, scope=Scope.REQUEST)
-    get_all_star_order_interactor = provide(star.GetAllStarOrderInteractor, scope=Scope.REQUEST)
-    update_star_order_interactor = provide(star.UpdateStarOrderInteractor, scope=Scope.REQUEST)
-    delete_star_order_interactor = provide(star.DeleteStarOrderInteractor, scope=Scope.REQUEST)
-
-
-class StickerInteractorProvider:
-    create_auction_interactor = provide(sticker.CreateAuctionInteractor, scope=Scope.REQUEST)
-    new_bid_interactor = provide(sticker.NewBidInteractor, scope=Scope.REQUEST)
-    get_all_auctions_interactor = provide(sticker.GetAllAuctionsInteractor, scope=Scope.REQUEST)
-    get_auction_interactor = provide(sticker.GetAuctionInteractor, scope=Scope.REQUEST)
 
 
 class AppProvider(FastapiProvider):
@@ -126,8 +82,39 @@ class AppProvider(FastapiProvider):
         StarGateway, scope=Scope.REQUEST, provides=AnyOf[StarManager, StarOrderReader, StarOrderSaver]
     )
 
-    user_interactor = UserInteractorProvider()
-    gift_interactor = GiftInteractorProvider()
-    star_interactor = StarInteractorProvider()
+    # User
+    login_interactor = provide(user.LoginInteractor, scope=Scope.REQUEST)
+    get_user_interactor = provide(user.GetUserInteractor, scope=Scope.REQUEST)
+    get_user_gifts_interactor = provide(user.GetUserGiftsInteractor, scope=Scope.REQUEST)
+    get_user_gift_interactor = provide(user.GetUserGiftInteractor, scope=Scope.REQUEST)
+    update_user_gift_interactor = provide(user.UpdateUserGiftInteractor, scope=Scope.REQUEST)
+    delete_user_gift_interactor = provide(user.DeleteUserGiftInteractor, scope=Scope.REQUEST)
+
+    # Gift
+    create_order_interactor = provide(market.CreateOrderInteractor, scope=Scope.REQUEST)
+    buy_gift_interactor = provide(market.BuyGiftInteractor, scope=Scope.REQUEST)
+    cancel_order_interactor = provide(market.CancelOrderInteractor, scope=Scope.REQUEST)
+    seller_accept_interactor = provide(market.SellerAcceptInteractor, scope=Scope.REQUEST)
+    seller_cancel_interactor = provide(market.SellerCancelInteractor, scope=Scope.REQUEST)
+    confirm_transfer_interactor = provide(market.ConfirmTransferInteractor, scope=Scope.REQUEST)
+    accept_transfer_interactor = provide(market.AcceptTransferInteractor, scope=Scope.REQUEST)
+    get_gifts_interactor = provide(market.GetGiftsInteractor, scope=Scope.REQUEST)
+    get_gift_interactor = provide(market.GetGiftInteractor, scope=Scope.REQUEST)
+    get_orders_interactor = provide(market.GetOrdersInteractor, scope=Scope.REQUEST)
+    get_order_interactor = provide(market.GetOrderInteractor, scope=Scope.REQUEST)
+
+    # Stars
+    create_star_interactor = provide(star.CreateStarOrderInteractor, scope=Scope.REQUEST)
+    buy_stars_interactor = provide(star.BuyStarsInteractor, scope=Scope.REQUEST)
+    cancel_star_order_interactor = provide(star.CancelStarOrderInteractor, scope=Scope.REQUEST)
+    seller_accept_star_order_interactor = provide(star.SellerAcceptStarOrderInteractor, scope=Scope.REQUEST)
+    seller_cancel_star_order_interactor = provide(star.SellerCancelStarOrderInteractor, scope=Scope.REQUEST)
+    confirm_star_order_interactor = provide(star.ConfirmStarOrderInteractor, scope=Scope.REQUEST)
+    accept_transfer_star_order_interactor = provide(star.AcceptTransferStarOrderInteractor, scope=Scope.REQUEST)
+    get_star_order_interactor = provide(star.GetStarOrderInteractor, scope=Scope.REQUEST)
+    get_all_star_order_interactor = provide(star.GetAllStarOrderInteractor, scope=Scope.REQUEST)
+    update_star_order_interactor = provide(star.UpdateStarOrderInteractor, scope=Scope.REQUEST)
+    delete_star_order_interactor = provide(star.DeleteStarOrderInteractor, scope=Scope.REQUEST)
+
+    # Wallet
     withdraw_request_interactor = provide(WithdrawRequestInteractor, scope=Scope.REQUEST)
-    sticker_interactor = provide(StickerInteractorProvider, scope=Scope.REQUEST)
