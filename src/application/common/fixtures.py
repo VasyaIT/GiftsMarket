@@ -108,5 +108,49 @@ def get_gift_images(webapp_url: str) -> GiftImagesDTO:
             f"{webapp_url}/images/{GiftType.WITCH_HAT.value}/{GiftType.WITCH_HAT.value}_{number}.json"
             for number in range(1, 89)
         ],
+        GiftType.COOKIE_HEART: [
+            f"{webapp_url}/images/{GiftType.COOKIE_HEART.value}/{GiftType.COOKIE_HEART.value}_{number}.json"
+            for number in range(1, 101)
+        ],
+        GiftType.ETERNAL_CANDLE: [
+            f"{webapp_url}/images/{GiftType.ETERNAL_CANDLE.value}/{GiftType.ETERNAL_CANDLE.value}_{number}.json"
+            for number in range(1, 81)
+        ],
+        GiftType.HANGING_STAR: [
+            f"{webapp_url}/images/{GiftType.HANGING_STAR.value}/{GiftType.HANGING_STAR.value}_{number}.json"
+            for number in range(1, 101)
+        ],
+        GiftType.JINGLE_BELLS: [
+            f"{webapp_url}/images/{GiftType.JINGLE_BELLS.value}/{GiftType.JINGLE_BELLS.value}_{number}.json"
+            for number in range(1, 101)
+        ],
+        GiftType.CRYSTAL_BALL: [
+            f"{webapp_url}/images/{GiftType.CRYSTAL_BALL.value}/{GiftType.CRYSTAL_BALL.value}_{number}.json"
+            for number in range(1, 56)
+        ],
+        GiftType.SWISS_WATCH: [
+            f"{webapp_url}/images/{GiftType.SWISS_WATCH.value}/{GiftType.SWISS_WATCH.value}_{number}.json"
+            for number in range(1, 51)
+        ],
+        GiftType.DESK_CALENDAR: [
+            f"{webapp_url}/images/{GiftType.DESK_CALENDAR.value}/{GiftType.DESK_CALENDAR.value}_{number}.json"
+            for number in range(1, 101)
+        ],
+        GiftType.FLYING_BROOM: [
+            f"{webapp_url}/images/{GiftType.FLYING_BROOM.value}/{GiftType.FLYING_BROOM.value}_{number}.json"
+            for number in range(1, 51)
+        ],
+        GiftType.HYPNO_LOLLIPOP: [
+            f"{webapp_url}/images/{GiftType.HYPNO_LOLLIPOP.value}/{GiftType.HYPNO_LOLLIPOP.value}_{number}.json"
+            for number in range(1, 101)
+        ],
+        GiftType.LOVE_CANDLE: [
+            f"{webapp_url}/images/{GiftType.LOVE_CANDLE.value}/{GiftType.LOVE_CANDLE.value}_{number}.json"
+            for number in range(1, 51)
+        ],
+        GiftType.SNOW_MITTENS: [
+            f"{webapp_url}/images/{GiftType.SNOW_MITTENS.value}/{GiftType.SNOW_MITTENS.value}_{number}.json"
+            for number in range(1, 101)
+        ],
     }
     return GiftImagesDTO(data=data)

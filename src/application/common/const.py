@@ -64,6 +64,17 @@ class GiftType(Enum):
     JESTER_HAT = "jester_hat"
     GENIE_LAMP = "genie_lamp"
     WITCH_HAT = "witch_hat"
+    COOKIE_HEART = "cookie_heart"
+    ETERNAL_CANDLE = "eternal_candle"
+    HANGING_STAR = "hanging_star"
+    JINGLE_BELLS = "jingle_bells"
+    CRYSTAL_BALL = "crystal_ball"
+    SWISS_WATCH = "swiss_watch"
+    DESK_CALENDAR = "desk_calendar"
+    FLYING_BROOM = "flying_broom"
+    HYPNO_LOLLIPOP = "hypno_lollipop"
+    LOVE_CANDLE = "love_candle"
+    SNOW_MITTENS = "snow_mittens"
 
 
 GIFT_RARITY_PERCENT = {
@@ -97,4 +108,15 @@ GIFT_TYPE_MAP = {
     "Jester Hat": GiftType.JESTER_HAT,
     "Genie Lamp": GiftType.GENIE_LAMP,
     "Witch Hat": GiftType.WITCH_HAT,
+    "Cookie Heart": GiftType.COOKIE_HEART,
+    "Eternal Candle": GiftType.ETERNAL_CANDLE,
+    "Hanging Star": GiftType.HANGING_STAR,
+    "Jingle Bells": GiftType.JINGLE_BELLS,
+    "Crystal Ball": GiftType.CRYSTAL_BALL,
+    "Swiss Watch": GiftType.SWISS_WATCH,
+    "Desk Calendar": GiftType.DESK_CALENDAR,
+    "Flying Broom": GiftType.FLYING_BROOM,
+    "Hypno Lollipop": GiftType.HYPNO_LOLLIPOP,
+    "Love Candle": GiftType.LOVE_CANDLE,
+    "Snow Mittens": GiftType.SNOW_MITTENS,
 }
