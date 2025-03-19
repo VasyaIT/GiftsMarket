@@ -2,10 +2,17 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from src.application.common.const import GiftRarity, GiftType, OrderStatus
+from src.application.common.const import GiftRarity, GiftType
 
 
-class CharacteristicsOrderDM(BaseModel):
+class CreateOrderDM(BaseModel):
+    id: int
+    seller_id: int
+    number: int
+    type: GiftType
+    model_name: str
+    pattern_name: str
+    background_name: str
     model: float
     pattern: float
     background: float
@@ -13,58 +20,24 @@ class CharacteristicsOrderDM(BaseModel):
     is_active: bool
 
 
-class UpdateOrderDM(BaseModel):
-    price: float
-
-
-class CreateOrderDM(BaseModel):
-    number: int
-    image_url: str
-    type: GiftType
-    price: float
-    seller_id: int
-    is_vip: bool
-
-
 class OrderDM(CreateOrderDM):
+    buyer_id: int | None = None
+    price: float = 0
+    completed_order_date: datetime | None = None
+    is_vip: bool | None = None
+
+
+class UserGiftDM(BaseModel):
     id: int
-    buyer_id: int | None
-    status: OrderStatus
-    created_order_date: datetime | None
-    completed_order_date: datetime | None
-
-
-class ReadOrderDM(CreateOrderDM):
-    status: OrderStatus
-    created_order_date: datetime | None
-    completed_order_date: datetime | None
-    created_at: datetime
-    model: float | None
-    pattern: float | None
-    background: float | None
-    rarity: GiftRarity | None
-    buyer_id: int | None
-    seller_name: str | None
-    buyer_name: str | None
-    id: int
-
-
-class UserGiftsDM(BaseModel):
-    id: int
-    image_url: str
     type: GiftType
     number: int
-    price: float
-    model: float | None
-    pattern: float | None
-    background: float | None
-    rarity: GiftRarity | None
-    is_active: bool
-
-
-class GetUserGiftsDM(BaseModel):
-    user_id: int
-    status: OrderStatus
+    model: float
+    pattern: float
+    background: float
+    model_name: str
+    pattern_name: str
+    background_name: str
+    rarity: GiftRarity
 
 
 class GiftFiltersDM(BaseModel):
@@ -72,16 +45,8 @@ class GiftFiltersDM(BaseModel):
     offset: int | None
     from_price: float
     to_price: float
+    from_gift_number: int
+    to_gift_number: int
     rarities: list[GiftRarity]
     types: list[GiftType]
-    status: OrderStatus
     user_id: int
-
-
-class OrderFiltersDM(BaseModel):
-    limit: int | None
-    offset: int | None
-    statuses: list[OrderStatus]
-    user_id: int
-    is_buyer: bool
-    is_seller: bool

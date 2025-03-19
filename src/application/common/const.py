@@ -2,6 +2,7 @@ from enum import Enum, StrEnum, auto
 
 
 MINUTES_TO_SEND_GIFT = 20
+MAX_GIFT_NUMBER = 500000
 INLINE_IMAGE_URL = "https://store.nestdex.dev/media/inline_image.jpg"
 
 
@@ -75,6 +76,15 @@ class GiftType(Enum):
     HYPNO_LOLLIPOP = "hypno_lollipop"
     LOVE_CANDLE = "love_candle"
     SNOW_MITTENS = "snow_mittens"
+
+
+class HistoryType(Enum):
+    BUY_GIFT = "buy_gift"
+    SELL_GIFT = "sell_gift"
+    DEPOSIT = "deposit"
+    WITHDRAW = "withdraw"
+    BUY_STARS = "buy_stars"
+    SELL_STARS = "sell_stars"
 
 
 GIFT_RARITY_PERCENT = {

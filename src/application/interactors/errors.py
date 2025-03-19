@@ -14,13 +14,9 @@ class NotAccessError(Exception):
     pass
 
 
-class NotUsernameError(Exception):
-    pass
-
-
-class InvalidImageUrlError(Exception):
-    pass
-
-
 class AlreadyExistError(Exception):
+    pass
+
+
+class GiftSendError(Exception):
     pass

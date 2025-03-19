@@ -4,12 +4,11 @@ from fastapi import APIRouter, HTTPException
 from starlette import status
 
 from src.application.dto.common import ResponseDTO
-from src.application.dto.market import OrderDTO, UpdateOrderDTO
+from src.application.dto.market import UpdateOrderDTO
 from src.application.dto.user import LoginDTO, TokenDTO, UserDTO
 from src.application.interactors import user
-from src.application.interactors.errors import InvalidImageUrlError, NotAccessError, NotFoundError
-from src.domain.entities.market import UserGiftsDM
-from src.infrastructure.gateways.errors import InvalidOrderDataError
+from src.application.interactors.errors import AlreadyExistError, NotAccessError, NotFoundError
+from src.domain.entities.market import OrderDM, UserGiftDM
 
 
 user_router = APIRouter(prefix="/user", tags=["User"])
@@ -37,13 +36,13 @@ async def get_current_user(interactor: FromDishka[user.GetUserInteractor]) -> Us
 
 @user_router.get("/gifts")
 @inject
-async def get_user_gifts(interactor: FromDishka[user.GetUserGiftsInteractor]) -> list[UserGiftsDM]:
+async def get_user_gifts(interactor: FromDishka[user.GetUserGiftsInteractor]) -> list[UserGiftDM]:
     return await interactor()
 
 
 @user_router.get("/gifts/{id}")
 @inject
-async def get_user_gift(id: int, interactor: FromDishka[user.GetUserGiftInteractor]) -> UserGiftsDM:
+async def get_user_gift(id: int, interactor: FromDishka[user.GetUserGiftInteractor]) -> UserGiftDM:
     try:
         return await interactor(id)
     except NotFoundError as e:
@@ -54,10 +53,10 @@ async def get_user_gift(id: int, interactor: FromDishka[user.GetUserGiftInteract
 @inject
 async def edit_gift(
     id: int, dto: UpdateOrderDTO, interactor: FromDishka[user.UpdateUserGiftInteractor]
-) -> OrderDTO:
+) -> OrderDM:
     try:
         return await interactor(id, dto)
-    except (NotFoundError, InvalidImageUrlError, InvalidOrderDataError) as e:
+    except (NotFoundError, AlreadyExistError) as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
 
 

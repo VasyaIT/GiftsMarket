@@ -4,9 +4,9 @@ from logging.handlers import RotatingFileHandler
 from aiogram import Bot
 from aiogram.utils.payload import decode_payload, encode_payload
 
-from src.application.common.const import OrderStatus, PriceList
+from src.application.common.const import PriceList
 from src.application.common.utils import build_direct_link, generate_deposit_comment, is_subscriber
-from src.application.dto.market import OrderDTO, UpdateOrderDTO
+from src.application.dto.market import UpdateOrderDTO
 from src.application.dto.user import LoginDTO, UserDTO
 from src.application.interactors.errors import NotAccessError, NotFoundError
 from src.application.interfaces.auth import InitDataValidator, TokenEncoder
@@ -15,7 +15,7 @@ from src.application.interfaces.interactor import Interactor
 from src.application.interfaces.market import OrderReader, OrderSaver
 from src.application.interfaces.user import UserManager, UserReader, UserSaver
 from src.domain.entities.bot import BotInfoDM
-from src.domain.entities.market import GetUserGiftsDM, UpdateOrderDM, UserGiftsDM
+from src.domain.entities.market import OrderDM, UserGiftDM
 from src.domain.entities.user import CreateUserDM, UpdateUserBalanceDM, UserDM
 from src.entrypoint.config import Config
 
@@ -40,15 +40,11 @@ class LoginInteractor(Interactor[LoginDTO, str]):
         token_gateway: TokenEncoder,
         telegram_gateway: InitDataValidator,
         user_gateway: UserManager,
-        bot: Bot,
-        config: Config,
     ) -> None:
         self._db_session = db_session
         self._token_gateway = token_gateway
         self._telegram_gateway = telegram_gateway
         self._user_gateway = user_gateway
-        self._bot = bot
-        self._config = config
 
     async def __call__(self, data: LoginDTO) -> str | None:
         try:
@@ -83,8 +79,6 @@ class LoginInteractor(Interactor[LoginDTO, str]):
                 dict(username=user_data.get("username")), id=user_id
             )
             await self._db_session.commit()
-        if not await is_subscriber(self._bot, self._config.bot.CHANNEL_ID, user_id):
-            raise NotAccessError("User is not subscriber")
         return self._token_gateway.encode(user_id)
 
     def _get_referrer_id(self, decoded_payload: str | None) -> int | None:
@@ -113,29 +107,25 @@ class GetUserInteractor(Interactor[None, UserDTO]):
         )
 
 
-class GetUserGiftsInteractor(Interactor[None, list[UserGiftsDM]]):
+class GetUserGiftsInteractor(Interactor[None, list[UserGiftDM]]):
     def __init__(self, market_gateway: OrderReader, user: UserDM) -> None:
         self._market_gateway = market_gateway
         self._user = user
 
-    async def __call__(self) -> list[UserGiftsDM]:
-        return await self._market_gateway.get_user_gifts(
-            GetUserGiftsDM(user_id=self._user.id, status=OrderStatus.ON_MARKET)
-        )
+    async def __call__(self) -> list[UserGiftDM]:
+        return await self._market_gateway.get_user_gifts(user_id=self._user.id)
 
 
-class GetUserGiftInteractor(Interactor[int, UserGiftsDM]):
+class GetUserGiftInteractor(Interactor[int, UserGiftDM]):
     def __init__(self, market_gateway: OrderReader, user: UserDM) -> None:
         self._market_gateway = market_gateway
         self._user = user
 
-    async def __call__(self, gift_id: int) -> UserGiftsDM:
-        gift = await self._market_gateway.get_one(
-            id=gift_id, status=OrderStatus.ON_MARKET, seller_id=self._user.id
-        )
+    async def __call__(self, gift_id: int) -> UserGiftDM:
+        gift = await self._market_gateway.get_user_gift(user_id=self._user.id, gift_id=gift_id)
         if not gift:
             raise NotFoundError("Gift not found")
-        return UserGiftsDM(**gift.model_dump())
+        return gift
 
 
 class UpdateUserGiftInteractor:
@@ -147,10 +137,9 @@ class UpdateUserGiftInteractor:
         self._db_session = db_session
         self._config = config
 
-    async def __call__(self, id: int, data: UpdateOrderDTO) -> OrderDTO:
-        order = UpdateOrderDM(**data.model_dump())
+    async def __call__(self, id: int, data: UpdateOrderDTO) -> OrderDM:
         updated_order = await self._market_gateway.update_order(
-            order.model_dump(), id=id, status=OrderStatus.ON_MARKET, seller_id=self._user.id
+            data.model_dump(), id=id, is_active=True, is_completed=False, seller_id=self._user.id
         )
         if not updated_order:
             await self._db_session.rollback()
@@ -161,7 +150,7 @@ class UpdateUserGiftInteractor:
             "UpdateUserGiftInteractor: "
             f"@{self._user.username} #{self._user.id} updated a gift with id: {id}"
         )
-        return OrderDTO(**updated_order.model_dump())
+        return updated_order
 
 
 class DeleteUserGiftInteractor(Interactor[int, None]):
@@ -175,7 +164,7 @@ class DeleteUserGiftInteractor(Interactor[int, None]):
 
     async def __call__(self, gift_id: int) -> None:
         deleted_order = await self._market_gateway.delete_order(
-            id=gift_id, status=OrderStatus.ON_MARKET, seller_id=self._user.id
+            id=gift_id, is_completed=False, seller_id=self._user.id
         )
         if not deleted_order:
             await self._db_session.rollback()

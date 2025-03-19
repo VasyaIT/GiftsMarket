@@ -2,6 +2,7 @@ deposit_script.sh
 db_dump_script.sh
 db_dump.json
 *.log*
+client.session
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -4,14 +4,17 @@ from aiogram import Bot
 from dishka import AnyOf, Scope, from_context, provide
 from dishka.integrations.fastapi import FastapiProvider
 from fastapi import Request
+from pyrogram.client import Client
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from src.application.common.fixtures import get_gift_images
 from src.application.dto.common import GiftImagesDTO
 from src.application.interactors import market, star, user
+from src.application.interactors.history import HistoryInteractor
 from src.application.interactors.wallet import WithdrawRequestInteractor
 from src.application.interfaces.auth import InitDataValidator, TokenDecoder, TokenEncoder
 from src.application.interfaces.database import DBSession
+from src.application.interfaces.history import HistoryReader, HistorySaver
 from src.application.interfaces.market import OrderManager, OrderReader, OrderSaver
 from src.application.interfaces.star import StarManager, StarOrderReader, StarOrderSaver
 from src.application.interfaces.user import UserManager, UserReader, UserSaver
@@ -21,6 +24,7 @@ from src.domain.entities.user import UserDM
 from src.entrypoint.config import Config
 from src.infrastructure.database.session import new_session_maker
 from src.infrastructure.gateways.auth import TelegramGateway, TokenGateway
+from src.infrastructure.gateways.history import HistoryGateway
 from src.infrastructure.gateways.market import MarketGateway
 from src.infrastructure.gateways.star import StarGateway
 from src.infrastructure.gateways.user import UserGateway
@@ -31,6 +35,7 @@ from src.presentation.api.authentication import get_user_by_token
 class AppProvider(FastapiProvider):
     config = from_context(provides=Config, scope=Scope.APP)
     bot = from_context(provides=Bot, scope=Scope.APP)
+    client = from_context(provides=Client, scope=Scope.APP)
 
     @provide(scope=Scope.APP)
     async def bot_info(self, bot: Bot) -> BotInfoDM:
@@ -81,6 +86,9 @@ class AppProvider(FastapiProvider):
     star_gateway = provide(
         StarGateway, scope=Scope.REQUEST, provides=AnyOf[StarManager, StarOrderReader, StarOrderSaver]
     )
+    history_gateway = provide(
+        HistoryGateway, scope=Scope.REQUEST, provides=AnyOf[HistoryReader, HistorySaver]
+    )
 
     # User
     login_interactor = provide(user.LoginInteractor, scope=Scope.REQUEST)
@@ -93,15 +101,8 @@ class AppProvider(FastapiProvider):
     # Gift
     create_order_interactor = provide(market.CreateOrderInteractor, scope=Scope.REQUEST)
     buy_gift_interactor = provide(market.BuyGiftInteractor, scope=Scope.REQUEST)
-    cancel_order_interactor = provide(market.CancelOrderInteractor, scope=Scope.REQUEST)
-    seller_accept_interactor = provide(market.SellerAcceptInteractor, scope=Scope.REQUEST)
-    seller_cancel_interactor = provide(market.SellerCancelInteractor, scope=Scope.REQUEST)
-    confirm_transfer_interactor = provide(market.ConfirmTransferInteractor, scope=Scope.REQUEST)
-    accept_transfer_interactor = provide(market.AcceptTransferInteractor, scope=Scope.REQUEST)
     get_gifts_interactor = provide(market.GetGiftsInteractor, scope=Scope.REQUEST)
     get_gift_interactor = provide(market.GetGiftInteractor, scope=Scope.REQUEST)
-    get_orders_interactor = provide(market.GetOrdersInteractor, scope=Scope.REQUEST)
-    get_order_interactor = provide(market.GetOrderInteractor, scope=Scope.REQUEST)
 
     # Stars
     create_star_interactor = provide(star.CreateStarOrderInteractor, scope=Scope.REQUEST)
@@ -118,3 +119,6 @@ class AppProvider(FastapiProvider):
 
     # Wallet
     withdraw_request_interactor = provide(WithdrawRequestInteractor, scope=Scope.REQUEST)
+
+    # History
+    history_interactor = provide(HistoryInteractor, scope=Scope.REQUEST)

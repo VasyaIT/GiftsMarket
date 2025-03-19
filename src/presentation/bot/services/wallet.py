@@ -1,9 +1,12 @@
 from tonutils.client import TonapiClient
 from tonutils.wallet import WalletV5R1
 
+from src.application.common.const import HistoryType
+from src.domain.entities.history import CreateHistoryDM
 from src.domain.entities.wallet import WithdrawRequestDM
 from src.entrypoint.config import PostgresConfig, TonapiConfig
 from src.infrastructure.database.session import new_session_maker
+from src.infrastructure.gateways.history import HistoryGateway
 from src.infrastructure.gateways.wallet import WalletGateway
 
 
@@ -22,6 +25,12 @@ async def complete_withdraw_request(
     session_maker = new_session_maker(postgres_config)
     async with session_maker() as session:
         if withdraw_request := await WalletGateway(session).set_completed(request_id):
+            history_data = CreateHistoryDM(
+                user_id=withdraw_request.user_id,
+                price=withdraw_request.amount,
+                type=HistoryType.WITHDRAW
+            )
+            await HistoryGateway(session).save(history_data)
             await session.commit()
             return withdraw_request
 
