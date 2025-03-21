@@ -88,7 +88,10 @@ class HistoryType(Enum):
 
 
 GIFT_RARITY_PERCENT = {
-    GiftRarity.COMMON: 2, GiftRarity.RARE: 1, GiftRarity.MYTHICAL: 0.6, GiftRarity.LEGEND: 0
+    GiftRarity.COMMON: 2,
+    GiftRarity.RARE: 1,
+    GiftRarity.MYTHICAL: 0.6,
+    GiftRarity.LEGEND: 0,
 }
 
 GIFT_TYPE_MAP = {

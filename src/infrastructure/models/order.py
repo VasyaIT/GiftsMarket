@@ -22,14 +22,16 @@ class Order(Base):
     background_name: Mapped[str] = mapped_column(String)
     rarity: Mapped[GiftRarity] = mapped_column(ENUM(GiftRarity))
     completed_order_date: Mapped[datetime | None] = mapped_column(TIMESTAMP, nullable=True)
+    min_step: Mapped[float | None] = mapped_column(Float, nullable=True)
+    auction_end_time: Mapped[datetime | None] = mapped_column(TIMESTAMP, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=False)
     is_vip: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     is_completed: Mapped[bool] = mapped_column(Boolean, default=False)
 
     seller_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
-    buyer_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
-
-    seller: Mapped[User] = relationship(
-        "User", lazy="selectin", foreign_keys="Order.seller_id"
+    buyer_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=True
     )
+
+    seller: Mapped[User] = relationship("User", lazy="selectin", foreign_keys="Order.seller_id")
     buyer: Mapped[User] = relationship("User", lazy="selectin", foreign_keys="Order.buyer_id")

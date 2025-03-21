@@ -25,6 +25,8 @@ class OrderDM(CreateOrderDM):
     price: float = 0
     completed_order_date: datetime | None = None
     is_vip: bool | None = None
+    min_step: float | None = None
+    auction_end_time: datetime | None = None
 
 
 class UserGiftDM(BaseModel):
@@ -50,3 +52,9 @@ class GiftFiltersDM(BaseModel):
     rarities: list[GiftRarity]
     types: list[GiftType]
     user_id: int
+
+
+class NewBidDM(BaseModel):
+    id: int
+    amount: float
+    buyer_id: int

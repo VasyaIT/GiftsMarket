@@ -13,7 +13,9 @@ class MarketGateway(OrderSaver):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def get_all_gifts(self, filters: GiftFiltersDM, sort_by: GiftSortParams | None) -> list[OrderDM]:
+    async def get_all_gifts(
+        self, filters: GiftFiltersDM, sort_by: GiftSortParams | None
+    ) -> list[OrderDM]:
         order_by = Order.created_at.desc()
         if sort_by is GiftSortParams.OLDEST:
             order_by = Order.created_at.asc()
@@ -24,10 +26,14 @@ class MarketGateway(OrderSaver):
         stmt = (
             select(Order)
             .where(
-                filters.from_price <= Order.price, filters.to_price >= Order.price,
-                Order.rarity.in_(filters.rarities), Order.type.in_(filters.types),
-                Order.is_active == True, Order.is_completed == False,
-                filters.from_gift_number <= Order.number, filters.to_gift_number >= Order.number,
+                filters.from_price <= Order.price,
+                filters.to_price >= Order.price,
+                Order.rarity.in_(filters.rarities),
+                Order.type.in_(filters.types),
+                Order.is_active == True,
+                Order.is_completed == False,
+                filters.from_gift_number <= Order.number,
+                filters.to_gift_number >= Order.number,
             )
             .limit(filters.limit)
             .offset(filters.offset)
@@ -52,7 +58,7 @@ class MarketGateway(OrderSaver):
             return
         return UserGiftDM(**gift.__dict__)
 
-    async def get_all(self, **filters) -> list[OrderDM]:
+    async def get_many(self, **filters) -> list[OrderDM]:
         stmt = select(Order).filter_by(**filters)
         result = await self._session.execute(stmt)
         return [OrderDM(**order.__dict__) for order in result.scalars().all()]
@@ -68,6 +74,13 @@ class MarketGateway(OrderSaver):
         order = result.scalar_one_or_none()
         if order:
             return OrderDM(**order.__dict__)
+
+    async def get_auction_orders(self) -> list[OrderDM]:
+        stmt = select(Order).where(
+            Order.min_step != None, Order.is_active == True, Order.is_completed == False
+        )
+        result = await self._session.execute(stmt)
+        return [OrderDM(**order.__dict__) for order in result.scalars().all()]
 
     async def save(self, order_dm: CreateOrderDM) -> CreateOrderDM:
         try:

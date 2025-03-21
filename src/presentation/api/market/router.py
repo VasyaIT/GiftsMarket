@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
 
 from src.application.dto.common import GiftImagesDTO, ResponseDTO
-from src.application.dto.market import CreateOrderDTO, OrderIdDTO
+from src.application.dto.market import BidDTO, CreateOrderDTO, OrderIdDTO
 from src.application.interactors import errors, market
 from src.domain.entities.market import OrderDM
 from src.presentation.api.market.params import GiftFilterParams, GiftSortParams
@@ -43,7 +43,12 @@ async def create_order(
 
     try:
         await interactor(dto)
-    except (errors.NotEnoughBalanceError, errors.NotAccessError, errors.AlreadyExistError) as e:
+    except (
+        errors.NotEnoughBalanceError,
+        errors.NotAccessError,
+        errors.AlreadyExistError,
+        errors.AuctionBidError,
+    ) as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
     return ResponseDTO(success=True)
 
@@ -51,13 +56,26 @@ async def create_order(
 @market_router.post("/order/buy")
 @inject
 async def buy_gift(dto: OrderIdDTO, interactor: FromDishka[market.BuyGiftInteractor]) -> ResponseDTO:
-    """Buyer has paid for the gift and is waiting for the seller transferred the gift"""
-
     try:
         await interactor(dto.id)
     except (
-        errors.NotFoundError, errors.NotEnoughBalanceError, errors.NotAccessError, errors.GiftSendError
+        errors.NotFoundError,
+        errors.NotEnoughBalanceError,
+        errors.NotAccessError,
+        errors.GiftSendError,
     ) as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
+    return ResponseDTO(success=True)
+
+
+@market_router.post("/order/new-bid")
+@inject
+async def new_bid(dto: BidDTO, interactor: FromDishka[market.BuyGiftInteractor]) -> ResponseDTO:
+    """New bid on auction"""
+
+    try:
+        await interactor(dto.id)
+    except (errors.NotFoundError, errors.NotEnoughBalanceError, errors.AuctionBidError) as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
     return ResponseDTO(success=True)
 

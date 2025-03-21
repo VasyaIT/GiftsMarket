@@ -20,3 +20,7 @@ class AlreadyExistError(Exception):
 
 class GiftSendError(Exception):
     pass
+
+
+class AuctionBidError(Exception):
+    pass

@@ -14,7 +14,9 @@ async def get_orders_info(
 ) -> list[OrderDM] | None:
     session_maker = new_session_maker(postgres_config)
     async with session_maker() as session:
-        if orders := await MarketGateway(session).get_all(type=GiftType[gift_type], number=gift_number):
+        if orders := await MarketGateway(session).get_many(
+            type=GiftType[gift_type], number=gift_number
+        ):
             return orders
 
 
@@ -58,10 +60,7 @@ async def cancel_order(order_id: int, postgres_config: PostgresConfig) -> bool:
         if not (order := await gateway.get_one(id=order_id)):
             return False
         await UserGateway(session).update_balance(
-            UpdateUserBalanceDM(
-                id=order.buyer_id,
-                amount=order.price
-            )
+            UpdateUserBalanceDM(id=order.buyer_id, amount=order.price)
         )
         await gateway.update_order(data, id=order_id)
         await session.commit()

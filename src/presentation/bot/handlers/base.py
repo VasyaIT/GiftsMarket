@@ -3,7 +3,6 @@ from aiogram.filters import Command, CommandStart
 from aiogram.methods import AnswerCallbackQuery, SendMessage
 from aiogram.types import CallbackQuery, Message
 
-from src.application.common.const import PriceList
 from src.entrypoint.config import Config
 from src.presentation.bot.keyboards.base import open_app_kb
 from src.presentation.bot.services import market, text, user, wallet
@@ -38,7 +37,7 @@ async def user_info_handler(message: Message, config: Config) -> Message | None:
         user_id = int(message.text.split("/user")[1].strip())
     except ValueError:
         return await message.answer(
-            f"❌ Неверный формат команды.\nОтправь команду в формате <code>/user [user id]</code>"
+            "❌ Неверный формат команды.\nОтправь команду в формате <code>/user [user id]</code>"
         )
     if not (user_info := await user.get_full_user_info(config.postgres, user_id)):
         return await message.answer(f"✅ Пользователь #{user_id} заблокирован")
@@ -53,7 +52,7 @@ async def ban_handler(message: Message, config: Config) -> Message | None:
         user_id = int(message.text.split("/ban")[1].strip())
     except ValueError:
         return await message.answer(
-            f"❌ Неверный формат команды.\nОтправь команду в формате <code>/ban [user id]</code>"
+            "❌ Неверный формат команды.\nОтправь команду в формате <code>/ban [user id]</code>"
         )
     if await user.ban_user(config.postgres, user_id):
         return await message.answer(f"✅ Пользователь #{user_id} заблокирован")
@@ -68,7 +67,7 @@ async def unban_handler(message: Message, config: Config) -> Message | None:
         user_id = int(message.text.split("/unban")[1].strip())
     except ValueError:
         return await message.answer(
-            f"❌ Неверный формат команды.\nОтправь команду в формате <code>/unban [user id]</code>"
+            "❌ Неверный формат команды.\nОтправь команду в формате <code>/unban [user id]</code>"
         )
     if await user.unban_user(config.postgres, user_id):
         return await message.answer(f"✅ Пользователь #{user_id} разблокирован")
@@ -77,7 +76,9 @@ async def unban_handler(message: Message, config: Config) -> Message | None:
 
 @router.callback_query(F.data.startswith("complete_withdraw:"))
 async def withdraw_success_callback(
-    call: CallbackQuery, config: Config, bot: Bot,
+    call: CallbackQuery,
+    config: Config,
+    bot: Bot,
 ) -> AnswerCallbackQuery | SendMessage | None:
     if call.from_user.id not in config.bot.moderators_chat_id:
         return call.answer("У тебя нет прав", show_alert=True)
@@ -93,7 +94,7 @@ async def withdraw_success_callback(
     )
     await bot.send_message(
         withdraw_request.user_id,
-        f"✅ Your withdrawal of {withdraw_request.amount} TON has been successfully completed"
+        f"✅ Your withdrawal of {withdraw_request.amount} TON has been successfully completed",
     )
 
 
@@ -106,7 +107,7 @@ async def add_balance_handler(message: Message, config: Config) -> Message | Non
         user_id, amount = int(user_id), float(amount)
     except ValueError:
         return await message.answer(
-            f"❌ Неверный формат команды."
+            "❌ Неверный формат команды."
             "\nОтправь команду в формате <code>/addbalance [user id] [amount]</code>"
         )
     if await user.add_balance_user(config.postgres, user_id, amount):
@@ -122,7 +123,7 @@ async def cancel_order_handler(message: Message, config: Config) -> Message | No
         order_id = int(message.text.split("/cancel")[1].strip())
     except ValueError:
         return await message.answer(
-            f"❌ Неверный формат команды.\nОтправь команду в формате <code>/cancel [order id]</code>"
+            "❌ Неверный формат команды.\nОтправь команду в формате <code>/cancel [order id]</code>"
         )
 
     if await market.cancel_order(order_id, config.postgres):
@@ -138,7 +139,7 @@ async def confirm_order_handler(message: Message, config: Config) -> Message | N
         order_id = int(message.text.split("/confirm")[1].strip())
     except ValueError:
         return await message.answer(
-            f"❌ Неверный формат команды.\nОтправь команду в формате <code>/confirm [order id]</code>"
+            "❌ Неверный формат команды.\nОтправь команду в формате <code>/confirm [order id]</code>"
         )
 
     if await market.confirm_order(order_id, config):
@@ -155,11 +156,13 @@ async def order_info_handler(message: Message, config: Config) -> Message | None
         gift_number = int(gift_number)
     except ValueError:
         return await message.answer(
-            f"❌ Неверный формат команды.\n"
+            "❌ Неверный формат команды.\n"
             "Отправь команду в формате <code>/order [gift_type] [gift number]</code>"
         )
 
-    if not (orders := await market.get_orders_info(gift_type.upper(), gift_number, config.postgres)):
+    if not (
+        orders := await market.get_orders_info(gift_type.upper(), gift_number, config.postgres)
+    ):
         return await message.answer(f"❌ Ордер {gift_type} - #{gift_number} не найден")
     answer_text = ""
     for order in orders:
@@ -177,7 +180,7 @@ async def delete_order_handler(message: Message, config: Config) -> Message | No
         order_id = int(message.text.split("/delete")[1].strip())
     except ValueError:
         return await message.answer(
-            f"❌ Неверный формат команды.\nОтправь команду в формате <code>/delete [order id]</code>"
+            "❌ Неверный формат команды.\nОтправь команду в формате <code>/delete [order id]</code>"
         )
 
     if await market.delete_order(order_id, config.postgres):

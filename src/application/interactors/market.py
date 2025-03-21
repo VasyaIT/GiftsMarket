@@ -6,15 +6,9 @@ from aiogram import Bot
 from pyrogram.client import Client
 from pyrogram.errors import BadRequest, PeerIdInvalid, RPCError
 
-from src.application.common.const import (
-    MAX_GIFT_NUMBER,
-    GiftRarity,
-    GiftType,
-    HistoryType,
-    PriceList
-)
+from src.application.common.const import MAX_GIFT_NUMBER, GiftRarity, GiftType, HistoryType, PriceList
 from src.application.common.utils import build_direct_link, send_message
-from src.application.dto.market import CreateOrderDTO
+from src.application.dto.market import BidDTO, CreateOrderDTO
 from src.application.interactors import errors
 from src.application.interfaces.database import DBSession
 from src.application.interfaces.history import HistorySaver
@@ -60,9 +54,18 @@ class CreateOrderInteractor(Interactor[CreateOrderDTO, None]):
         self._config = config
 
     async def __call__(self, data: CreateOrderDTO) -> None:
+        if data.min_step and not data.auction_end_time or not data.min_step and data.auction_end_time:
+            raise errors.AuctionBidError("Auction parameters is invalid")
         order = await self._market_gateway.update_order(
-            {"price": data.price, "is_vip": data.is_vip, "is_active": True},
-            id=data.gift_id, seller_id=self._user.id
+            {
+                "price": data.price,
+                "is_vip": data.is_vip,
+                "is_active": True,
+                "min_step": data.min_step,
+                "auction_end_time": data.auction_end_time,
+            },
+            id=data.gift_id,
+            seller_id=self._user.id,
         )
         if not order:
             raise errors.NotAccessError("Gift not found")
@@ -80,10 +83,7 @@ class CreateOrderInteractor(Interactor[CreateOrderDTO, None]):
                 raise errors.NotEnoughBalanceError("User does not have enough balance")
         await self._db_session.commit()
 
-        logger.info(
-            "CreateOrderInteractor: "
-            f"@{self._user.username} #{self._user.id} created the order"
-        )
+        logger.info(f"CreateOrderInteractor: @{self._user.username} #{self._user.id} created the order")
 
 
 class GetGiftsInteractor:
@@ -130,6 +130,7 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
         user: UserDM,
         bot: Bot,
         bot_info: BotInfoDM,
+        config: Config,
         client: Client,
     ) -> None:
         self._db_session = db_session
@@ -139,6 +140,7 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
         self._user = user
         self._bot = bot
         self._bot_info = bot_info
+        self._config = config
         self._client = client
 
     async def __call__(self, gift_id: int) -> OrderDM:
@@ -148,6 +150,8 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
             raise errors.NotFoundError("Gift not found")
         if self._user.id == order.seller_id:
             raise errors.NotAccessError("Forbidden")
+        if order.min_step is not None:
+            raise errors.NotAccessError("This gift on auction")
 
         buyer = await self._user_gateway.update_balance(
             UpdateUserBalanceDM(id=self._user.id, amount=-order.price)
@@ -156,8 +160,9 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
             await self._db_session.rollback()
             raise errors.NotEnoughBalanceError("User not enough balance")
 
-        is_success = await self._send_gift(self._user.id, gift_id)
+        is_success = await self._send_gift(self._user.id, gift_id, self._bot, self._config)
         if not is_success:
+            await self._db_session.rollback()
             raise errors.GiftSendError("Error when sending a gift")
 
         await self._db_session.commit()
@@ -185,7 +190,7 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
             self._bot,
             text.get_buy_gift_text(order.type.name, order.number),
             [order.seller_id],
-            reply_markup=order_kb(order.type, order.number, direct_link)
+            reply_markup=order_kb(order.type, order.number, direct_link),
         )
 
         logger.info(
@@ -194,16 +199,55 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
         )
         return order
 
-    async def _send_gift(self, user_id: int, gift_id: int) -> bool:
+    async def _send_gift(self, user_id: int, gift_id: int, bot: Bot, config: Config) -> bool:
+        is_success, message = False, None
         try:
             is_success = await self._client.send_gift(user_id, gift_id)
         except PeerIdInvalid:
-            logger.error(f"PeerIdInvalid when sending a gift. user id: {user_id}, gift id: {gift_id}")
-            return False
+            message = f"PeerIdInvalid when sending a gift. user id: {user_id}, gift id: {gift_id}"
         except BadRequest:
-            logger.error(f"TelegramBadRequest when sending a gift. user id: {user_id}, gift id: {gift_id}")
-            return False
+            message = f"TelegramBadRequest when sending a gift. user id: {user_id}, gift id: {gift_id}"
         except RPCError:
-            logger.error(f"RPCError when sending a gift. user id: {user_id}, gift id: {gift_id}")
-            return False
+            message = f"RPCError when sending a gift. user id: {user_id}, gift id: {gift_id}"
+
+        if message:
+            logger.error(message)
+            await send_message(bot, message, config.bot.owners_chat_id)
         return is_success
+
+
+class NewBidInteractor(Interactor[BidDTO, None]):
+    def __init__(
+        self,
+        db_session: DBSession,
+        market_gateway: OrderManager,
+        user: UserDM,
+        user_gateway: UserSaver,
+    ) -> None:
+        self._db_session = db_session
+        self._market_gateway = market_gateway
+        self._user = user
+        self._user_gateway = user_gateway
+
+    async def __call__(self, data: BidDTO) -> None:
+        if not (
+            order := await self._market_gateway.get_one(id=data.id, is_completed=False, is_active=True)
+        ):
+            raise errors.NotFoundError("Gift not found")
+        if not order.min_step or order.min_step > data.amount - order.price:
+            raise errors.AuctionBidError("Amount is too low or this gift not on auction")
+        if order.auction_end_time and order.auction_end_time < datetime.now():
+            raise errors.AuctionBidError("Auction already ended")
+        if self._user.balance < data.amount:
+            raise errors.NotEnoughBalanceError("User does not have enough balance")
+
+        await self._user_gateway.update_balance(
+            UpdateUserBalanceDM(id=self._user.id, amount=-data.amount)
+        )
+        if order.buyer_id:
+            await self._user_gateway.update_balance(
+                UpdateUserBalanceDM(id=order.buyer_id, amount=data.amount)
+            )
+        updated_data = {"buyer_id": self._user.id, "price": data.amount}
+        await self._market_gateway.update_order(updated_data, id=data.id)
+        await self._db_session.commit()
