@@ -4,9 +4,9 @@ from logging.handlers import RotatingFileHandler
 
 from aiogram import Bot
 from pyrogram.client import Client
-from pyrogram.errors import BadRequest, PeerIdInvalid, RPCError
 
 from src.application.common.const import MAX_GIFT_NUMBER, GiftRarity, GiftType, HistoryType, PriceList
+from src.application.common.send_gift import send_gift
 from src.application.common.utils import build_direct_link, send_message
 from src.application.dto.market import BidDTO, CreateOrderDTO
 from src.application.interactors import errors
@@ -160,7 +160,7 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
             await self._db_session.rollback()
             raise errors.NotEnoughBalanceError("User not enough balance")
 
-        is_success = await self._send_gift(self._user.id, gift_id, self._bot, self._config)
+        is_success = await send_gift(self._user.id, gift_id, self._client, self._bot, self._config)
         if not is_success:
             await self._db_session.rollback()
             raise errors.GiftSendError("Error when sending a gift")
@@ -198,22 +198,6 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
             f"@{self._user.username} #{self._user.id} buy the order with id: {gift_id}"
         )
         return order
-
-    async def _send_gift(self, user_id: int, gift_id: int, bot: Bot, config: Config) -> bool:
-        is_success, message = False, None
-        try:
-            is_success = await self._client.send_gift(user_id, gift_id)
-        except PeerIdInvalid:
-            message = f"PeerIdInvalid when sending a gift. user id: {user_id}, gift id: {gift_id}"
-        except BadRequest:
-            message = f"TelegramBadRequest when sending a gift. user id: {user_id}, gift id: {gift_id}"
-        except RPCError:
-            message = f"RPCError when sending a gift. user id: {user_id}, gift id: {gift_id}"
-
-        if message:
-            logger.error(message)
-            await send_message(bot, message, config.bot.owners_chat_id)
-        return is_success
 
 
 class NewBidInteractor(Interactor[BidDTO, None]):

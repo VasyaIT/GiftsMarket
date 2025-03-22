@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import delete, func, insert, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -44,9 +46,7 @@ class MarketGateway(OrderSaver):
 
     async def get_user_gifts(self, user_id: int) -> list[UserGiftDM]:
         stmt = (
-            select(Order)
-            .filter_by(seller_id=user_id, is_active=False)
-            .order_by(Order.created_at.desc())
+            select(Order).filter_by(seller_id=user_id, is_active=False).order_by(Order.created_at.desc())
         )
         result = await self._session.execute(stmt)
         return [UserGiftDM(**order.__dict__) for order in result.scalars().all()]
@@ -77,7 +77,7 @@ class MarketGateway(OrderSaver):
 
     async def get_auction_orders(self) -> list[OrderDM]:
         stmt = select(Order).where(
-            Order.min_step != None, Order.is_active == True, Order.is_completed == False
+            Order.min_step != None, Order.auction_end_time <= datetime.now(), Order.is_completed == False
         )
         result = await self._session.execute(stmt)
         return [OrderDM(**order.__dict__) for order in result.scalars().all()]

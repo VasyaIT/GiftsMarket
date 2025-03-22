@@ -76,8 +76,13 @@ class TonapiConfig(BaseModel):
     WALLET_MNEMONICS: str
 
 
+class RedisConfig(BaseModel):
+    REDIS_URL: str = Field(default="redis://localhost:6379")
+
+
 class Config(BaseModel):
     app: AppConfig = Field(default_factory=lambda: AppConfig(**environ))  # type: ignore
     postgres: PostgresConfig = Field(default_factory=lambda: PostgresConfig(**environ))  # type: ignore
     bot: BotConfig = Field(default_factory=lambda: BotConfig(**environ))  # type: ignore
     tonapi: TonapiConfig = Field(default_factory=lambda: TonapiConfig(**environ))  # type: ignore
+    redis: RedisConfig = Field(default_factory=lambda: RedisConfig(**environ))  # type: ignore

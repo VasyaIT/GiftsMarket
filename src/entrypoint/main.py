@@ -1,3 +1,5 @@
+from asyncio import create_task
+
 from aiogram import Bot
 from dishka import make_async_container
 from dishka.integrations.fastapi import setup_dishka
@@ -7,6 +9,7 @@ from pyrogram.client import Client
 from src.application.common.utils import get_bot
 from src.entrypoint.config import Config
 from src.entrypoint.ioc import AppProvider
+from src.entrypoint.queue import run_queue
 from src.presentation.api.middlewares import setup_middlewares
 from src.presentation.api.routers import setup_routers
 from src.presentation.client.handlers.setup import setup_client_handlers
@@ -20,6 +23,7 @@ def get_fastapi_app() -> FastAPI:
 
     async def on_startup() -> None:
         await client.start()
+        create_task(run_queue(client, bot, config))
 
     async def on_shutdown() -> None:
         await bot.session.close()

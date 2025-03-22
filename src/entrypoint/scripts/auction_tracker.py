@@ -3,6 +3,8 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+from bullmq import Queue
+
 
 BASE_DIR = Path(__file__).resolve().parents[3]
 sys.path.append(str(BASE_DIR))
@@ -24,13 +26,16 @@ async def start_auction_tracker() -> None:
             return
         for order in orders:
             now = datetime.now()
-            if order.auction_end_time and order.auction_end_time > now:
-                updated_data = {"is_completed": True, "completed_order_date": now}
-                await market_gateway.update_order(updated_data, id=order.id)
-                await user_gateway.update_balance(
-                    UpdateUserBalanceDM(id=order.seller_id, amount=order.price)
-                )
-                await session.commit()
+            updated_data = {"is_completed": True, "completed_order_date": now}
+            await market_gateway.update_order(updated_data, id=order.id)
+            await user_gateway.update_balance(
+                UpdateUserBalanceDM(id=order.seller_id, amount=order.price)
+            )
+            await session.commit()
+
+            queue = Queue("gifts", {"connection": config.redis.REDIS_URL})  # type: ignore
+            await queue.add("send_gift", {"user_id": order.buyer_id, "gift_id": order.id})
+            await queue.close()
 
 
 if __name__ == "__main__":
