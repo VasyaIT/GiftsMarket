@@ -11,7 +11,7 @@ class OrderReader(Protocol):
         ...
 
     @abstractmethod
-    async def get_user_gifts(self, user_id: int) -> list[UserGiftDM]:
+    async def get_user_gifts(self, user_id: int, limit: int | None, offset: int | None) -> list[UserGiftDM]:
         ...
 
     @abstractmethod

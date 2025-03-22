@@ -44,9 +44,15 @@ class MarketGateway(OrderSaver):
         result = await self._session.execute(stmt)
         return [OrderDM(**order.__dict__) for order in result.scalars().all()]
 
-    async def get_user_gifts(self, user_id: int) -> list[UserGiftDM]:
+    async def get_user_gifts(
+        self, user_id: int, limit: int | None, offset: int | None
+    ) -> list[UserGiftDM]:
         stmt = (
-            select(Order).filter_by(seller_id=user_id, is_active=False).order_by(Order.created_at.desc())
+            select(Order)
+            .filter_by(seller_id=user_id, is_active=False)
+            .order_by(Order.created_at.desc())
+            .limit(limit)
+            .offset(offset)
         )
         result = await self._session.execute(stmt)
         return [UserGiftDM(**order.__dict__) for order in result.scalars().all()]

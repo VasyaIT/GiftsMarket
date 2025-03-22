@@ -46,7 +46,7 @@ async def get_full_user_info(postgres_config: PostgresConfig, user_id: int) -> F
         gateway = UserGateway(session)
         if not (user := await gateway.get_by_id(user_id)):
             return
-        orders = await MarketGateway(session).get_user_gifts(user_id)
+        orders = await MarketGateway(session).get_user_gifts(user_id, None, None)
         withdraw_requests, total_withdrawn = await WalletGateway(session).get_by_user_id(user_id)
 
     return FullUserInfoDM(

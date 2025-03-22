@@ -1,6 +1,6 @@
 from dishka import FromDishka
 from dishka.integrations.fastapi import inject
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from starlette import status
 
 from src.application.dto.common import ResponseDTO
@@ -36,8 +36,12 @@ async def get_current_user(interactor: FromDishka[user.GetUserInteractor]) -> Us
 
 @user_router.get("/gifts")
 @inject
-async def get_user_gifts(interactor: FromDishka[user.GetUserGiftsInteractor]) -> list[UserGiftDM]:
-    return await interactor()
+async def get_user_gifts(
+    interactor: FromDishka[user.GetUserGiftsInteractor],
+    limit: int | None = Query(default=50, ge=0, le=1000),
+    offset: int | None = Query(default=None, ge=0),
+) -> list[UserGiftDM]:
+    return await interactor(limit, offset)
 
 
 @user_router.get("/gifts/{id}")

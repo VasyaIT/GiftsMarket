@@ -40,6 +40,10 @@ class UserSaver(Protocol):
     async def add_referral(self, referrer_id: int, referral: UserDM) -> None:
         ...
 
+    @abstractmethod
+    async def update_referrer(self, referrer_id: int, referral: UserDM) -> None:
+        ...
+
 
 class UserManager(UserReader, UserSaver):
     ...

@@ -54,7 +54,7 @@ class CreateOrderInteractor(Interactor[CreateOrderDTO, None]):
         self._config = config
 
     async def __call__(self, data: CreateOrderDTO) -> None:
-        if data.min_step and not data.auction_end_time or not data.min_step and data.auction_end_time:
+        if not all([data.min_step, data.auction_end_time]):
             raise errors.AuctionBidError("Auction parameters is invalid")
         order = await self._market_gateway.update_order(
             {
@@ -114,7 +114,7 @@ class GetGiftInteractor(Interactor[int, OrderDM]):
         self._market_gateway = market_gateway
 
     async def __call__(self, gift_id: int) -> OrderDM:
-        gift = await self._market_gateway.get_one(id=gift_id)
+        gift = await self._market_gateway.get_one(id=gift_id, is_active=True, is_completed=False)
         if not gift:
             raise errors.NotFoundError("Gift not found")
         return gift

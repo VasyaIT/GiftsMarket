@@ -1,14 +1,13 @@
 import logging
 from logging.handlers import RotatingFileHandler
 
-from aiogram import Bot
 from aiogram.utils.payload import decode_payload, encode_payload
 
 from src.application.common.const import PriceList
-from src.application.common.utils import build_direct_link, generate_deposit_comment, is_subscriber
+from src.application.common.utils import build_direct_link, generate_deposit_comment
 from src.application.dto.market import UpdateOrderDTO
 from src.application.dto.user import LoginDTO, UserDTO
-from src.application.interactors.errors import NotAccessError, NotFoundError
+from src.application.interactors.errors import NotFoundError
 from src.application.interfaces.auth import InitDataValidator, TokenEncoder
 from src.application.interfaces.database import DBSession
 from src.application.interfaces.interactor import Interactor
@@ -70,20 +69,20 @@ class LoginInteractor(Interactor[LoginDTO, str]):
 
             referrer_id = self._get_referrer_id(valid_data.start_param)
             if referrer_id and referrer_id != user_id:
-                if await self._user_gateway.add_referral(referrer_id, user):
-                    await self._db_session.commit()
+                if not await self._user_gateway.get_referrer(user_id):
+                    await self._user_gateway.add_referral(referrer_id, user)
                 else:
-                    await self._db_session.rollback()
+                    await self._user_gateway.update_referrer(referrer_id, user_id)
+                await self._db_session.commit()
+
         if user.username != user_data.get("username"):
-            await self._user_gateway.update_user(
-                dict(username=user_data.get("username")), id=user_id
-            )
+            await self._user_gateway.update_user(dict(username=user_data.get("username")), id=user_id)
             await self._db_session.commit()
         return self._token_gateway.encode(user_id)
 
-    def _get_referrer_id(self, decoded_payload: str | None) -> int | None:
+    def _get_referrer_id(self, encoded_payload: str | None) -> int | None:
         try:
-            return None if not decoded_payload else int(decode_payload(decoded_payload))
+            return int(decode_payload(encoded_payload)) if encoded_payload else None
         except Exception:
             return
 
@@ -107,13 +106,13 @@ class GetUserInteractor(Interactor[None, UserDTO]):
         )
 
 
-class GetUserGiftsInteractor(Interactor[None, list[UserGiftDM]]):
+class GetUserGiftsInteractor:
     def __init__(self, market_gateway: OrderReader, user: UserDM) -> None:
         self._market_gateway = market_gateway
         self._user = user
 
-    async def __call__(self) -> list[UserGiftDM]:
-        return await self._market_gateway.get_user_gifts(user_id=self._user.id)
+    async def __call__(self, limit: int | None, offset: int | None) -> list[UserGiftDM]:
+        return await self._market_gateway.get_user_gifts(self._user.id, limit, offset)
 
 
 class GetUserGiftInteractor(Interactor[int, UserGiftDM]):

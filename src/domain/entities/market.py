@@ -22,7 +22,7 @@ class CreateOrderDM(BaseModel):
 
 class OrderDM(CreateOrderDM):
     buyer_id: int | None = None
-    price: float = 0
+    price: float
     completed_order_date: datetime | None = None
     is_vip: bool | None = None
     min_step: float | None = None
