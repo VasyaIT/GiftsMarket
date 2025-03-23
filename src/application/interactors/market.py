@@ -54,7 +54,7 @@ class CreateOrderInteractor(Interactor[CreateOrderDTO, None]):
         self._config = config
 
     async def __call__(self, data: CreateOrderDTO) -> None:
-        if not all([data.min_step, data.auction_end_time]):
+        if not data.min_step and data.auction_end_time or data.min_step and not data.auction_end_time:
             raise errors.AuctionBidError("Auction parameters is invalid")
         order = await self._market_gateway.update_order(
             {
