@@ -70,11 +70,11 @@ async def buy_gift(dto: OrderIdDTO, interactor: FromDishka[market.BuyGiftInterac
 
 @market_router.post("/order/new-bid")
 @inject
-async def new_bid(dto: BidDTO, interactor: FromDishka[market.BuyGiftInteractor]) -> ResponseDTO:
+async def new_bid(dto: BidDTO, interactor: FromDishka[market.NewBidInteractor]) -> ResponseDTO:
     """New bid on auction"""
 
     try:
-        await interactor(dto.id)
+        await interactor(dto)
     except (errors.NotFoundError, errors.NotEnoughBalanceError, errors.AuctionBidError) as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
     return ResponseDTO(success=True)
