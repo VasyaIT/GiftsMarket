@@ -40,6 +40,11 @@ class UserGiftDM(BaseModel):
     pattern_name: str
     background_name: str
     rarity: GiftRarity
+    is_active: bool
+    price: float | None = None
+    is_vip: bool | None = None
+    min_step: float | None = None
+    auction_end_time: datetime | None = None
 
 
 class GiftFiltersDM(BaseModel):
