@@ -49,7 +49,7 @@ class MarketGateway(OrderSaver):
     ) -> list[UserGiftDM]:
         stmt = (
             select(Order)
-            .filter_by(seller_id=user_id, is_active=False)
+            .filter_by(seller_id=user_id, is_completed=False)
             .order_by(Order.created_at.desc())
             .limit(limit)
             .offset(offset)
@@ -58,7 +58,7 @@ class MarketGateway(OrderSaver):
         return [UserGiftDM(**order.__dict__) for order in result.scalars().all()]
 
     async def get_user_gift(self, user_id: int, gift_id: int) -> UserGiftDM | None:
-        stmt = select(Order).filter_by(id=gift_id, seller_id=user_id, is_active=False)
+        stmt = select(Order).filter_by(id=gift_id, seller_id=user_id, is_completed=False)
         result = await self._session.execute(stmt)
         if not (gift := result.scalar_one_or_none()):
             return
