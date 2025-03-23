@@ -103,6 +103,7 @@ class AppProvider(FastapiProvider):
     buy_gift_interactor = provide(market.BuyGiftInteractor, scope=Scope.REQUEST)
     get_gifts_interactor = provide(market.GetGiftsInteractor, scope=Scope.REQUEST)
     get_gift_interactor = provide(market.GetGiftInteractor, scope=Scope.REQUEST)
+    new_bid_interactor = provide(market.NewBidInteractor, scope=Scope.REQUEST)
 
     # Stars
     create_star_interactor = provide(star.CreateStarOrderInteractor, scope=Scope.REQUEST)
