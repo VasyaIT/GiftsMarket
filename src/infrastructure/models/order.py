@@ -23,7 +23,7 @@ class Order(Base):
     rarity: Mapped[GiftRarity] = mapped_column(ENUM(GiftRarity))
     completed_order_date: Mapped[datetime | None] = mapped_column(TIMESTAMP, nullable=True)
     min_step: Mapped[float | None] = mapped_column(Float, nullable=True)
-    auction_end_time: Mapped[datetime | None] = mapped_column(TIMESTAMP, nullable=True)
+    auction_end_time: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=False)
     is_vip: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     is_completed: Mapped[bool] = mapped_column(Boolean, default=False)
