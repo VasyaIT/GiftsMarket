@@ -218,7 +218,7 @@ class NewBidInteractor(Interactor[BidDTO, None]):
             order := await self._market_gateway.get_one(id=data.id, is_completed=False, is_active=True)
         ):
             raise errors.NotFoundError("Gift not found")
-        if not order.min_step or order.min_step > data.amount - order.price:
+        if not order.min_step or order.min_step > data.amount - order.price + 0.01:
             raise errors.AuctionBidError("Amount is too low or this gift not on auction")
         if order.auction_end_time and order.auction_end_time < datetime.now(tz=timezone.utc):
             raise errors.AuctionBidError("Auction already ended")
