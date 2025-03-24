@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from logging.handlers import RotatingFileHandler
 
 from aiogram import Bot
@@ -220,7 +220,7 @@ class NewBidInteractor(Interactor[BidDTO, None]):
             raise errors.NotFoundError("Gift not found")
         if not order.min_step or order.min_step > data.amount - order.price:
             raise errors.AuctionBidError("Amount is too low or this gift not on auction")
-        if order.auction_end_time and order.auction_end_time < datetime.now():
+        if order.auction_end_time and order.auction_end_time < datetime.now(tz=timezone.utc):
             raise errors.AuctionBidError("Auction already ended")
         if self._user.balance < data.amount:
             raise errors.NotEnoughBalanceError("User does not have enough balance")

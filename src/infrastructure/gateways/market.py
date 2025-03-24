@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import delete, func, insert, select, update
 from sqlalchemy.exc import IntegrityError
@@ -83,7 +83,9 @@ class MarketGateway(OrderSaver):
 
     async def get_auction_orders(self) -> list[OrderDM]:
         stmt = select(Order).where(
-            Order.min_step != None, Order.auction_end_time <= datetime.now(), Order.is_completed == False
+            Order.min_step != None,
+            Order.auction_end_time <= datetime.now(tz=timezone.utc),
+            Order.is_completed == False,
         )
         result = await self._session.execute(stmt)
         return [OrderDM(**order.__dict__) for order in result.scalars().all()]
