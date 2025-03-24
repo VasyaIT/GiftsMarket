@@ -6,8 +6,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.interactors.errors import AlreadyExistError
 from src.application.interfaces.market import OrderSaver
-from src.domain.entities.market import CreateOrderDM, GiftFiltersDM, OrderDM, UserGiftDM
-from src.infrastructure.models.order import Order
+from src.domain.entities.market import (
+    BidDM,
+    CreateOrderDM,
+    GiftFiltersDM,
+    OrderDM,
+    ReadOrderDM,
+    UserGiftDM,
+)
+from src.infrastructure.models.order import Bid, Order
 from src.presentation.api.market.params import GiftSortParams
 
 
@@ -81,6 +88,13 @@ class MarketGateway(OrderSaver):
         if order:
             return OrderDM(**order.__dict__)
 
+    async def get_full_order(self, **filters) -> ReadOrderDM | None:
+        stmt = select(Order).filter_by(**filters)
+        result = await self._session.execute(stmt)
+        order = result.scalar_one_or_none()
+        if order:
+            return ReadOrderDM(**order.__dict__)
+
     async def get_auction_orders(self) -> list[OrderDM]:
         stmt = select(Order).where(
             Order.min_step != None,
@@ -112,3 +126,7 @@ class MarketGateway(OrderSaver):
         order = result.scalar_one_or_none()
         if order:
             return OrderDM(**order.__dict__)
+
+    async def save_auction_bid(self, data: BidDM) -> None:
+        stmt = insert(Bid).values(data.model_dump())
+        await self._session.execute(stmt)

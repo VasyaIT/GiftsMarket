@@ -17,7 +17,7 @@ from src.application.interfaces.market import OrderManager, OrderReader
 from src.application.interfaces.user import UserSaver
 from src.domain.entities.bot import BotInfoDM
 from src.domain.entities.history import CreateHistoryDM
-from src.domain.entities.market import GiftFiltersDM, OrderDM
+from src.domain.entities.market import BidDM, GiftFiltersDM, OrderDM, ReadOrderDM
 from src.domain.entities.user import UpdateUserBalanceDM, UserDM
 from src.entrypoint.config import Config
 from src.presentation.api.market.params import GiftFilterParams, GiftSortParams
@@ -109,12 +109,12 @@ class GetGiftsInteractor:
         )
 
 
-class GetGiftInteractor(Interactor[int, OrderDM]):
+class GetGiftInteractor(Interactor[int, ReadOrderDM]):
     def __init__(self, market_gateway: OrderReader) -> None:
         self._market_gateway = market_gateway
 
-    async def __call__(self, gift_id: int) -> OrderDM:
-        gift = await self._market_gateway.get_one(id=gift_id, is_active=True, is_completed=False)
+    async def __call__(self, gift_id: int) -> ReadOrderDM:
+        gift = await self._market_gateway.get_full_order(id=gift_id, is_active=True, is_completed=False)
         if not gift:
             raise errors.NotFoundError("Gift not found")
         return gift
@@ -230,8 +230,11 @@ class NewBidInteractor(Interactor[BidDTO, None]):
         )
         if order.buyer_id:
             await self._user_gateway.update_balance(
-                UpdateUserBalanceDM(id=order.buyer_id, amount=data.amount)
+                UpdateUserBalanceDM(id=order.buyer_id, amount=order.price)
             )
         updated_data = {"buyer_id": self._user.id, "price": data.amount}
         await self._market_gateway.update_order(updated_data, id=data.id)
+        await self._market_gateway.save_auction_bid(
+            BidDM(gift_id=data.id, amount=data.amount, buyer_id=self._user.id)
+        )
         await self._db_session.commit()

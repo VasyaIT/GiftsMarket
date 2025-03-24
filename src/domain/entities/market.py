@@ -1,11 +1,10 @@
 from datetime import datetime
 
-from pydantic import BaseModel
-
 from src.application.common.const import GiftRarity, GiftType
+from src.application.dto.base import BaseDTO
 
 
-class CreateOrderDM(BaseModel):
+class CreateOrderDM(BaseDTO):
     id: int
     seller_id: int
     number: int
@@ -29,7 +28,11 @@ class OrderDM(CreateOrderDM):
     auction_end_time: datetime | None = None
 
 
-class UserGiftDM(BaseModel):
+class ReadOrderDM(OrderDM):
+    bids: list["ReadBidDM"]
+
+
+class UserGiftDM(BaseDTO):
     id: int
     type: GiftType
     number: int
@@ -47,7 +50,7 @@ class UserGiftDM(BaseModel):
     auction_end_time: datetime | None = None
 
 
-class GiftFiltersDM(BaseModel):
+class GiftFiltersDM(BaseDTO):
     limit: int | None
     offset: int | None
     from_price: float
@@ -59,7 +62,12 @@ class GiftFiltersDM(BaseModel):
     user_id: int
 
 
-class NewBidDM(BaseModel):
-    id: int
+class BidDM(BaseDTO):
     amount: float
+    gift_id: int
     buyer_id: int
+
+
+class ReadBidDM(BaseDTO):
+    amount: float
+    created_at: datetime

@@ -8,7 +8,7 @@ from starlette import status
 from src.application.dto.common import GiftImagesDTO, ResponseDTO
 from src.application.dto.market import BidDTO, CreateOrderDTO, OrderIdDTO
 from src.application.interactors import errors, market
-from src.domain.entities.market import OrderDM
+from src.domain.entities.market import OrderDM, ReadOrderDM
 from src.presentation.api.market.params import GiftFilterParams, GiftSortParams
 
 
@@ -27,7 +27,7 @@ async def get_all_gifts(
 
 @market_router.get("/gifts/{id}")
 @inject
-async def get_gift_by_id(id: int, interactor: FromDishka[market.GetGiftInteractor]) -> OrderDM:
+async def get_gift_by_id(id: int, interactor: FromDishka[market.GetGiftInteractor]) -> ReadOrderDM:
     try:
         return await interactor(id)
     except errors.NotFoundError as e:

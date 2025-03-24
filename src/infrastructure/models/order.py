@@ -35,3 +35,11 @@ class Order(Base):
 
     seller: Mapped[User] = relationship("User", lazy="selectin", foreign_keys="Order.seller_id")
     buyer: Mapped[User] = relationship("User", lazy="selectin", foreign_keys="Order.buyer_id")
+    bids: Mapped[list["Bid"]] = relationship("Bid", lazy="selectin", uselist=True)
+
+
+class Bid(Base):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    amount: Mapped[float] = mapped_column(Float)
+    gift_id: Mapped[int] = mapped_column(ForeignKey("orders.id", ondelete="CASCADE"))
+    buyer_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))

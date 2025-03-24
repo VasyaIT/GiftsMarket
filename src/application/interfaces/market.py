@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Protocol
 
-from src.domain.entities.market import CreateOrderDM, GiftFiltersDM, OrderDM, UserGiftDM
+from src.domain.entities.market import BidDM, CreateOrderDM, GiftFiltersDM, OrderDM, ReadOrderDM, UserGiftDM
 from src.presentation.api.market.params import GiftSortParams
 
 
@@ -22,6 +22,10 @@ class OrderReader(Protocol):
     async def get_one(self, **filters) -> OrderDM | None:
         ...
 
+    @abstractmethod
+    async def get_full_order(self, **filters) -> ReadOrderDM | None:
+        ...
+
 
 class OrderSaver(Protocol):
     @abstractmethod
@@ -34,6 +38,10 @@ class OrderSaver(Protocol):
 
     @abstractmethod
     async def delete_order(self, **filters) -> OrderDM | None:
+        ...
+
+    @abstractmethod
+    async def save_auction_bid(self, data: BidDM) -> None:
         ...
 
 
