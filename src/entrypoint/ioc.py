@@ -57,10 +57,14 @@ class AppProvider(FastapiProvider):
         return await get_user_by_token(request, user_gateway, token_gateway)
 
     @provide(scope=Scope.REQUEST)
-    async def get_session(self, session_maker: async_sessionmaker[AsyncSession]) -> AsyncIterable[AnyOf[
-        AsyncSession,
-        DBSession,
-    ]]:
+    async def get_session(
+        self, session_maker: async_sessionmaker[AsyncSession]
+    ) -> AsyncIterable[
+        AnyOf[
+            AsyncSession,
+            DBSession,
+        ]
+    ]:
         async with session_maker() as session:
             try:
                 yield session
@@ -96,7 +100,8 @@ class AppProvider(FastapiProvider):
     get_user_gifts_interactor = provide(user.GetUserGiftsInteractor, scope=Scope.REQUEST)
     get_user_gift_interactor = provide(user.GetUserGiftInteractor, scope=Scope.REQUEST)
     update_user_gift_interactor = provide(user.UpdateUserGiftInteractor, scope=Scope.REQUEST)
-    delete_user_gift_interactor = provide(user.DeleteUserGiftInteractor, scope=Scope.REQUEST)
+    remove_order_interactor = provide(user.RemoveOrderInteractor, scope=Scope.REQUEST)
+    withdraw_gift_interactor = provide(user.WithdrawGiftInteractor, scope=Scope.REQUEST)
 
     # Gift
     create_order_interactor = provide(market.CreateOrderInteractor, scope=Scope.REQUEST)
@@ -109,10 +114,16 @@ class AppProvider(FastapiProvider):
     create_star_interactor = provide(star.CreateStarOrderInteractor, scope=Scope.REQUEST)
     buy_stars_interactor = provide(star.BuyStarsInteractor, scope=Scope.REQUEST)
     cancel_star_order_interactor = provide(star.CancelStarOrderInteractor, scope=Scope.REQUEST)
-    seller_accept_star_order_interactor = provide(star.SellerAcceptStarOrderInteractor, scope=Scope.REQUEST)
-    seller_cancel_star_order_interactor = provide(star.SellerCancelStarOrderInteractor, scope=Scope.REQUEST)
+    seller_accept_star_order_interactor = provide(
+        star.SellerAcceptStarOrderInteractor, scope=Scope.REQUEST
+    )
+    seller_cancel_star_order_interactor = provide(
+        star.SellerCancelStarOrderInteractor, scope=Scope.REQUEST
+    )
     confirm_star_order_interactor = provide(star.ConfirmStarOrderInteractor, scope=Scope.REQUEST)
-    accept_transfer_star_order_interactor = provide(star.AcceptTransferStarOrderInteractor, scope=Scope.REQUEST)
+    accept_transfer_star_order_interactor = provide(
+        star.AcceptTransferStarOrderInteractor, scope=Scope.REQUEST
+    )
     get_star_order_interactor = provide(star.GetStarOrderInteractor, scope=Scope.REQUEST)
     get_all_star_order_interactor = provide(star.GetAllStarOrderInteractor, scope=Scope.REQUEST)
     update_star_order_interactor = provide(star.UpdateStarOrderInteractor, scope=Scope.REQUEST)

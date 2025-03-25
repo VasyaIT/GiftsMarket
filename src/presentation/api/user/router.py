@@ -64,9 +64,19 @@ async def edit_gift(
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
 
 
-@user_router.delete("/gifts/{id}")
+@user_router.post("/gifts/{id}/remove")
 @inject
-async def delete_gift(id: int, interactor: FromDishka[user.DeleteUserGiftInteractor]) -> ResponseDTO:
+async def remove_order(id: int, interactor: FromDishka[user.RemoveOrderInteractor]) -> ResponseDTO:
+    try:
+        await interactor(id)
+    except (NotFoundError, NotAccessError) as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
+    return ResponseDTO(success=True)
+
+
+@user_router.post("/gifts/{id}/withdraw")
+@inject
+async def withdraw_gift(id: int, interactor: FromDishka[user.WithdrawGiftInteractor]) -> ResponseDTO:
     try:
         await interactor(id)
     except NotFoundError as e:

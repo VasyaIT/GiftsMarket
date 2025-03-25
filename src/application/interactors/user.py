@@ -1,13 +1,15 @@
 import logging
 from logging.handlers import RotatingFileHandler
 
+from aiogram import Bot
 from aiogram.utils.payload import decode_payload, encode_payload
+from pyrogram.client import Client
 
-from src.application.common.const import PriceList
+from src.application.common.send_gift import send_gift
 from src.application.common.utils import build_direct_link, generate_deposit_comment
 from src.application.dto.market import UpdateOrderDTO
 from src.application.dto.user import LoginDTO, UserDTO
-from src.application.interactors.errors import NotFoundError
+from src.application.interactors.errors import NotAccessError, NotFoundError
 from src.application.interfaces.auth import InitDataValidator, TokenEncoder
 from src.application.interfaces.database import DBSession
 from src.application.interfaces.interactor import Interactor
@@ -15,7 +17,7 @@ from src.application.interfaces.market import OrderReader, OrderSaver
 from src.application.interfaces.user import UserManager, UserReader, UserSaver
 from src.domain.entities.bot import BotInfoDM
 from src.domain.entities.market import OrderDM, UserGiftDM
-from src.domain.entities.user import CreateUserDM, UpdateUserBalanceDM, UserDM
+from src.domain.entities.user import CreateUserDM, UserDM
 from src.entrypoint.config import Config
 
 
@@ -152,9 +154,13 @@ class UpdateUserGiftInteractor:
         return updated_order
 
 
-class DeleteUserGiftInteractor(Interactor[int, None]):
+class RemoveOrderInteractor(Interactor[int, None]):
     def __init__(
-        self, market_gateway: OrderSaver, user: UserDM, db_session: DBSession, user_gateway: UserSaver
+        self,
+        market_gateway: OrderSaver,
+        user: UserDM,
+        db_session: DBSession,
+        user_gateway: UserSaver,
     ) -> None:
         self._market_gateway = market_gateway
         self._user_gateway = user_gateway
@@ -162,19 +168,54 @@ class DeleteUserGiftInteractor(Interactor[int, None]):
         self._db_session = db_session
 
     async def __call__(self, gift_id: int) -> None:
+        data = dict(is_active=False)
+        updated_order = await self._market_gateway.update_order(
+            data, id=gift_id, is_active=True, is_completed=False, seller_id=self._user.id
+        )
+        if not updated_order:
+            await self._db_session.rollback()
+            raise NotFoundError("Gift not found")
+        if updated_order.min_step and updated_order.buyer_id:
+            await self._db_session.rollback()
+            raise NotAccessError("Auction already started")
+
+        await self._db_session.commit()
+
+        logger.info(
+            "RemoveOrderInteractor: "
+            f"@{self._user.username} #{self._user.id} removed a gift from market with id: {gift_id}"
+        )
+
+
+class WithdrawGiftInteractor(Interactor[int, None]):
+    def __init__(
+        self,
+        market_gateway: OrderSaver,
+        user: UserDM,
+        db_session: DBSession,
+        client: Client,
+        bot: Bot,
+        config: Config,
+    ) -> None:
+        self._market_gateway = market_gateway
+        self._user = user
+        self._db_session = db_session
+        self._client = client
+        self._bot = bot
+        self._config = config
+
+    async def __call__(self, gift_id: int) -> None:
         deleted_order = await self._market_gateway.delete_order(
-            id=gift_id, is_completed=False, seller_id=self._user.id
+            id=gift_id, is_active=False, is_completed=False, seller_id=self._user.id
         )
         if not deleted_order:
             await self._db_session.rollback()
             raise NotFoundError("Gift not found")
-
-        await self._user_gateway.update_balance(
-            UpdateUserBalanceDM(id=self._user.id, amount=PriceList.UP_FOR_SALE)
-        )
         await self._db_session.commit()
 
+        await send_gift(self._user.id, gift_id, self._client, self._bot, self._config)
+
         logger.info(
-            "DeleteUserGiftInteractor: "
-            f"@{self._user.username} #{self._user.id} deleted a gift with id: {gift_id}"
+            "WithdrawGiftInteractor: "
+            f"@{self._user.username} #{self._user.id} withdrew a gift with id: {gift_id}"
         )
