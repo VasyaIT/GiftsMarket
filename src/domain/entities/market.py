@@ -71,3 +71,8 @@ class BidDM(BaseDTO):
 class ReadBidDM(BaseDTO):
     amount: float
     created_at: datetime
+
+
+class BidSuccessDM(BaseDTO):
+    user_balance: float
+    created_at: datetime

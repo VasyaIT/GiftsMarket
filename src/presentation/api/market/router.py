@@ -8,7 +8,7 @@ from starlette import status
 from src.application.dto.common import GiftImagesDTO, ResponseDTO
 from src.application.dto.market import BidDTO, CreateOrderDTO, OrderIdDTO
 from src.application.interactors import errors, market
-from src.domain.entities.market import OrderDM, ReadOrderDM
+from src.domain.entities.market import BidSuccessDM, OrderDM, ReadOrderDM
 from src.presentation.api.market.params import GiftFilterParams, GiftSortParams
 
 
@@ -70,14 +70,13 @@ async def buy_gift(dto: OrderIdDTO, interactor: FromDishka[market.BuyGiftInterac
 
 @market_router.post("/order/new-bid")
 @inject
-async def new_bid(dto: BidDTO, interactor: FromDishka[market.NewBidInteractor]) -> ResponseDTO:
+async def new_bid(dto: BidDTO, interactor: FromDishka[market.NewBidInteractor]) -> BidSuccessDM:
     """New bid on auction"""
 
     try:
-        await interactor(dto)
+        return await interactor(dto)
     except (errors.NotFoundError, errors.NotEnoughBalanceError, errors.AuctionBidError) as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
-    return ResponseDTO(success=True)
 
 
 @market_router.get("/get-gift-types")

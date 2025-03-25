@@ -17,7 +17,7 @@ from src.application.interfaces.market import OrderManager, OrderReader
 from src.application.interfaces.user import UserSaver
 from src.domain.entities.bot import BotInfoDM
 from src.domain.entities.history import CreateHistoryDM
-from src.domain.entities.market import BidDM, GiftFiltersDM, OrderDM, ReadOrderDM
+from src.domain.entities.market import BidDM, BidSuccessDM, GiftFiltersDM, OrderDM, ReadOrderDM
 from src.domain.entities.user import UpdateUserBalanceDM, UserDM
 from src.entrypoint.config import Config
 from src.presentation.api.market.params import GiftFilterParams, GiftSortParams
@@ -213,7 +213,7 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
         return order
 
 
-class NewBidInteractor(Interactor[BidDTO, None]):
+class NewBidInteractor(Interactor[BidDTO, BidSuccessDM]):
     def __init__(
         self,
         db_session: DBSession,
@@ -226,7 +226,7 @@ class NewBidInteractor(Interactor[BidDTO, None]):
         self._user = user
         self._user_gateway = user_gateway
 
-    async def __call__(self, data: BidDTO) -> None:
+    async def __call__(self, data: BidDTO) -> BidSuccessDM:
         if not (
             order := await self._market_gateway.get_one(id=data.id, is_completed=False, is_active=True)
         ):
@@ -238,6 +238,10 @@ class NewBidInteractor(Interactor[BidDTO, None]):
         if self._user.balance < data.amount:
             raise errors.NotEnoughBalanceError("User does not have enough balance")
 
+        new_balance = self._user.balance - data.amount
+        if order.buyer_id == self._user.id:
+            new_balance += order.price
+
         await self._user_gateway.update_balance(
             UpdateUserBalanceDM(id=self._user.id, amount=-data.amount)
         )
@@ -245,9 +249,11 @@ class NewBidInteractor(Interactor[BidDTO, None]):
             await self._user_gateway.update_balance(
                 UpdateUserBalanceDM(id=order.buyer_id, amount=order.price)
             )
+
         updated_data = {"buyer_id": self._user.id, "price": data.amount}
         await self._market_gateway.update_order(updated_data, id=data.id)
         await self._market_gateway.save_auction_bid(
             BidDM(gift_id=data.id, amount=data.amount, buyer_id=self._user.id)
         )
         await self._db_session.commit()
+        return BidSuccessDM(user_balance=new_balance, created_at=datetime.now(tz=timezone.utc))
