@@ -13,7 +13,7 @@ class History(Base):
     price: Mapped[float] = mapped_column(Float)
     stars: Mapped[int | None] = mapped_column(Integer, nullable=True)
     gift: Mapped[GiftType | None] = mapped_column(ENUM(GiftType), nullable=True)
-    image_url: Mapped[str | None] = mapped_column(String, nullable=True)
+    model_name: Mapped[str | None] = mapped_column(String, nullable=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
 
     user: Mapped[User] = relationship("User", lazy="selectin")

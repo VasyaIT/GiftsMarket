@@ -182,10 +182,18 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
         await self._db_session.commit()
 
         buyer_history_data = CreateHistoryDM(
-            user_id=self._user.id, type=HistoryType.BUY_GIFT, price=order.price, gift=order.type
+            user_id=self._user.id,
+            type=HistoryType.BUY_GIFT,
+            price=order.price,
+            gift=order.type,
+            model_name=order.model_name,
         )
         seller_history_data = CreateHistoryDM(
-            user_id=order.seller_id, type=HistoryType.SELL_GIFT, price=order.price, gift=order.type
+            user_id=order.seller_id,
+            type=HistoryType.SELL_GIFT,
+            price=order.price,
+            gift=order.type,
+            model_name=order.model_name,
         )
         await self._history_gateway.save_many([buyer_history_data, seller_history_data])
         await self._db_session.commit()

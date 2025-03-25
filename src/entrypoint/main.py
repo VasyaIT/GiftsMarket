@@ -23,7 +23,8 @@ def get_fastapi_app() -> FastAPI:
 
     async def on_startup() -> None:
         await client.start()
-        create_task(run_queue(client, bot, config))
+        if not config.app.DEBUG:
+            create_task(run_queue(client, bot, config))
 
     async def on_shutdown() -> None:
         await bot.session.close()
