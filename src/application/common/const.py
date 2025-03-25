@@ -3,6 +3,7 @@ from enum import Enum, StrEnum, auto
 
 MINUTES_TO_SEND_GIFT = 20
 MAX_GIFT_NUMBER = 500000
+MAX_WITHDRAW_AMOUNT = 500
 INLINE_IMAGE_URL = "https://store.nestdex.dev/media/inline_image.jpg"
 
 

@@ -1,11 +1,10 @@
-from aiogram import Bot, F, Router
+from aiogram import F, Router
 from aiogram.filters import Command, CommandStart
-from aiogram.methods import AnswerCallbackQuery, SendMessage
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import Message
 
 from src.entrypoint.config import Config
 from src.presentation.bot.keyboards.base import open_app_kb
-from src.presentation.bot.services import market, text, user, wallet
+from src.presentation.bot.services import market, text, user
 
 
 router = Router()
@@ -74,30 +73,6 @@ async def unban_handler(message: Message, config: Config) -> Message | None:
     await message.answer(f"❌ Пользователь с id {user_id} не найден")
 
 
-@router.callback_query(F.data.startswith("complete_withdraw:"))
-async def withdraw_success_callback(
-    call: CallbackQuery,
-    config: Config,
-    bot: Bot,
-) -> AnswerCallbackQuery | SendMessage | None:
-    if call.from_user.id not in config.bot.moderators_chat_id:
-        return call.answer("У тебя нет прав", show_alert=True)
-
-    request_id = call.data.replace("complete_withdraw:", "")
-    withdraw_request = await wallet.get_withdraw_request(int(request_id), config.postgres)
-    if not withdraw_request:
-        return call.message.answer(f"❌ <b>Заявка на вывод #{request_id} уже исполнена</b>")
-    await wallet.complete_withdraw_request(int(request_id), config.postgres)
-    await wallet.send_transaction(withdraw_request, config.tonapi)
-    await call.message.edit_text(
-        f"{call.message.text}\n\n✅ Вывод исполнен", reply_markup=None, parse_mode="html"
-    )
-    await bot.send_message(
-        withdraw_request.user_id,
-        f"✅ Your withdrawal of {withdraw_request.amount} TON has been successfully completed",
-    )
-
-
 @router.message(F.text.startswith("/addbalance"))
 async def add_balance_handler(message: Message, config: Config) -> Message | None:
     if message.from_user.id not in config.bot.moderators_chat_id:
@@ -115,38 +90,6 @@ async def add_balance_handler(message: Message, config: Config) -> Message | Non
     await message.answer(f"❌ Пользователь с id {user_id} не найден")
 
 
-@router.message(F.text.startswith("/cancel"))
-async def cancel_order_handler(message: Message, config: Config) -> Message | None:
-    if message.from_user.id not in config.bot.moderators_chat_id:
-        return
-    try:
-        order_id = int(message.text.split("/cancel")[1].strip())
-    except ValueError:
-        return await message.answer(
-            "❌ Неверный формат команды.\nОтправь команду в формате <code>/cancel [order id]</code>"
-        )
-
-    if await market.cancel_order(order_id, config.postgres):
-        return await message.answer(f"✅ Ордер с ID {order_id} отменён")
-    await message.answer(f"❌ Ордер с ID {order_id} не найден")
-
-
-@router.message(F.text.startswith("/confirm"))
-async def confirm_order_handler(message: Message, config: Config) -> Message | None:
-    if message.from_user.id not in config.bot.moderators_chat_id:
-        return
-    try:
-        order_id = int(message.text.split("/confirm")[1].strip())
-    except ValueError:
-        return await message.answer(
-            "❌ Неверный формат команды.\nОтправь команду в формате <code>/confirm [order id]</code>"
-        )
-
-    if await market.confirm_order(order_id, config):
-        return await message.answer(f"✅ Ордер с ID {order_id} завершён")
-    await message.answer(f"❌ Ордер с ID {order_id} не найден")
-
-
 @router.message(F.text.startswith("/order"))
 async def order_info_handler(message: Message, config: Config) -> Message | None:
     if message.from_user.id not in config.bot.moderators_chat_id:
@@ -160,9 +103,7 @@ async def order_info_handler(message: Message, config: Config) -> Message | None
             "Отправь команду в формате <code>/order [gift_type] [gift number]</code>"
         )
 
-    if not (
-        orders := await market.get_orders_info(gift_type.upper(), gift_number, config.postgres)
-    ):
+    if not (orders := await market.get_orders_info(gift_type.upper(), gift_number, config.postgres)):
         return await message.answer(f"❌ Ордер {gift_type} - #{gift_number} не найден")
     answer_text = ""
     for order in orders:

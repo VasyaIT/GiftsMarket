@@ -42,3 +42,8 @@ class WalletGateway(WithdrawRequestSaver):
         request = result.scalar_one_or_none()
         if request:
             return WithdrawRequestDM(**request.__dict__)
+
+    async def get_many(self, **filters) -> list[WithdrawRequestDM]:
+        stmt = select(WithdrawRequest).filter_by(**filters)
+        result = await self._session.execute(stmt)
+        return [WithdrawRequestDM(**request.__dict__) for request in result.scalars().all()]

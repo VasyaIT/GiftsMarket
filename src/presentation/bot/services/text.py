@@ -4,9 +4,7 @@ from src.domain.entities.user import FullUserInfoDM
 
 
 def get_buy_gift_text(type_name: str, gift_number: int) -> str:
-    return (
-        f"💰 Your gift was bought - <b>{type_name} #{gift_number}</b>"
-    )
+    return f"💰 Your gift was bought - <b>{type_name} #{gift_number}</b>"
 
 
 def get_cancel_gift_text(type_name: str, gift_number: int) -> str:
@@ -45,15 +43,12 @@ def get_accept_transfer_text(type_name: str, gift_number: int) -> str:
 
 def get_buy_stars_text(amount: float) -> str:
     return (
-        f"💰 Your stars was bought - <b>{amount:.2f} ⭐</b>\n\n"
-        f"📤 Confirm or cancel the order in the app"
+        f"💰 Your stars was bought - <b>{amount:.2f} ⭐</b>\n\n📤 Confirm or cancel the order in the app"
     )
 
 
 def get_cancel_star_text(amount: float) -> str:
-    return (
-        f"❗ The buyer canceled the purchase of your stars - <b>{amount:.2f} ⭐</b>"
-    )
+    return f"❗ The buyer canceled the purchase of your stars - <b>{amount:.2f} ⭐</b>"
 
 
 def get_seller_accept_star_text(amount: float) -> str:
@@ -80,14 +75,6 @@ def get_confirm_transfer_stars_text(amount: float) -> str:
 
 def get_accept_transfer_stars_text(amount: float) -> str:
     return f"✅ The order for {amount:.2f} Stars was completed successfully"
-
-
-def get_withdraw_request_text(username: str | None, user_id: int, amount: float, wallet: str) -> str:
-    username_text = "" if not username else f"@{username} "
-    return (
-        f"👛 Заявка на вывод средств от пользователя {username_text}#<code>{user_id}</code>"
-        f"\n\nСумма: <b>{amount}</b> TON\nАдрес кошелька: <code>{wallet}</code>"
-    )
 
 
 def get_start_text() -> str:
@@ -143,7 +130,7 @@ def get_full_user_info_text(user_info_data: FullUserInfoDM) -> str:
     if not user_info_data.first_name:
         first_name_text = ""
 
-    orders_text = f"\n🛍️ <b>Последние ордера: </b>"
+    orders_text = "\n🛍️ <b>Последние ордера: </b>"
     for order in user_info_data.orders[:5]:
         user_text = "покупатель" if order.buyer_id == user_info_data.id else "продавец"
         completed_date_text = "\n"
@@ -157,7 +144,7 @@ def get_full_user_info_text(user_info_data: FullUserInfoDM) -> str:
     if not user_info_data.orders:
         orders_text = ""
 
-    withdraws_text = f"\n👛 <b>Последние выводы:</b>"
+    withdraws_text = "\n👛 <b>Последние выводы:</b>"
     for withdraw in user_info_data.withdraw_requests[:5]:
         withdraws_text += f"\n<code>{withdraw.wallet}</code> - {withdraw.amount:.2f} TON"
     withdraws_text += "\n"
@@ -169,7 +156,7 @@ def get_full_user_info_text(user_info_data: FullUserInfoDM) -> str:
         f"{username_text}"
         f"{first_name_text}"
         f"💰 <b>Баланс: </b>{user_info_data.balance:.2f} TON\n"
-        f"📅 <b>Дата регистрации: </b>{user_info_data.created_at.strftime("%d.%m.%y, %H:%M")}\n"
+        f"📅 <b>Дата регистрации: </b>{user_info_data.created_at.strftime('%d.%m.%y, %H:%M')}\n"
         f"{orders_text}"
         f"{withdraws_text}"
         f"\n💸 <b>Общая выведенная сумма: </b>{user_info_data.total_withdrawn} TON"
@@ -179,13 +166,13 @@ def get_full_user_info_text(user_info_data: FullUserInfoDM) -> str:
 def get_order_info_text(order_info: OrderDM) -> str:
     buyer_text = ""
     if order_info.buyer_id:
-        buyer_text = f"👨‍🦱 <b>Продавец: </b>@{order_info.seller_id} #<code>{order_info.buyer_id}</code>\n"
+        buyer_text = (
+            f"👨‍🦱 <b>Продавец: </b>@{order_info.seller_id} #<code>{order_info.buyer_id}</code>\n"
+        )
     created_order_text = ""
     completed_order_text = ""
     if order_info.completed_order_date:
-        completed_order_text = (
-            f"📅 <b>Дата завершения сделки: </b>{order_info.completed_order_date.strftime("%d.%m.%y, %H:%M")}"
-        )
+        completed_order_text = f"📅 <b>Дата завершения сделки: </b>{order_info.completed_order_date.strftime('%d.%m.%y, %H:%M')}"
 
     return (
         f"🔒 ID: <code>{order_info.id}</code>\n"
