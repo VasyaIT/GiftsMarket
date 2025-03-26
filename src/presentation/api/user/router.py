@@ -44,26 +44,6 @@ async def get_user_gifts(
     return await interactor(limit, offset)
 
 
-@user_router.get("/gifts/{id}")
-@inject
-async def get_user_gift(id: int, interactor: FromDishka[user.GetUserGiftInteractor]) -> UserGiftDM:
-    try:
-        return await interactor(id)
-    except NotFoundError as e:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, str(e))
-
-
-@user_router.post("/gifts/{id}")
-@inject
-async def edit_gift(
-    id: int, dto: UpdateOrderDTO, interactor: FromDishka[user.UpdateUserGiftInteractor]
-) -> OrderDM:
-    try:
-        return await interactor(id, dto)
-    except (NotFoundError, AlreadyExistError) as e:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
-
-
 @user_router.post("/gifts/remove")
 @inject
 async def remove_order(
@@ -86,3 +66,23 @@ async def withdraw_gift(
     except NotFoundError as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
     return ResponseDTO(success=True)
+
+
+@user_router.get("/gifts/{id}")
+@inject
+async def get_user_gift(id: int, interactor: FromDishka[user.GetUserGiftInteractor]) -> UserGiftDM:
+    try:
+        return await interactor(id)
+    except NotFoundError as e:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, str(e))
+
+
+@user_router.post("/gifts/{id}")
+@inject
+async def edit_gift(
+    id: int, dto: UpdateOrderDTO, interactor: FromDishka[user.UpdateUserGiftInteractor]
+) -> OrderDM:
+    try:
+        return await interactor(id, dto)
+    except (NotFoundError, AlreadyExistError) as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
