@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, Query
 from starlette import status
 
 from src.application.dto.common import ResponseDTO
-from src.application.dto.market import UpdateOrderDTO
+from src.application.dto.market import OrderIdDTO, UpdateOrderDTO
 from src.application.dto.user import LoginDTO, TokenDTO, UserDTO
 from src.application.interactors import user
 from src.application.interactors.errors import AlreadyExistError, NotAccessError, NotFoundError
@@ -64,21 +64,25 @@ async def edit_gift(
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
 
 
-@user_router.post("/gifts/{id}/remove")
+@user_router.post("/gifts/remove")
 @inject
-async def remove_order(id: int, interactor: FromDishka[user.RemoveOrderInteractor]) -> ResponseDTO:
+async def remove_order(
+    dto: OrderIdDTO, interactor: FromDishka[user.RemoveOrderInteractor]
+) -> ResponseDTO:
     try:
-        await interactor(id)
+        await interactor(dto.id)
     except (NotFoundError, NotAccessError) as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
     return ResponseDTO(success=True)
 
 
-@user_router.post("/gifts/{id}/withdraw")
+@user_router.post("/gifts/withdraw")
 @inject
-async def withdraw_gift(id: int, interactor: FromDishka[user.WithdrawGiftInteractor]) -> ResponseDTO:
+async def withdraw_gift(
+    dto: OrderIdDTO, interactor: FromDishka[user.WithdrawGiftInteractor]
+) -> ResponseDTO:
     try:
-        await interactor(id)
+        await interactor(dto.id)
     except NotFoundError as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
     return ResponseDTO(success=True)
