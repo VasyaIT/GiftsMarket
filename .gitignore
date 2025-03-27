@@ -1,8 +1,11 @@
 deposit_script.sh
 db_dump_script.sh
+auction_script.sh
+withdraw_script.sh
 db_dump.json
 *.log*
 client.session
+client.session-journal
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
