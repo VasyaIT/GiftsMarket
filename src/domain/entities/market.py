@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from src.application.common.const import GiftRarity, GiftType
+from src.application.common.const import GiftRarity
 from src.application.dto.base import BaseDTO
 
 
@@ -8,7 +8,7 @@ class CreateOrderDM(BaseDTO):
     id: int
     seller_id: int
     number: int
-    type: GiftType
+    type: str
     model_name: str
     pattern_name: str
     background_name: str
@@ -34,7 +34,7 @@ class ReadOrderDM(OrderDM):
 
 class UserGiftDM(BaseDTO):
     id: int
-    type: GiftType
+    type: str
     number: int
     model: float
     pattern: float
@@ -58,7 +58,7 @@ class GiftFiltersDM(BaseDTO):
     from_gift_number: int
     to_gift_number: int
     rarities: list[GiftRarity]
-    types: list[GiftType]
+    types: list[str] | None
     user_id: int
 
 

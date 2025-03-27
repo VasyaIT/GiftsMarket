@@ -4,41 +4,8 @@ from src.domain.entities.user import FullUserInfoDM
 
 
 def get_buy_gift_text(type_name: str, gift_number: int) -> str:
-    return f"💰 Your gift was bought - <b>{type_name} #{gift_number}</b>"
-
-
-def get_cancel_gift_text(type_name: str, gift_number: int) -> str:
-    return (
-        f"❗ The buyer canceled the purchase of your gift - <b>{type_name} #{gift_number}</b>\n\n"
-        "⚠️ <b>Don't transfer your gift! If the transfer has occurred, please contact support</b>"
-    )
-
-
-def get_seller_accept_text(type_name: str, gift_number: int) -> str:
-    return (
-        f"✅ The seller accepted your deal for a gift - <b>{type_name} #{gift_number}</b>\n\n"
-        f"🕑 Wait for the seller to send you a gift and you will receive a notification in the bot"
-    )
-
-
-def get_seller_cancel_text(type_name: str, gift_number: int) -> str:
-    return (
-        f"❌ The seller canceled your gift order - <b>{type_name} #{gift_number}</b>\n\n"
-        f"💸 The TONs have been returned to your balance in the app"
-    )
-
-
-def get_confirm_transfer_text(type_name: str, gift_number: int) -> str:
-    return (
-        f"✅ The seller transferred you a gift - <b>{type_name} #{gift_number}</b>\n\n"
-        "Go to the market and confirm receipt of the gift\n\n"
-        "⚠️ <i>Be sure to check if you have received the gift for real!"
-        "Check your profile, and only then confirm receipt!</i>"
-    )
-
-
-def get_accept_transfer_text(type_name: str, gift_number: int) -> str:
-    return f"✅ The order was completed successfully - <b>{type_name} #{gift_number}</b>"
+    order_name_text = " ".join(part.capitalize() for part in type_name.split("_"))
+    return f"💰 Your gift was bought - <b>{order_name_text} #{gift_number}</b>"
 
 
 def get_buy_stars_text(amount: float) -> str:
@@ -95,14 +62,6 @@ def get_deposit_text(
     )
 
 
-def get_canceled_text_to_owner(username: str | None, user_id: int) -> str:
-    username_text = "" if not username else f"@{username} "
-    return (
-        f"❗ Пользователь {username_text}#<code>{user_id}</code> отменил покупку подарка!\n\n"
-        "⚠️ Если он создаст заявку на вывод в ближайшее время, убедитесь, что продавец не передал ему подарок"
-    )
-
-
 def get_admin_text(
     count_users: int, count_gifts: int, count_completed_gifts: int, total_balance: float
 ) -> str:
@@ -136,8 +95,9 @@ def get_full_user_info_text(user_info_data: FullUserInfoDM) -> str:
         completed_date_text = "\n"
         if order.completed_order_date:
             completed_date_text = f"\n<b>Дата завершения: </b>{order.completed_order_date}\n"
+        order_name_text = " ".join(part.capitalize() for part in order.type.split("_"))
         orders_text += (
-            f"\n<b>ID: </b>{order.id}\n<b>Подарок</b>:  <b>{order.type.name} #{order.number}</b>"
+            f"\n<b>ID: </b>{order.id}\n<b>Подарок</b>:  <b>{order_name_text} #{order.number}</b>"
             f"\n<b>Цена: </b>{order.price} TON"
             f"\n<b>Пользователь: </b>{user_text}{completed_date_text}"
         )
@@ -176,7 +136,7 @@ def get_order_info_text(order_info: OrderDM) -> str:
 
     return (
         f"🔒 ID: <code>{order_info.id}</code>\n"
-        f"🔎 Тип: <code>{order_info.type.name}</code>\n"
+        f"🔎 Тип: <code>{order_info.type}</code>\n"
         f"➕ Номер: <code>{order_info.number}</code>\n"
         f"💰 <b>Цена: </b>{order_info.price} TON\n\n"
         f"{buyer_text}"

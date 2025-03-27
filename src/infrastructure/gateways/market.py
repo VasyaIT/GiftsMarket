@@ -32,18 +32,20 @@ class MarketGateway(OrderSaver):
             order_by = Order.price.asc()
         elif sort_by is GiftSortParams.PRICE_HIGH_TO_LOW:
             order_by = Order.price.desc()
+        conditions = [
+            filters.from_price <= Order.price,
+            filters.to_price >= Order.price,
+            Order.rarity.in_(filters.rarities),
+            Order.is_active == True,
+            Order.is_completed == False,
+            filters.from_gift_number <= Order.number,
+            filters.to_gift_number >= Order.number,
+        ]
+        if filters.types:
+            conditions.append(Order.type.in_(filters.types))
         stmt = (
             select(Order)
-            .where(
-                filters.from_price <= Order.price,
-                filters.to_price >= Order.price,
-                Order.rarity.in_(filters.rarities),
-                Order.type.in_(filters.types),
-                Order.is_active == True,
-                Order.is_completed == False,
-                filters.from_gift_number <= Order.number,
-                filters.to_gift_number >= Order.number,
-            )
+            .where(*conditions)
             .limit(filters.limit)
             .offset(filters.offset)
             .order_by(Order.is_vip.desc(), order_by)

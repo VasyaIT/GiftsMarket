@@ -5,7 +5,7 @@ from logging.handlers import RotatingFileHandler
 from aiogram import Bot
 from pyrogram.client import Client
 
-from src.application.common.const import MAX_GIFT_NUMBER, GiftRarity, GiftType, HistoryType, PriceList
+from src.application.common.const import MAX_GIFT_NUMBER, GiftRarity, HistoryType, PriceList
 from src.application.common.send_gift import send_gift
 from src.application.common.utils import build_direct_link, send_message
 from src.application.dto.market import BidDTO, CreateOrderDTO
@@ -109,7 +109,7 @@ class GetGiftsInteractor:
             from_gift_number=filters.from_gift_number if filters.from_gift_number else 1,
             to_gift_number=filters.to_gift_number if filters.to_gift_number else MAX_GIFT_NUMBER,
             rarities=filters.rarities if filters.rarities else [rarity for rarity in GiftRarity],
-            types=filters.types if filters.types else [type for type in GiftType],
+            types=filters.types if filters.types else None,
             user_id=user_id,
         )
 
@@ -176,9 +176,7 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
             UpdateUserBalanceDM(id=order.seller_id, amount=order.price)
         )
         values = dict(buyer_id=self._user.id, is_completed=True, completed_order_date=datetime.now())
-        await self._market_gateway.update_order(
-            values, id=gift_id, buyer_id=self._user.id, is_completed=False, is_active=True
-        )
+        await self._market_gateway.update_order(values, id=gift_id, is_completed=False, is_active=True)
         await self._db_session.commit()
 
         buyer_history_data = CreateHistoryDM(
@@ -186,6 +184,7 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
             type=HistoryType.BUY_GIFT,
             price=order.price,
             gift=order.type,
+            gift_number=order.number,
             model_name=order.model_name,
         )
         seller_history_data = CreateHistoryDM(
@@ -193,6 +192,7 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
             type=HistoryType.SELL_GIFT,
             price=order.price,
             gift=order.type,
+            gift_number=order.number,
             model_name=order.model_name,
         )
         await self._history_gateway.save_many([buyer_history_data, seller_history_data])
@@ -201,7 +201,7 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
         direct_link = build_direct_link(self._bot_info.username, f"order_{order.id}")
         await send_message(
             self._bot,
-            text.get_buy_gift_text(order.type.name, order.number),
+            text.get_buy_gift_text(order.type, order.number),
             [order.seller_id],
             reply_markup=order_kb(order.type, order.number, direct_link),
         )
@@ -262,6 +262,7 @@ class NewBidInteractor(Interactor[BidDTO, BidSuccessDM]):
             type=HistoryType.BID_GIFT,
             price=data.amount,
             gift=order.type,
+            gift_number=order.number,
             model_name=order.model_name,
         )
         await self._history_gateway.save(history_data)

@@ -46,7 +46,6 @@ class PostgresConfig(BaseModel):
 
 class BotConfig(BaseModel):
     BOT_TOKEN: str
-    WEBAPP_URL: str
     CHANNEL_ID: str
     DEPOSIT_CHAT_ID: str
     MODERATION_THREAD_ID: int

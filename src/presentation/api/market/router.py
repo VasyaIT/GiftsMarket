@@ -5,7 +5,7 @@ from dishka.integrations.fastapi import inject
 from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
 
-from src.application.dto.common import GiftImagesDTO, ResponseDTO
+from src.application.dto.common import ResponseDTO
 from src.application.dto.market import BidDTO, CreateOrderDTO, OrderIdDTO
 from src.application.interactors import errors, market
 from src.domain.entities.market import BidSuccessDM, OrderDM, ReadOrderDM
@@ -77,9 +77,3 @@ async def new_bid(dto: BidDTO, interactor: FromDishka[market.NewBidInteractor]) 
         return await interactor(dto)
     except (errors.NotFoundError, errors.NotEnoughBalanceError, errors.AuctionBidError) as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
-
-
-@market_router.get("/get-gift-types")
-@inject
-async def get_images_by_gift_type(image_data: FromDishka[GiftImagesDTO]) -> GiftImagesDTO:
-    return image_data

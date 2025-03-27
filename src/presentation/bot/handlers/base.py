@@ -3,7 +3,6 @@ from aiogram.filters import Command, CommandStart
 from aiogram.types import Message
 
 from src.entrypoint.config import Config
-from src.presentation.bot.keyboards.base import open_app_kb
 from src.presentation.bot.services import market, text, user
 
 
@@ -12,7 +11,7 @@ router = Router()
 
 @router.message(CommandStart())
 async def start_handler(message: Message, config: Config) -> None:
-    await message.answer(text.get_start_text(), reply_markup=open_app_kb(config.bot.WEBAPP_URL))
+    await message.answer(text.get_start_text())
 
 
 @router.message(Command("admin"))

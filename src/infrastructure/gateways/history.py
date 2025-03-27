@@ -20,11 +20,11 @@ class HistoryGateway(HistoryReader, HistorySaver):
         await self._session.execute(stmt)
 
     async def get_many(self, **filters) -> list[HistoryDM]:
-        stmt = select(History).filter_by(**filters)
+        stmt = select(History).filter_by(**filters).order_by(History.created_at.desc())
         result = await self._session.execute(stmt)
         return [HistoryDM(**history.__dict__) for history in result.scalars().all()]
 
     async def get_activity(self) -> list[ActivityDM]:
-        stmt = select(History)
+        stmt = select(History).order_by(History.created_at.desc())
         result = await self._session.execute(stmt)
         return [ActivityDM(**history.__dict__) for history in result.scalars().all()]

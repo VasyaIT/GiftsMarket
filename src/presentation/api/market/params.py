@@ -2,7 +2,7 @@ from enum import StrEnum, auto
 
 from fastapi import Query
 
-from src.application.common.const import GiftRarity, GiftType
+from src.application.common.const import GiftRarity
 
 
 class GiftFilterParams:
@@ -15,7 +15,7 @@ class GiftFilterParams:
         from_gift_number: int | None = Query(default=1, gt=0),
         to_gift_number: int | None = Query(default=None, gt=0),
         rarity: list[GiftRarity] | None = Query(default=None, alias="rarity[]"),
-        type: list[GiftType] | None = Query(default=None, alias="type[]"),
+        type: list[str] | None = Query(default=None, alias="type[]"),
     ) -> None:
         self.offset = offset
         self.limit = limit

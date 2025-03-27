@@ -4,7 +4,7 @@ from sqlalchemy import TIMESTAMP, BigInteger, Boolean, Float, ForeignKey, Intege
 from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.application.common.const import GiftRarity, GiftType
+from src.application.common.const import GiftRarity
 from src.infrastructure.models.base import Base
 from src.infrastructure.models.user import User
 
@@ -12,7 +12,7 @@ from src.infrastructure.models.user import User
 class Order(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=False)
     number: Mapped[int] = mapped_column(Integer)
-    type: Mapped[GiftType] = mapped_column(ENUM(GiftType))
+    type: Mapped[str] = mapped_column(String)
     price: Mapped[float | None] = mapped_column(Float, nullable=True)
     model: Mapped[float] = mapped_column(Float)
     pattern: Mapped[float] = mapped_column(Float)

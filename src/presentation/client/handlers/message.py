@@ -2,7 +2,6 @@ from pyrogram.client import Client
 from pyrogram.enums import GiftAttributeType
 from pyrogram.types import Message
 
-from src.application.common.const import GIFT_TYPE_MAP
 from src.application.common.utils import calculate_gift_rarity
 from src.domain.entities.market import CreateOrderDM
 from src.entrypoint.config import Config
@@ -26,9 +25,8 @@ async def receive_gift(client: Client, message: Message) -> Message | None:
         elif attribute.type is GiftAttributeType.SYMBOL and attribute.name:
             pattern, pattern_name = attribute_rarity, attribute.name
 
-    gift_type = GIFT_TYPE_MAP.get(gift.title or "")
-    if not gift_type:
-        return await message.reply_text("This gift was not found in the nest store.")
+    if not gift.title:
+        return await message.reply_text("The gift has no title")
 
     config = Config()
     await create_user_if_not_exist(user.id, user.username, user.first_name, config.postgres)
@@ -37,7 +35,7 @@ async def receive_gift(client: Client, message: Message) -> Message | None:
         id=gift.id,
         seller_id=user.id,
         number=gift.number if gift.number else 0,
-        type=gift_type,
+        type=gift.title.lower().replace("'", "").replace("_", " "),
         pattern=pattern,
         model=model,
         background=background,

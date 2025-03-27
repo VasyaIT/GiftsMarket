@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from src.application.common.const import GiftType, PriceList
+from src.application.common.const import PriceList
 from src.domain.entities.market import CreateOrderDM, OrderDM
 from src.domain.entities.user import UpdateUserBalanceDM
 from src.entrypoint.config import Config, PostgresConfig
@@ -14,9 +14,7 @@ async def get_orders_info(
 ) -> list[OrderDM] | None:
     session_maker = new_session_maker(postgres_config)
     async with session_maker() as session:
-        if orders := await MarketGateway(session).get_many(
-            type=GiftType[gift_type], number=gift_number
-        ):
+        if orders := await MarketGateway(session).get_many(type=gift_type, number=gift_number):
             return orders
 
 
@@ -34,7 +32,7 @@ async def delete_order(order_id: int, postgres_config: PostgresConfig) -> OrderD
             return order
 
 
-async def create_order(data: CreateOrderDM, postgres_config: PostgresConfig) -> OrderDM | None:
+async def create_order(data: CreateOrderDM, postgres_config: PostgresConfig) -> CreateOrderDM | None:
     session_maker = new_session_maker(postgres_config)
     async with session_maker() as session:
         if order := await MarketGateway(session).save(data):

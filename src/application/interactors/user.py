@@ -178,7 +178,7 @@ class RemoveOrderInteractor(Interactor[int, None]):
         if updated_order.min_step and updated_order.buyer_id:
             await self._db_session.rollback()
             raise NotAccessError("Auction already started")
-        await self._market_gateway.delete_auction_bids(user_id=self._user.id)
+        await self._market_gateway.delete_auction_bids(gift_id=gift_id)
 
         await self._db_session.commit()
 

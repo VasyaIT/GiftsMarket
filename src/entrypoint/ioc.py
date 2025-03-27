@@ -7,8 +7,6 @@ from fastapi import Request
 from pyrogram.client import Client
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from src.application.common.fixtures import get_gift_images
-from src.application.dto.common import GiftImagesDTO
 from src.application.interactors import market, star, user
 from src.application.interactors.history import ActivityInteractor, HistoryInteractor
 from src.application.interactors.wallet import WithdrawRequestInteractor
@@ -41,10 +39,6 @@ class AppProvider(FastapiProvider):
     async def bot_info(self, bot: Bot) -> BotInfoDM:
         bot_data = await bot.me()
         return BotInfoDM(**bot_data.model_dump())
-
-    @provide(scope=Scope.APP)
-    async def get_image_fixtures(self, config: Config) -> GiftImagesDTO:
-        return get_gift_images(config.bot.WEBAPP_URL)
 
     @provide(scope=Scope.APP)
     def get_session_maker(self, config: Config) -> async_sessionmaker[AsyncSession]:
