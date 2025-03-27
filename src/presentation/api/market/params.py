@@ -16,6 +16,7 @@ class GiftFilterParams:
         to_gift_number: int | None = Query(default=None, gt=0),
         rarity: list[GiftRarity] | None = Query(default=None, alias="rarity[]"),
         type: list[str] | None = Query(default=None, alias="type[]"),
+        model_name: list[str] | None = Query(default=None, alias="model_name[]"),
     ) -> None:
         self.offset = offset
         self.limit = limit
@@ -25,6 +26,7 @@ class GiftFilterParams:
         self.to_gift_number = to_gift_number
         self.rarities = rarity
         self.types = type
+        self.model_names = model_name
 
 
 class GiftSortParams(StrEnum):

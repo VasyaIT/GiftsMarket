@@ -43,6 +43,8 @@ class MarketGateway(OrderSaver):
         ]
         if filters.types:
             conditions.append(Order.type.in_(filters.types))
+        if filters.model_names:
+            conditions.append(Order.model_name.in_(filters.model_names))
         stmt = (
             select(Order)
             .where(*conditions)

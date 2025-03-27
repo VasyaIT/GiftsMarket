@@ -110,6 +110,7 @@ class GetGiftsInteractor:
             to_gift_number=filters.to_gift_number if filters.to_gift_number else MAX_GIFT_NUMBER,
             rarities=filters.rarities if filters.rarities else [rarity for rarity in GiftRarity],
             types=filters.types if filters.types else None,
+            model_names=filters.model_names,
             user_id=user_id,
         )
 

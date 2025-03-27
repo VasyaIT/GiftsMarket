@@ -59,6 +59,7 @@ class GiftFiltersDM(BaseDTO):
     to_gift_number: int
     rarities: list[GiftRarity]
     types: list[str] | None
+    model_names: list[str] | None
     user_id: int
 
 
