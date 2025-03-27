@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from src.application.common.fixtures import get_gift_images
 from src.application.dto.common import GiftImagesDTO
 from src.application.interactors import market, star, user
-from src.application.interactors.history import HistoryInteractor
+from src.application.interactors.history import ActivityInteractor, HistoryInteractor
 from src.application.interactors.wallet import WithdrawRequestInteractor
 from src.application.interfaces.auth import InitDataValidator, TokenDecoder, TokenEncoder
 from src.application.interfaces.database import DBSession
@@ -134,3 +134,4 @@ class AppProvider(FastapiProvider):
 
     # History
     history_interactor = provide(HistoryInteractor, scope=Scope.REQUEST)
+    activity_interactor = provide(ActivityInteractor, scope=Scope.REQUEST)

@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Protocol
 
-from src.domain.entities.history import CreateHistoryDM, HistoryDM
+from src.domain.entities.history import ActivityDM, CreateHistoryDM, HistoryDM
 
 
 class HistorySaver(Protocol):
@@ -17,4 +17,8 @@ class HistorySaver(Protocol):
 class HistoryReader(Protocol):
     @abstractmethod
     async def get_many(self, **filters) -> list[HistoryDM]:
+        ...
+
+    @abstractmethod
+    async def get_activity(self) -> list[ActivityDM]:
         ...

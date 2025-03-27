@@ -2,7 +2,7 @@ from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.interfaces.history import HistoryReader, HistorySaver
-from src.domain.entities.history import CreateHistoryDM, HistoryDM
+from src.domain.entities.history import ActivityDM, CreateHistoryDM, HistoryDM
 from src.infrastructure.models.history import History
 
 
@@ -23,3 +23,8 @@ class HistoryGateway(HistoryReader, HistorySaver):
         stmt = select(History).filter_by(**filters)
         result = await self._session.execute(stmt)
         return [HistoryDM(**history.__dict__) for history in result.scalars().all()]
+
+    async def get_activity(self) -> list[ActivityDM]:
+        stmt = select(History)
+        result = await self._session.execute(stmt)
+        return [ActivityDM(**history.__dict__) for history in result.scalars().all()]

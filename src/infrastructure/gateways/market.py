@@ -130,3 +130,7 @@ class MarketGateway(OrderSaver):
     async def save_auction_bid(self, data: BidDM) -> None:
         stmt = insert(Bid).values(data.model_dump())
         await self._session.execute(stmt)
+
+    async def delete_auction_bids(self, **filters) -> None:
+        stmt = delete(Bid).filter_by(**filters)
+        await self._session.execute(stmt)

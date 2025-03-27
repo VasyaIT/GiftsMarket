@@ -16,3 +16,13 @@ class CreateHistoryDM(BaseDTO):
 class HistoryDM(CreateHistoryDM):
     id: int
     created_at: datetime
+
+
+class ActivityDM(CreateHistoryDM):
+    id: int
+    created_at: datetime
+    type: HistoryType
+    price: float
+    stars: int | None = None
+    gift: GiftType | None = None
+    model_name: str | None = None
