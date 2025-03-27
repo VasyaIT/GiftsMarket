@@ -23,15 +23,14 @@ async def inline_query(inline_query: InlineQuery, config: Config, bot_username: 
         return
 
     direct_link = build_direct_link(bot_username, f"gift_{order.id}")
-    order_name_text = " ".join(part.capitalize() for part in order.type.split("_"))
     rarity_text = f"🪙 Rarity: {order.rarity.name}" if order.rarity else ""
     result = InlineQueryResultArticle(
         id=str(order.id),
-        title=f"🎁 {order_name_text} - #{order.number}",
+        title=f"🎁 {order.type} - #{order.number}",
         thumbnail_url=INLINE_IMAGE_URL,
         input_message_content=InputTextMessageContent(
             message_text=(
-                f"💸 <b>{order_name_text} - #{order.number} in Nest Store!</b>\n\n"
+                f"💸 <b>{order.type} - #{order.number} in Nest Store!</b>\n\n"
                 f"💎 Price: {order.price:.2f} TON\n"
                 f"🔦 Background: {order.background}%\n"
                 f"❄️ Pattern: {order.pattern}%\n"

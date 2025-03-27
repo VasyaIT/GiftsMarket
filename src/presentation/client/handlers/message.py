@@ -35,7 +35,7 @@ async def receive_gift(client: Client, message: Message) -> Message | None:
         id=gift.id,
         seller_id=user.id,
         number=gift.number if gift.number else 0,
-        type=gift.title.lower().replace("'", "").replace("_", " "),
+        type=gift.title,
         pattern=pattern,
         model=model,
         background=background,

@@ -95,9 +95,8 @@ def get_full_user_info_text(user_info_data: FullUserInfoDM) -> str:
         completed_date_text = "\n"
         if order.completed_order_date:
             completed_date_text = f"\n<b>Дата завершения: </b>{order.completed_order_date}\n"
-        order_name_text = " ".join(part.capitalize() for part in order.type.split("_"))
         orders_text += (
-            f"\n<b>ID: </b>{order.id}\n<b>Подарок</b>:  <b>{order_name_text} #{order.number}</b>"
+            f"\n<b>ID: </b>{order.id}\n<b>Подарок</b>:  <b>{order.type} #{order.number}</b>"
             f"\n<b>Цена: </b>{order.price} TON"
             f"\n<b>Пользователь: </b>{user_text}{completed_date_text}"
         )
