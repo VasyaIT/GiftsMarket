@@ -220,11 +220,13 @@ class NewBidInteractor(Interactor[BidDTO, BidSuccessDM]):
         market_gateway: OrderManager,
         user: UserDM,
         user_gateway: UserSaver,
+        history_gateway: HistorySaver,
     ) -> None:
         self._db_session = db_session
         self._market_gateway = market_gateway
         self._user = user
         self._user_gateway = user_gateway
+        self._history_gateway = history_gateway
 
     async def __call__(self, data: BidDTO) -> BidSuccessDM:
         if not (
@@ -255,5 +257,13 @@ class NewBidInteractor(Interactor[BidDTO, BidSuccessDM]):
         await self._market_gateway.save_auction_bid(
             BidDM(gift_id=data.id, amount=data.amount, buyer_id=self._user.id)
         )
+        history_data = CreateHistoryDM(
+            user_id=self._user.id,
+            type=HistoryType.BID_GIFT,
+            price=data.amount,
+            gift=order.type,
+            model_name=order.model_name,
+        )
+        await self._history_gateway.save(history_data)
         await self._db_session.commit()
         return BidSuccessDM(user_balance=new_balance, created_at=datetime.now(tz=timezone.utc))
