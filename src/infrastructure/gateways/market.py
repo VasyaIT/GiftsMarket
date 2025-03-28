@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.interactors.errors import AlreadyExistError
 from src.application.interfaces.market import OrderSaver
+from src.domain.entities.cart import CartGiftDM
 from src.domain.entities.market import (
     BidDM,
     CreateOrderDM,
@@ -99,6 +100,17 @@ class MarketGateway(OrderSaver):
         if order:
             return ReadOrderDM(**order.__dict__)
 
+    async def get_gifts_by_ids(self, gifts_ids: list[int], user_id: int) -> list[CartGiftDM]:
+        stmt = select(Order).where(
+            Order.id.in_(gifts_ids),
+            Order.is_active == True,
+            Order.is_completed == False,
+            Order.min_step == None,
+            Order.seller_id != user_id,
+        )
+        result = await self._session.execute(stmt)
+        return [CartGiftDM(**order.__dict__) for order in result.scalars().all()]
+
     async def get_auction_orders(self) -> list[OrderDM]:
         stmt = select(Order).where(
             Order.min_step != None,
@@ -123,6 +135,20 @@ class MarketGateway(OrderSaver):
         order = result.scalar_one_or_none()
         if order:
             return OrderDM(**order.__dict__)
+
+    async def update_cart_orders(self, values: dict, gifts_ids: list[int], user_id: int) -> None:
+        stmt = (
+            update(Order)
+            .where(
+                Order.id.in_(gifts_ids),
+                Order.is_active == True,
+                Order.is_completed == False,
+                Order.min_step == None,
+                Order.seller_id != user_id,
+            )
+            .values(values)
+        )
+        await self._session.execute(stmt)
 
     async def delete_order(self, **filters) -> OrderDM | None:
         stmt = delete(Order).filter_by(**filters).returning(Order)

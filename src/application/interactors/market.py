@@ -3,8 +3,10 @@ from datetime import datetime, timezone
 from logging.handlers import RotatingFileHandler
 
 from aiogram import Bot
+from fastapi import BackgroundTasks
 from pyrogram.client import Client
 
+from src.application.common.cart import CartGiftDTO
 from src.application.common.const import MAX_GIFT_NUMBER, GiftRarity, HistoryType, PriceList
 from src.application.common.send_gift import send_gift
 from src.application.common.utils import build_direct_link, send_message
@@ -16,6 +18,7 @@ from src.application.interfaces.interactor import Interactor
 from src.application.interfaces.market import OrderManager, OrderReader
 from src.application.interfaces.user import UserSaver
 from src.domain.entities.bot import BotInfoDM
+from src.domain.entities.cart import CartGiftDM
 from src.domain.entities.history import CreateHistoryDM
 from src.domain.entities.market import BidDM, BidSuccessDM, GiftFiltersDM, OrderDM, ReadOrderDM
 from src.domain.entities.user import UpdateUserBalanceDM, UserDM
@@ -269,3 +272,35 @@ class NewBidInteractor(Interactor[BidDTO, BidSuccessDM]):
         await self._history_gateway.save(history_data)
         await self._db_session.commit()
         return BidSuccessDM(user_balance=new_balance, created_at=datetime.now(tz=timezone.utc))
+
+
+class BuyGiftsFromCartInteractor(Interactor):
+    def __init__(
+        self,
+        db_session: DBSession,
+        user: UserDM,
+        market_gateway: OrderManager,
+        buy_gift_interactor: BuyGiftInteractor,
+    ) -> None:
+        self._db_session = db_session
+        self._user = user
+        self._market_gateway = market_gateway
+        self._buy_gift_interactor = buy_gift_interactor
+
+    async def __call__(
+        self, data: list[CartGiftDTO], background_tasks: BackgroundTasks
+    ) -> tuple[bool, list[CartGiftDM]]:
+        gifts_ids = [gift.id for gift in data]
+        gifts = await self._market_gateway.get_gifts_by_ids(gifts_ids, self._user.id)
+        if len(gifts) != len(data):
+            return False, gifts
+
+        for gift_data in data:
+            for gift in gifts:
+                if gift.id == gift_data.id:
+                    if gift.price != gift_data.price:
+                        return False, gifts
+
+        for gift in gifts:
+            background_tasks.add_task(self._buy_gift_interactor, gift.id)
+        return True, gifts

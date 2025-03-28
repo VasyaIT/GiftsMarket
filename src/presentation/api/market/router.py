@@ -2,9 +2,10 @@ from typing import Annotated
 
 from dishka import FromDishka
 from dishka.integrations.fastapi import inject
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from starlette import status
 
+from src.application.common.cart import CartGiftDTO, ResponseCartDTO
 from src.application.dto.common import ResponseDTO
 from src.application.dto.market import BidDTO, CreateOrderDTO, OrderIdDTO
 from src.application.interactors import errors, market
@@ -77,3 +78,17 @@ async def new_bid(dto: BidDTO, interactor: FromDishka[market.NewBidInteractor]) 
         return await interactor(dto)
     except (errors.NotFoundError, errors.NotEnoughBalanceError, errors.AuctionBidError) as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
+
+
+@market_router.get("/cart/buy")
+@inject
+async def get_user_cart_gifts(
+    dto: list[CartGiftDTO],
+    interactor: FromDishka[market.BuyGiftsFromCartInteractor],
+    background_tasks: BackgroundTasks,
+) -> ResponseCartDTO:
+    try:
+        is_success, cart = await interactor(dto, background_tasks)
+    except errors.NotEnoughBalanceError as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
+    return ResponseCartDTO(success=is_success, cart=cart)

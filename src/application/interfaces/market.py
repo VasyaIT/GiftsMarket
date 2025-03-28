@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from typing import Protocol
 
+from src.domain.entities.cart import CartGiftDM
 from src.domain.entities.market import (
     BidDM,
     CreateOrderDM,
@@ -32,6 +33,9 @@ class OrderReader(Protocol):
     @abstractmethod
     async def get_full_order(self, **filters) -> ReadOrderDM | None: ...
 
+    @abstractmethod
+    async def get_gifts_by_ids(self, gifts_ids: list[int], user_id: int) -> list[CartGiftDM]: ...
+
 
 class OrderSaver(Protocol):
     @abstractmethod
@@ -48,6 +52,9 @@ class OrderSaver(Protocol):
 
     @abstractmethod
     async def delete_auction_bids(self, **filters) -> None: ...
+
+    @abstractmethod
+    async def update_cart_orders(self, values: dict, gifts_ids: list[int], user_id: int) -> None: ...
 
 
 class OrderManager(OrderReader, OrderSaver): ...

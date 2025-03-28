@@ -4,8 +4,7 @@ from src.domain.entities.user import FullUserInfoDM
 
 
 def get_buy_gift_text(type_name: str, gift_number: int) -> str:
-    order_name_text = " ".join(part.capitalize() for part in type_name.split("_"))
-    return f"💰 Your gift was bought - <b>{order_name_text} #{gift_number}</b>"
+    return f"💰 Your gift was bought - <b>{type_name} #{gift_number}</b>"
 
 
 def get_buy_stars_text(amount: float) -> str:
