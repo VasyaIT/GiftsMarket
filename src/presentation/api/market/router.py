@@ -82,7 +82,7 @@ async def new_bid(dto: BidDTO, interactor: FromDishka[market.NewBidInteractor]) 
 
 @market_router.post("/cart/buy")
 @inject
-async def get_user_cart_gifts(
+async def buy_many_gifts(
     dto: list[CartGiftDTO],
     interactor: FromDishka[market.BuyGiftsFromCartInteractor],
     background_tasks: BackgroundTasks,
