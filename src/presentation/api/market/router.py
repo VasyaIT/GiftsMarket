@@ -80,7 +80,7 @@ async def new_bid(dto: BidDTO, interactor: FromDishka[market.NewBidInteractor]) 
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
 
 
-@market_router.get("/cart/buy")
+@market_router.post("/cart/buy")
 @inject
 async def get_user_cart_gifts(
     dto: list[CartGiftDTO],
