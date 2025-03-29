@@ -34,7 +34,7 @@ async def start_auction_tracker() -> None:
             await session.commit()
 
             queue = Queue("gifts", {"connection": config.redis.REDIS_URL})  # type: ignore
-            await queue.add("send_gift", {"user_id": order.buyer_id, "gift_id": order.id})
+            await queue.add("send_gift", {"user_id": order.buyer_id, "gift_id": order.gift_id})
             await queue.close()
 
 

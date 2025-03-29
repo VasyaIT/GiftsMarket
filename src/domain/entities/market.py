@@ -5,7 +5,7 @@ from src.application.dto.base import BaseDTO
 
 
 class CreateOrderDM(BaseDTO):
-    id: int
+    gift_id: int
     seller_id: int
     number: int
     type: str
@@ -20,6 +20,7 @@ class CreateOrderDM(BaseDTO):
 
 
 class OrderDM(CreateOrderDM):
+    id: int
     buyer_id: int | None = None
     price: float
     completed_order_date: datetime | None = None
@@ -34,6 +35,7 @@ class ReadOrderDM(OrderDM):
 
 class UserGiftDM(BaseDTO):
     id: int
+    gift_id: int
     type: str
     number: int
     model: float
@@ -65,7 +67,7 @@ class GiftFiltersDM(BaseDTO):
 
 class BidDM(BaseDTO):
     amount: float
-    gift_id: int
+    id: int
     buyer_id: int
 
 

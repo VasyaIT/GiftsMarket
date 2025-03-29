@@ -214,7 +214,7 @@ class WithdrawGiftInteractor(Interactor[int, None]):
             raise NotFoundError("Gift not found")
         await self._db_session.commit()
 
-        await send_gift(self._user.id, gift_id, self._client, self._bot, self._config)
+        await send_gift(self._user.id, deleted_order.gift_id, self._client, self._bot, self._config)
 
         logger.info(
             "WithdrawGiftInteractor: "

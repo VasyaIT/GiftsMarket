@@ -87,7 +87,7 @@ class CreateOrderInteractor(Interactor[CreateOrderDTO, None]):
 
         if data.min_step:
             await self._market_gateway.save_auction_bid(
-                BidDM(gift_id=data.gift_id, amount=data.price, buyer_id=self._user.id)
+                BidDM(id=data.gift_id, amount=data.price, buyer_id=self._user.id)
             )
         await self._db_session.commit()
 
@@ -169,7 +169,7 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
             await self._db_session.rollback()
             raise errors.NotEnoughBalanceError("User not enough balance")
 
-        is_success = await send_gift(self._user.id, gift_id, self._client, self._bot, self._config)
+        is_success = await send_gift(self._user.id, order.gift_id, self._client, self._bot, self._config)
         if not is_success:
             await self._db_session.rollback()
             raise errors.GiftSendError("Error when sending a gift")
@@ -259,7 +259,7 @@ class NewBidInteractor(Interactor[BidDTO, BidSuccessDM]):
         updated_data = {"buyer_id": self._user.id, "price": data.amount}
         await self._market_gateway.update_order(updated_data, id=data.id)
         await self._market_gateway.save_auction_bid(
-            BidDM(gift_id=data.id, amount=data.amount, buyer_id=self._user.id)
+            BidDM(id=data.id, amount=data.amount, buyer_id=self._user.id)
         )
         history_data = CreateHistoryDM(
             user_id=self._user.id,

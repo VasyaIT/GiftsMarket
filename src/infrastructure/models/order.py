@@ -10,7 +10,8 @@ from src.infrastructure.models.user import User
 
 
 class Order(Base):
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    gift_id: Mapped[int] = mapped_column(BigInteger)
     number: Mapped[int] = mapped_column(Integer)
     type: Mapped[str] = mapped_column(String)
     price: Mapped[float | None] = mapped_column(Float, nullable=True)

@@ -1,8 +1,8 @@
-"""empty message
+"""Initial
 
-Revision ID: 4838e34e8866
+Revision ID: 35fb44ef220d
 Revises: 
-Create Date: 2025-03-27 21:29:23.096172
+Create Date: 2025-03-29 21:26:12.846638
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = '4838e34e8866'
+revision: str = '35fb44ef220d'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -51,7 +51,8 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('orders',
-    sa.Column('id', sa.BigInteger(), autoincrement=False, nullable=False),
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('gift_id', sa.BigInteger(), nullable=False),
     sa.Column('number', sa.Integer(), nullable=False),
     sa.Column('type', sa.String(), nullable=False),
     sa.Column('price', sa.Float(), nullable=True),
@@ -110,7 +111,7 @@ def upgrade() -> None:
     op.create_table('bids',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('amount', sa.Float(), nullable=False),
-    sa.Column('gift_id', sa.BigInteger(), nullable=False),
+    sa.Column('gift_id', sa.Integer(), nullable=False),
     sa.Column('buyer_id', sa.BigInteger(), nullable=False),
     sa.Column('created_at', sa.TIMESTAMP(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.ForeignKeyConstraint(['buyer_id'], ['users.id'], ondelete='CASCADE'),
