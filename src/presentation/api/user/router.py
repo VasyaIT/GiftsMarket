@@ -7,7 +7,12 @@ from src.application.dto.common import ResponseDTO
 from src.application.dto.market import OrderIdDTO, UpdateOrderDTO
 from src.application.dto.user import LoginDTO, TokenDTO, UserDTO
 from src.application.interactors import user
-from src.application.interactors.errors import AlreadyExistError, NotAccessError, NotFoundError
+from src.application.interactors.errors import (
+    AlreadyExistError,
+    GiftSendError,
+    NotAccessError,
+    NotFoundError,
+)
 from src.domain.entities.market import OrderDM, UserGiftDM
 
 
@@ -63,7 +68,7 @@ async def withdraw_gift(
 ) -> ResponseDTO:
     try:
         await interactor(dto.id)
-    except NotFoundError as e:
+    except (NotFoundError, GiftSendError) as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
     return ResponseDTO(success=True)
 

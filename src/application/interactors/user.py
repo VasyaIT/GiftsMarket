@@ -9,7 +9,7 @@ from src.application.common.send_gift import send_gift
 from src.application.common.utils import build_direct_link, generate_deposit_comment
 from src.application.dto.market import UpdateOrderDTO
 from src.application.dto.user import LoginDTO, UserDTO
-from src.application.interactors.errors import NotAccessError, NotFoundError
+from src.application.interactors.errors import GiftSendError, NotAccessError, NotFoundError
 from src.application.interfaces.auth import InitDataValidator, TokenEncoder
 from src.application.interfaces.database import DBSession
 from src.application.interfaces.interactor import Interactor
@@ -212,9 +212,15 @@ class WithdrawGiftInteractor(Interactor[int, None]):
         if not deleted_order:
             await self._db_session.rollback()
             raise NotFoundError("Gift not found")
-        await self._db_session.commit()
 
-        await send_gift(self._user.id, deleted_order.gift_id, self._client, self._bot, self._config)
+        is_success = await send_gift(
+            self._user.id, deleted_order.gift_id, self._client, self._bot, self._config
+        )
+
+        if not is_success:
+            await self._db_session.rollback()
+            raise GiftSendError("Error when sending a gift")
+        await self._db_session.commit()
 
         logger.info(
             "WithdrawGiftInteractor: "

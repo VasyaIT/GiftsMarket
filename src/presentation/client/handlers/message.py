@@ -32,7 +32,7 @@ async def receive_gift(client: Client, message: Message) -> Message | None:
     await create_user_if_not_exist(user.id, user.username, user.first_name, config.postgres)
 
     order_data = CreateOrderDM(
-        gift_id=gift.id,
+        gift_id=message.id,
         seller_id=user.id,
         number=gift.number if gift.number else 0,
         type=gift.title,
