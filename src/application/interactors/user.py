@@ -69,13 +69,13 @@ class LoginInteractor(Interactor[LoginDTO, str]):
             user = await self._user_gateway.save(user_dm)
             await self._db_session.commit()
 
-            referrer_id = self._get_referrer_id(valid_data.start_param)
-            if referrer_id and referrer_id != user_id:
-                if not await self._user_gateway.get_referrer(user_id):
-                    await self._user_gateway.add_referral(referrer_id, user)
-                else:
-                    await self._user_gateway.update_referrer(referrer_id, user_id)
-                await self._db_session.commit()
+        referrer_id = self._get_referrer_id(valid_data.start_param)
+        if referrer_id and referrer_id != user_id:
+            if not await self._user_gateway.get_referrer(user_id):
+                await self._user_gateway.add_referral(referrer_id, user)
+            else:
+                await self._user_gateway.update_referrer(referrer_id, user_id)
+            await self._db_session.commit()
 
         if user.username != user_data.get("username"):
             await self._user_gateway.update_user(dict(username=user_data.get("username")), id=user_id)

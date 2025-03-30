@@ -63,32 +63,3 @@ async def cancel_order(order_id: int, postgres_config: PostgresConfig) -> bool:
         await gateway.update_order(data, id=order_id)
         await session.commit()
     return True
-
-
-async def confirm_order(order_id: int, config: Config) -> bool:
-    session_maker = new_session_maker(config.postgres)
-    values = dict(completed_order_date=datetime.now())
-
-    async with session_maker() as session:
-        user_gateway = UserGateway(session)
-        order = await MarketGateway(session).update_order(values, id=order_id)
-        if not order:
-            await session.rollback()
-            return False
-
-        commission = order.price * PriceList.SELLER_FEE_PERCENT / 100
-        if order.seller_id in config.bot.nft_holders_id:
-            commission = 0
-        await user_gateway.update_balance(
-            UpdateUserBalanceDM(id=order.seller_id, amount=order.price - commission)
-        )
-        referrer = await user_gateway.get_referrer(user_id=order.seller_id)
-        if referrer:
-            referrer_percent = PriceList.REFERRAL_PERCENT
-            if referrer.id in config.app.vip_users_id:
-                referrer_percent = PriceList.VIP_REFERRAL_PERCENT
-            referrer_reward = commission * referrer_percent / 100
-            await user_gateway.update_referrer_balance(referrer.id, referrer_reward)
-
-        await session.commit()
-    return True
