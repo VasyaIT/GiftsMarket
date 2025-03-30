@@ -11,12 +11,14 @@ async def send_gift(user_id: int, gift_id: int, client: Client, bot: Bot, config
 
     try:
         is_success = await client.send_gift(user_id, gift_id)
-    except (PeerIdInvalid, ValueError):
-        message = f"PeerIdInvalid when sending a gift. user id: {user_id}, gift id: {gift_id}"
-    except BadRequest:
-        message = f"TelegramBadRequest when sending a gift. user id: {user_id}, gift id: {gift_id}"
-    except RPCError:
-        message = f"RPCError when sending a gift. user id: {user_id}, gift id: {gift_id}"
+    except (PeerIdInvalid, ValueError) as e:
+        message = f"PeerIdInvalid when sending a gift. user id: {user_id}, gift id: {gift_id}\n\n{e}"
+    except BadRequest as e:
+        message = (
+            f"TelegramBadRequest when sending a gift. user id: {user_id}, gift id: {gift_id}\n\n{e}"
+        )
+    except RPCError as e:
+        message = f"RPCError when sending a gift. user id: {user_id}, gift id: {gift_id}\n\n{e}"
     except Exception as e:
         message = f"Error when sending a gift. user id: {user_id}, gift id: {gift_id}:\n\n{e}"
 
