@@ -163,7 +163,7 @@ class BuyGiftInteractor(Interactor[int, OrderDM]):
             raise errors.NotAccessError("This gift on auction")
 
         buyer = await self._user_gateway.update_balance(
-            UpdateUserBalanceDM(id=self._user.id, amount=-order.price)
+            UpdateUserBalanceDM(id=self._user.id, amount=-(order.price * 1.05))
         )
         if buyer.balance < 0:  # type: ignore
             await self._db_session.rollback()
