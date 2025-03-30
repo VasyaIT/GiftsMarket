@@ -150,12 +150,12 @@ class MarketGateway(OrderSaver):
         )
         await self._session.execute(stmt)
 
-    async def delete_order(self, **filters) -> OrderDM | None:
+    async def delete_order(self, **filters) -> UserGiftDM | None:
         stmt = delete(Order).filter_by(**filters).returning(Order)
         result = await self._session.execute(stmt)
         order = result.scalar_one_or_none()
         if order:
-            return OrderDM(**order.__dict__)
+            return UserGiftDM(**order.__dict__)
 
     async def save_auction_bid(self, data: BidDM) -> None:
         stmt = insert(Bid).values(data.model_dump())
