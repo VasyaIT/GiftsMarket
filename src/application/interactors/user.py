@@ -74,7 +74,7 @@ class LoginInteractor(Interactor[LoginDTO, str]):
             if not await self._user_gateway.get_referrer(user_id):
                 await self._user_gateway.add_referral(referrer_id, user)
             else:
-                await self._user_gateway.update_referrer(referrer_id, user_id)
+                await self._user_gateway.update_referrer(referrer_id, user)
             await self._db_session.commit()
 
         if user.username != user_data.get("username"):
