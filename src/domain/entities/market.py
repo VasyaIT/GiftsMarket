@@ -67,7 +67,7 @@ class GiftFiltersDM(BaseDTO):
 
 class BidDM(BaseDTO):
     amount: float
-    id: int
+    gift_id: int
     buyer_id: int
 
 

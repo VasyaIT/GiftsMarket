@@ -11,16 +11,16 @@ class OrderIdDTO(BaseDTO):
 
 class CreateOrderDTO(BaseDTO):
     gift_id: int
-    price: float = Field(ge=0.1, le=999999)
+    price: float = Field(ge=0.1, le=99999)
     is_vip: bool = False
-    min_step: float | None = Field(default=None, ge=0.1, le=999999)
+    min_step: float | None = Field(default=None, ge=0.1, le=99999)
     auction_end_time: datetime | None = None
 
 
 class UpdateOrderDTO(BaseDTO):
-    price: float = Field(ge=0.1, le=999999)
+    price: float = Field(ge=0.1, le=99999)
 
 
 class BidDTO(BaseDTO):
     id: int
-    amount: float = Field(ge=0.1, le=999999)
+    amount: float = Field(ge=0.1, le=99999)
