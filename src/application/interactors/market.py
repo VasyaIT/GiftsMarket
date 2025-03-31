@@ -85,10 +85,6 @@ class CreateOrderInteractor(Interactor[CreateOrderDTO, None]):
                 await self._db_session.rollback()
                 raise errors.NotEnoughBalanceError("User does not have enough balance")
 
-        if data.min_step:
-            await self._market_gateway.save_auction_bid(
-                BidDM(gift_id=data.gift_id, amount=data.price, buyer_id=self._user.id)
-            )
         await self._db_session.commit()
 
         logger.info(f"CreateOrderInteractor: @{self._user.username} #{self._user.id} created the order")
