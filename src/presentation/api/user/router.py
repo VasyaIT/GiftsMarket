@@ -56,7 +56,7 @@ async def remove_order(
 ) -> ResponseDTO:
     try:
         await interactor(dto.id)
-    except (NotFoundError, NotAccessError) as e:
+    except NotFoundError as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
     return ResponseDTO(success=True)
 

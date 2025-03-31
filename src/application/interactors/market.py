@@ -225,12 +225,16 @@ class NewBidInteractor(Interactor[BidDTO, BidSuccessDM]):
         user: UserDM,
         user_gateway: UserSaver,
         history_gateway: HistorySaver,
+        bot: Bot,
+        bot_info: BotInfoDM,
     ) -> None:
         self._db_session = db_session
         self._market_gateway = market_gateway
         self._user = user
         self._user_gateway = user_gateway
         self._history_gateway = history_gateway
+        self._bot = bot
+        self._bot_info = bot_info
 
     async def __call__(self, data: BidDTO) -> BidSuccessDM:
         if not (
@@ -271,6 +275,14 @@ class NewBidInteractor(Interactor[BidDTO, BidSuccessDM]):
         )
         await self._history_gateway.save(history_data)
         await self._db_session.commit()
+        if order.buyer_id:
+            direct_link = build_direct_link(self._bot_info.username, f"order_{order.id}")
+            await send_message(
+                self._bot,
+                "Your bid was outbid at the auction",
+                [order.buyer_id],
+                reply_markup=order_kb(order.type, order.number, direct_link),
+            )
         return BidSuccessDM(user_balance=new_balance, created_at=datetime.now(tz=timezone.utc))
 
 

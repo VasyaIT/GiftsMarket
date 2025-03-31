@@ -9,7 +9,7 @@ from src.application.common.send_gift import send_gift
 from src.application.common.utils import build_direct_link, generate_deposit_comment
 from src.application.dto.market import UpdateOrderDTO
 from src.application.dto.user import LoginDTO, UserDTO
-from src.application.interactors.errors import GiftSendError, NotAccessError, NotFoundError
+from src.application.interactors.errors import GiftSendError, NotFoundError
 from src.application.interfaces.auth import InitDataValidator, TokenEncoder
 from src.application.interfaces.database import DBSession
 from src.application.interfaces.interactor import Interactor
@@ -168,16 +168,13 @@ class RemoveOrderInteractor(Interactor[int, None]):
         self._db_session = db_session
 
     async def __call__(self, gift_id: int) -> None:
-        data = dict(is_active=False)
+        data = dict(is_active=False, min_step=None, auction_end_time=None, price=None)
         updated_order = await self._market_gateway.update_order(
-            data, id=gift_id, is_active=True, is_completed=False, seller_id=self._user.id
+            data, id=gift_id, is_active=True, is_completed=False, seller_id=self._user.id, buyer_id=None
         )
         if not updated_order:
             await self._db_session.rollback()
             raise NotFoundError("Gift not found")
-        if updated_order.min_step and updated_order.buyer_id:
-            await self._db_session.rollback()
-            raise NotAccessError("Auction already started")
         await self._market_gateway.delete_auction_bids(gift_id=gift_id)
 
         await self._db_session.commit()
