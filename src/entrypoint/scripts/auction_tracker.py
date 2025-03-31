@@ -25,6 +25,12 @@ async def start_auction_tracker() -> None:
         if not orders:
             return
         for order in orders:
+            if not order.buyer_id:
+                data = dict(is_active=False, min_step=None, auction_end_time=None, price=None)
+                await market_gateway.withdraw_from_market(data, id=order.id)
+                await market_gateway.delete_auction_bids(gift_id=order.id)
+                await session.commit()
+                return
             now = datetime.now()
             updated_data = {"is_completed": True, "completed_order_date": now}
             await market_gateway.update_order(updated_data, id=order.id)
