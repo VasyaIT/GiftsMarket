@@ -22,8 +22,7 @@ async def send_broadcast_message(message: str, photo_path: str) -> None:
     session_maker = new_session_maker(config.postgres)
 
     async with session_maker() as session:
-        gateway = UserGateway(session)
-        users = await gateway.get_all()
+        users = await UserGateway(session).get_all()
 
     for user in users:
         try:

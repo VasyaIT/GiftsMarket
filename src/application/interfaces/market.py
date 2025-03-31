@@ -1,68 +1,63 @@
 from abc import abstractmethod
 from typing import Protocol
 
-from src.application.common.const import OrderStatus
+from src.domain.entities.cart import CartGiftDM
 from src.domain.entities.market import (
+    BidDM,
     CreateOrderDM,
-    GetUserGiftsDM,
     GiftFiltersDM,
     OrderDM,
-    OrderFiltersDM,
     ReadOrderDM,
-    UserGiftsDM
+    UserGiftDM,
 )
 from src.presentation.api.market.params import GiftSortParams
 
 
 class OrderReader(Protocol):
     @abstractmethod
-    async def get_all_gifts(self, filters: GiftFiltersDM, sort_by: GiftSortParams | None) -> list[ReadOrderDM]:
-        ...
+    async def get_all_gifts(
+        self, filters: GiftFiltersDM, sort_by: GiftSortParams | None
+    ) -> list[OrderDM]: ...
 
     @abstractmethod
-    async def get_all_orders(self, filters: OrderFiltersDM) -> list[ReadOrderDM]:
-        ...
+    async def get_user_gifts(
+        self, user_id: int, limit: int | None, offset: int | None
+    ) -> list[UserGiftDM]: ...
 
     @abstractmethod
-    async def get_user_gifts(self, data: GetUserGiftsDM) -> list[UserGiftsDM]:
-        ...
+    async def get_user_gift(self, user_id: int, gift_id: int) -> UserGiftDM | None: ...
 
     @abstractmethod
-    async def get_one(self, **filters) -> ReadOrderDM | None:
-        ...
+    async def get_one(self, **filters) -> OrderDM | None: ...
 
     @abstractmethod
-    async def is_exist(self, **filters) -> bool:
-        ...
+    async def get_full_order(self, **filters) -> ReadOrderDM | None: ...
 
     @abstractmethod
-    async def get_by_id_and_user(
-        self, order_id: int, user_id: int, statuses: list[OrderStatus]
-    ) -> ReadOrderDM | None:
-        ...
-
-    @abstractmethod
-    async def get_cancel_order(self, order_id: int, user_id: int) -> OrderDM | None:
-        ...
+    async def get_gifts_by_ids(self, gifts_ids: list[int], user_id: int) -> list[CartGiftDM]: ...
 
 
 class OrderSaver(Protocol):
     @abstractmethod
-    async def save(self, order_dm: CreateOrderDM) -> OrderDM:
-        ...
+    async def save(self, order_dm: CreateOrderDM) -> CreateOrderDM: ...
 
     @abstractmethod
-    async def update_order(self, data: dict, **filters) -> OrderDM | None:
-        ...
+    async def update_order(self, data: dict, **filters) -> OrderDM | None: ...
 
     @abstractmethod
-    async def seller_cancel_order(self, order_id: int, user_id: int, data: dict) -> OrderDM | None:
-        ...
+    async def delete_order(self, **filters) -> UserGiftDM | None: ...
 
     @abstractmethod
-    async def delete_order(self, **filters) -> OrderDM | None:
-        ...
+    async def withdraw_from_market(self, data: dict, **filters) -> UserGiftDM | None: ...
+
+    @abstractmethod
+    async def save_auction_bid(self, data: BidDM) -> None: ...
+
+    @abstractmethod
+    async def delete_auction_bids(self, **filters) -> None: ...
+
+    @abstractmethod
+    async def update_cart_orders(self, values: dict, gifts_ids: list[int], user_id: int) -> None: ...
 
 
-class OrderManager(OrderReader, OrderSaver):
-    ...
+class OrderManager(OrderReader, OrderSaver): ...

@@ -76,6 +76,10 @@ class UserGateway(UserReader, UserSaver):
 
         return not result.scalar_one().referrer.is_banned
 
+    async def update_referrer(self, referrer_id: int, referral: UserDM) -> None:
+        stmt = update(UserReferral).values(referrer_id=referrer_id).filter_by(referral_id=referral.id)
+        await self._session.execute(stmt)
+
     async def update_referrer_balance(self, referrer_id: int, amount: float) -> None:
         stmt = (
             update(User)

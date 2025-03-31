@@ -49,9 +49,6 @@ class CreateStarOrderInteractor(Interactor[CreateStarOrderDTO, None]):
         self._config = config
 
     async def __call__(self, data: CreateStarOrderDTO) -> None:
-        if not self._user.username:
-            raise errors.NotUsernameError("User does not have a username to create an order")
-
         await self._star_gateway.save(CreateStarOrderDM(**data.model_dump(), seller_id=self._user.id))
 
         if self._user.id not in self._config.bot.nft_holders_id:
@@ -82,9 +79,6 @@ class BuyStarsInteractor(Interactor[StarsIdDTO, None]):
         self._bot_info = bot_info
 
     async def __call__(self, data: StarsIdDTO) -> None:
-        if not self._user.username:
-            raise errors.NotUsernameError("User does not have a username to buy a stars")
-
         values = dict(status=OrderStatus.BUY, buyer_id=self._user.id)
         order = await self._star_gateway.update(
             values, id=data.id, status=OrderStatus.ON_MARKET, buyer_id=None

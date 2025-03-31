@@ -1,10 +1,13 @@
 from aiogram import Bot
 from pytonapi import AsyncTonapi
 
+from src.application.common.const import HistoryType
 from src.application.common.utils import send_message
+from src.domain.entities.history import CreateHistoryDM
 from src.domain.entities.user import UpdateUserBalanceDM, UserDM
 from src.entrypoint.config import Config, PostgresConfig
 from src.infrastructure.database.session import new_session_maker
+from src.infrastructure.gateways.history import HistoryGateway
 from src.infrastructure.gateways.transaction import TransactionGateway
 from src.infrastructure.gateways.user import UserGateway
 from src.presentation.bot.services.text import get_deposit_text
@@ -63,6 +66,8 @@ async def update_user_balance_and_lt(
         if not user:
             return
         await TransactionGateway(session).set_new_lt(new_lt)
+        history_data = CreateHistoryDM(user_id=user.id, type=HistoryType.DEPOSIT, price=ton_amount)
+        await HistoryGateway(session).save(history_data)
         await session.commit()
         return user
 

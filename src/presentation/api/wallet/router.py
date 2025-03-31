@@ -5,7 +5,7 @@ from starlette.status import HTTP_400_BAD_REQUEST
 
 from src.application.dto.common import ResponseDTO
 from src.application.dto.wallet import WalletAddressDTO, WithdrawRequestDTO
-from src.application.interactors.errors import NotEnoughBalanceError
+from src.application.interactors.errors import NotAccessError, NotEnoughBalanceError
 from src.application.interactors.wallet import WithdrawRequestInteractor
 from src.entrypoint.config import Config
 
@@ -26,6 +26,6 @@ async def create_withdraw_request(
 ) -> ResponseDTO:
     try:
         await interactor(dto)
-    except NotEnoughBalanceError as e:
+    except (NotEnoughBalanceError, NotAccessError) as e:
         raise HTTPException(HTTP_400_BAD_REQUEST, str(e))
     return ResponseDTO(success=True)

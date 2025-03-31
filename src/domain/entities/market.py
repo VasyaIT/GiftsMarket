@@ -1,11 +1,17 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from src.application.common.const import GiftRarity
+from src.application.dto.base import BaseDTO
 
-from src.application.common.const import GiftRarity, GiftType, OrderStatus
 
-
-class CharacteristicsOrderDM(BaseModel):
+class CreateOrderDM(BaseDTO):
+    gift_id: int
+    seller_id: int
+    number: int
+    type: str
+    model_name: str
+    pattern_name: str
+    background_name: str
     model: float
     pattern: float
     background: float
@@ -13,75 +19,63 @@ class CharacteristicsOrderDM(BaseModel):
     is_active: bool
 
 
-class UpdateOrderDM(BaseModel):
-    price: float
-
-
-class CreateOrderDM(BaseModel):
-    number: int
-    image_url: str
-    type: GiftType
-    price: float
-    seller_id: int
-    is_vip: bool
-
-
 class OrderDM(CreateOrderDM):
     id: int
-    buyer_id: int | None
-    status: OrderStatus
-    created_order_date: datetime | None
-    completed_order_date: datetime | None
-
-
-class ReadOrderDM(CreateOrderDM):
-    status: OrderStatus
-    created_order_date: datetime | None
-    completed_order_date: datetime | None
-    created_at: datetime
-    model: float | None
-    pattern: float | None
-    background: float | None
-    rarity: GiftRarity | None
-    buyer_id: int | None
-    seller_name: str | None
-    buyer_name: str | None
-    id: int
-
-
-class UserGiftsDM(BaseModel):
-    id: int
-    image_url: str
-    type: GiftType
-    number: int
+    buyer_id: int | None = None
     price: float
-    model: float | None
-    pattern: float | None
-    background: float | None
-    rarity: GiftRarity | None
+    completed_order_date: datetime | None = None
+    is_vip: bool | None = None
+    min_step: float | None = None
+    auction_end_time: datetime | None = None
+
+
+class ReadOrderDM(OrderDM):
+    bids: list["ReadBidDM"]
+
+
+class UserGiftDM(BaseDTO):
+    id: int
+    gift_id: int
+    type: str
+    number: int
+    model: float
+    pattern: float
+    background: float
+    model_name: str
+    pattern_name: str
+    background_name: str
+    rarity: GiftRarity
     is_active: bool
+    price: float | None = None
+    is_vip: bool | None = None
+    min_step: float | None = None
+    auction_end_time: datetime | None = None
 
 
-class GetUserGiftsDM(BaseModel):
-    user_id: int
-    status: OrderStatus
-
-
-class GiftFiltersDM(BaseModel):
+class GiftFiltersDM(BaseDTO):
     limit: int | None
     offset: int | None
     from_price: float
     to_price: float
+    from_gift_number: int
+    to_gift_number: int
     rarities: list[GiftRarity]
-    types: list[GiftType]
-    status: OrderStatus
+    types: list[str] | None
+    model_names: list[str] | None
     user_id: int
 
 
-class OrderFiltersDM(BaseModel):
-    limit: int | None
-    offset: int | None
-    statuses: list[OrderStatus]
-    user_id: int
-    is_buyer: bool
-    is_seller: bool
+class BidDM(BaseDTO):
+    amount: float
+    gift_id: int
+    buyer_id: int
+
+
+class ReadBidDM(BaseDTO):
+    amount: float
+    created_at: datetime
+
+
+class BidSuccessDM(BaseDTO):
+    user_balance: float
+    created_at: datetime

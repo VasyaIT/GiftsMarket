@@ -1,6 +1,7 @@
+from datetime import datetime
+
 from pydantic import Field
 
-from src.application.common.const import GiftRarity, GiftType
 from src.application.dto.base import BaseDTO
 
 
@@ -9,16 +10,17 @@ class OrderIdDTO(BaseDTO):
 
 
 class CreateOrderDTO(BaseDTO):
-    number: int = Field(ge=1, le=500000)
-    image_url: str = Field(examples=["https://example.com"])
-    type: GiftType
-    price: float = Field(gt=0)
+    gift_id: int
+    price: float = Field(ge=0.1, le=99999)
     is_vip: bool = False
+    min_step: float | None = Field(default=None, ge=0.1, le=99999)
+    auction_end_time: datetime | None = None
 
 
 class UpdateOrderDTO(BaseDTO):
-    price: float = Field(gt=0)
+    price: float = Field(ge=0.1, le=99999)
 
 
-class OrderDTO(CreateOrderDTO):
-    image_url: str
+class BidDTO(BaseDTO):
+    id: int
+    amount: float = Field(ge=0.1, le=99999)

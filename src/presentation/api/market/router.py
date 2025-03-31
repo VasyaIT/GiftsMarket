@@ -2,23 +2,15 @@ from typing import Annotated
 
 from dishka import FromDishka
 from dishka.integrations.fastapi import inject
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from starlette import status
 
-from src.application.dto.common import GiftImagesDTO, ResponseDTO
-from src.application.dto.market import CreateOrderDTO, OrderIdDTO
-from src.application.interactors import market
-from src.application.interactors.errors import (
-    AlreadyExistError,
-    InvalidImageUrlError,
-    NotAccessError,
-    NotEnoughBalanceError,
-    NotFoundError,
-    NotUsernameError
-)
-from src.domain.entities.market import ReadOrderDM
-from src.infrastructure.gateways.errors import InvalidOrderDataError
-from src.presentation.api.market.params import GiftFilterParams, GiftSortParams, OrderFilterParams
+from src.application.common.cart import CartGiftDTO, ResponseCartDTO
+from src.application.dto.common import ResponseDTO
+from src.application.dto.market import BidDTO, CreateOrderDTO, OrderIdDTO
+from src.application.interactors import errors, market
+from src.domain.entities.market import BidSuccessDM, OrderDM, ReadOrderDM
+from src.presentation.api.market.params import GiftFilterParams, GiftSortParams
 
 
 market_router = APIRouter(prefix="/market", tags=["Market"])
@@ -30,7 +22,7 @@ async def get_all_gifts(
     filters: Annotated[GiftFilterParams, Depends()],
     interactor: FromDishka[market.GetGiftsInteractor],
     sort_by: GiftSortParams | None = None,
-) -> list[ReadOrderDM]:
+) -> list[OrderDM]:
     return await interactor(filters, sort_by)
 
 
@@ -39,27 +31,7 @@ async def get_all_gifts(
 async def get_gift_by_id(id: int, interactor: FromDishka[market.GetGiftInteractor]) -> ReadOrderDM:
     try:
         return await interactor(id)
-    except NotFoundError as e:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, str(e))
-
-
-@market_router.get("/order/all")
-@inject
-async def get_user_orders(
-    filters: Annotated[OrderFilterParams, Depends()], interactor: FromDishka[market.GetOrdersInteractor]
-) -> list[ReadOrderDM]:
-    try:
-        return await interactor(filters)
-    except NotFoundError as e:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, str(e))
-
-
-@market_router.get("/order/{id}")
-@inject
-async def get_user_order(id: int, interactor: FromDishka[market.GetOrderInteractor]) -> ReadOrderDM:
-    try:
-        return await interactor(id)
-    except (NotFoundError, InvalidOrderDataError) as e:
+    except errors.NotFoundError as e:
         raise HTTPException(status.HTTP_404_NOT_FOUND, str(e))
 
 
@@ -72,7 +44,12 @@ async def create_order(
 
     try:
         await interactor(dto)
-    except (NotEnoughBalanceError, NotUsernameError, InvalidImageUrlError, AlreadyExistError) as e:
+    except (
+        errors.NotEnoughBalanceError,
+        errors.NotAccessError,
+        errors.AlreadyExistError,
+        errors.AuctionBidError,
+    ) as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
     return ResponseDTO(success=True)
 
@@ -80,84 +57,38 @@ async def create_order(
 @market_router.post("/order/buy")
 @inject
 async def buy_gift(dto: OrderIdDTO, interactor: FromDishka[market.BuyGiftInteractor]) -> ResponseDTO:
-    """Buyer has paid for the gift and is waiting for the seller transferred the gift"""
-
     try:
         await interactor(dto.id)
-    except (NotFoundError, NotEnoughBalanceError, NotAccessError, NotUsernameError) as e:
+    except (
+        errors.NotFoundError,
+        errors.NotEnoughBalanceError,
+        errors.NotAccessError,
+        errors.GiftSendError,
+    ) as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
     return ResponseDTO(success=True)
 
 
-@market_router.post("/order/cancel")
+@market_router.post("/order/new-bid")
 @inject
-async def cancel_order(dto: OrderIdDTO, interactor: FromDishka[market.CancelOrderInteractor]) -> ResponseDTO:
-    """Buyer can cancel the order until the seller has given him the gift"""
+async def new_bid(dto: BidDTO, interactor: FromDishka[market.NewBidInteractor]) -> BidSuccessDM:
+    """New bid on auction"""
 
     try:
-        await interactor(dto.id)
-    except NotFoundError as e:
+        return await interactor(dto)
+    except (errors.NotFoundError, errors.NotEnoughBalanceError, errors.AuctionBidError) as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
-    return ResponseDTO(success=True)
 
 
-@market_router.post("/order/seller-accept")
+@market_router.post("/cart/buy")
 @inject
-async def accept_order_by_seller(
-    dto: OrderIdDTO, interactor: FromDishka[market.SellerAcceptInteractor]
-) -> ResponseDTO:
-    """Seller accept order when the buyer makes a gift purchase"""
-
+async def buy_many_gifts(
+    dto: list[CartGiftDTO],
+    interactor: FromDishka[market.BuyGiftsFromCartInteractor],
+    background_tasks: BackgroundTasks,
+) -> ResponseCartDTO:
     try:
-        await interactor(dto.id)
-    except (NotFoundError, NotAccessError) as e:
+        is_success, cart = await interactor(dto, background_tasks)
+    except errors.NotEnoughBalanceError as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
-    return ResponseDTO(success=True)
-
-
-@market_router.post("/order/seller-cancel")
-@inject
-async def cancel_order_by_seller(
-    dto: OrderIdDTO, interactor: FromDishka[market.SellerCancelInteractor]
-) -> ResponseDTO:
-    """Seller cancel order when the buyer makes a gift purchase"""
-
-    try:
-        await interactor(dto.id)
-    except (NotFoundError, NotAccessError) as e:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
-    return ResponseDTO(success=True)
-
-
-@market_router.post("/order/confirm-transfer")
-@inject
-async def confirm_gift_transfer(
-    dto: OrderIdDTO, interactor: FromDishka[market.ConfirmTransferInteractor]
-) -> ResponseDTO:
-    """When seller transferred gift to buyer, seller confirmed his transfer"""
-
-    try:
-        await interactor(dto.id)
-    except (NotFoundError, NotAccessError) as e:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
-    return ResponseDTO(success=True)
-
-
-@market_router.post("/order/accept-receipt")
-@inject
-async def accept_gift_receipt(
-    dto: OrderIdDTO, interactor: FromDishka[market.AcceptTransferInteractor]
-) -> ResponseDTO:
-    """Buyer confirmed receipt of the gift"""
-
-    try:
-        await interactor(dto.id)
-    except (NotFoundError, NotAccessError) as e:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
-    return ResponseDTO(success=True)
-
-
-@market_router.get("/get-gift-types")
-@inject
-async def get_images_by_gift_type(image_data: FromDishka[GiftImagesDTO]) -> GiftImagesDTO:
-    return image_data
+    return ResponseCartDTO(success=is_success, cart=cart)

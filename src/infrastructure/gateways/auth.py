@@ -42,11 +42,11 @@ class TelegramGateway:
         self.bot_token = bot_config.BOT_TOKEN
 
     def validate_telegram_user(self, init_data: str) -> InitDataDM | None:
-        data = {value.split("=", 1)[0]: unquote(value.split("=", 1)[1]) for value in init_data.split("&")}
+        data = {
+            value.split("=", 1)[0]: unquote(value.split("=", 1)[1]) for value in init_data.split("&")
+        }
         hash = data.pop("hash")
-        data_check_string = "\n".join(
-            f"{key}={value}" for key, value in sorted(data.items())
-        )
+        data_check_string = "\n".join(f"{key}={value}" for key, value in sorted(data.items()))
         secret_key = new("WebAppData".encode(), self.bot_token.encode(), sha256).digest()
         calculated_hash = new(secret_key, data_check_string.encode(), sha256).hexdigest()
         if calculated_hash == hash:

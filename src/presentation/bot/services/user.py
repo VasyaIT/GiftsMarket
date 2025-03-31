@@ -1,4 +1,5 @@
-from src.domain.entities.user import FullUserInfoDM, UpdateUserBalanceDM
+from src.application.common.utils import generate_deposit_comment
+from src.domain.entities.user import CreateUserDM, FullUserInfoDM, UpdateUserBalanceDM
 from src.entrypoint.config import PostgresConfig
 from src.infrastructure.database.session import new_session_maker
 from src.infrastructure.gateways.market import MarketGateway
@@ -45,7 +46,7 @@ async def get_full_user_info(postgres_config: PostgresConfig, user_id: int) -> F
         gateway = UserGateway(session)
         if not (user := await gateway.get_by_id(user_id)):
             return
-        orders = await MarketGateway(session).get_user_orders(user_id)
+        orders = await MarketGateway(session).get_user_gifts(user_id, None, None)
         withdraw_requests, total_withdrawn = await WalletGateway(session).get_by_user_id(user_id)
 
     return FullUserInfoDM(
@@ -60,3 +61,24 @@ async def get_total_balance(postgres_config: PostgresConfig) -> float:
     session_maker = new_session_maker(postgres_config)
     async with session_maker() as session:
         return await UserGateway(session).get_sum_users_balance()
+
+
+async def create_user_if_not_exist(
+    user_id: int,
+    username: str | None,
+    first_name: str | None,
+    postgres_config: PostgresConfig
+) -> None:
+    session_maker = new_session_maker(postgres_config)
+    async with session_maker() as session:
+        user_gateway = UserGateway(session)
+        if not await user_gateway.get_by_id(user_id):
+            deposit_comment = generate_deposit_comment()
+            user_dm = CreateUserDM(
+                id=user_id,
+                username=username,
+                first_name=first_name,
+                deposit_comment=deposit_comment,
+            )
+            await user_gateway.save(user_dm)
+            await session.commit()

@@ -1,0 +1,27 @@
+from aiogram import Bot
+from pyrogram.client import Client
+from pyrogram.errors import BadRequest, PeerIdInvalid, RPCError
+
+from src.application.common.utils import send_message
+from src.entrypoint.config import Config
+
+
+async def send_gift(user_id: int, gift_id: int, client: Client, bot: Bot, config: Config) -> bool:
+    is_success, message = False, None
+
+    try:
+        is_success = await client.transfer_gift(gift_id, user_id)
+    except (PeerIdInvalid, ValueError) as e:
+        message = (
+            f"PeerIdInvalid when sending a gift. user id: {user_id}, gift message_id: {gift_id}\n\n{e}"
+        )
+    except BadRequest as e:
+        message = f"TelegramBadRequest when sending a gift. user id: {user_id}, gift message_id: {gift_id}\n\n{e}"
+    except RPCError as e:
+        message = f"RPCError when sending a gift. user id: {user_id}, gift message_id: {gift_id}\n\n{e}"
+    except Exception as e:
+        message = f"Error when sending a gift. user id: {user_id}, gift message_id: {gift_id}:\n\n{e}"
+
+    if message:
+        await send_message(bot, message, config.bot.owners_chat_id, parse_mode=None)
+    return is_success
