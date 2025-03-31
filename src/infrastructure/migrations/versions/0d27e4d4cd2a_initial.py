@@ -1,8 +1,8 @@
 """Initial
 
-Revision ID: 35fb44ef220d
+Revision ID: 0d27e4d4cd2a
 Revises: 
-Create Date: 2025-03-29 21:26:12.846638
+Create Date: 2025-03-31 20:48:10.704597
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = '35fb44ef220d'
+revision: str = '0d27e4d4cd2a'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -39,7 +39,7 @@ def upgrade() -> None:
     )
     op.create_table('historys',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('type', postgresql.ENUM('BUY_GIFT', 'SELL_GIFT', 'BID_GIFT', 'DEPOSIT', 'WITHDRAW', 'BUY_STARS', 'SELL_STARS', name='historytype'), nullable=False),
+    sa.Column('type', postgresql.ENUM('BUY_GIFT', 'SELL_GIFT', 'BID_GIFT', 'FINAL_BID_GIFT', 'DEPOSIT', 'WITHDRAW', 'BUY_STARS', 'SELL_STARS', name='historytype'), nullable=False),
     sa.Column('price', sa.Float(), nullable=False),
     sa.Column('stars', sa.Integer(), nullable=True),
     sa.Column('gift', sa.String(), nullable=True),

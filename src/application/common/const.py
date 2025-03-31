@@ -43,6 +43,7 @@ class HistoryType(Enum):
     BUY_GIFT = "buy_gift"
     SELL_GIFT = "sell_gift"
     BID_GIFT = "bid_gift"
+    FINAL_BID_GIFT = "final_bid_gift"
     DEPOSIT = "deposit"
     WITHDRAW = "withdraw"
     BUY_STARS = "buy_stars"
