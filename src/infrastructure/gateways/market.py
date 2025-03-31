@@ -136,6 +136,13 @@ class MarketGateway(OrderSaver):
         if order:
             return OrderDM(**order.__dict__)
 
+    async def withdraw_from_market(self, data: dict, **filters) -> UserGiftDM | None:
+        stmt = update(Order).filter_by(**filters).values(data).returning(Order)
+        result = await self._session.execute(stmt)
+        order = result.scalar_one_or_none()
+        if order:
+            return UserGiftDM(**order.__dict__)
+
     async def update_cart_orders(self, values: dict, gifts_ids: list[int], user_id: int) -> None:
         stmt = (
             update(Order)

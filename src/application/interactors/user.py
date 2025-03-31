@@ -169,7 +169,7 @@ class RemoveOrderInteractor(Interactor[int, None]):
 
     async def __call__(self, gift_id: int) -> None:
         data = dict(is_active=False, min_step=None, auction_end_time=None, price=None)
-        updated_order = await self._market_gateway.update_order(
+        updated_order = await self._market_gateway.withdraw_from_market(
             data, id=gift_id, is_active=True, is_completed=False, seller_id=self._user.id, buyer_id=None
         )
         if not updated_order:

@@ -48,6 +48,9 @@ class OrderSaver(Protocol):
     async def delete_order(self, **filters) -> UserGiftDM | None: ...
 
     @abstractmethod
+    async def withdraw_from_market(self, data: dict, **filters) -> UserGiftDM | None: ...
+
+    @abstractmethod
     async def save_auction_bid(self, data: BidDM) -> None: ...
 
     @abstractmethod
