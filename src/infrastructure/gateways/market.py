@@ -4,6 +4,7 @@ from sqlalchemy import delete, func, insert, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.application.common.const import ShopType
 from src.application.interactors.errors import AlreadyExistError
 from src.application.interfaces.market import OrderSaver
 from src.domain.entities.cart import CartGiftDM
@@ -46,6 +47,11 @@ class MarketGateway(OrderSaver):
             conditions.append(Order.type.in_(filters.types))
         if filters.model_names:
             conditions.append(Order.model_name.in_(filters.model_names))
+        if filters.shop_type is ShopType.AUCTION:
+            conditions.append(Order.min_step != None)
+        elif filters.shop_type is ShopType.MARKET:
+            conditions.append(Order.min_step == None)
+
         stmt = (
             select(Order)
             .where(*conditions)

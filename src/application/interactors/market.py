@@ -7,7 +7,7 @@ from fastapi import BackgroundTasks
 from pyrogram.client import Client
 
 from src.application.common.cart import CartGiftDTO
-from src.application.common.const import MAX_GIFT_NUMBER, GiftRarity, HistoryType, PriceList
+from src.application.common.const import MAX_GIFT_NUMBER, GiftRarity, HistoryType, PriceList, ShopType
 from src.application.common.send_gift import send_gift
 from src.application.common.utils import build_direct_link, send_message
 from src.application.dto.market import BidDTO, CreateOrderDTO
@@ -115,6 +115,7 @@ class GetGiftsInteractor:
             types=filters.types if filters.types else None,
             model_names=filters.model_names,
             user_id=user_id,
+            shop_type=filters.shop_type if filters.shop_type else ShopType.MARKET,
         )
 
 

@@ -26,6 +26,16 @@ async def get_all_gifts(
     return await interactor(filters, sort_by)
 
 
+@market_router.get("/gifts/auction")
+@inject
+async def get_all_auction_gifts(
+    filters: Annotated[GiftFilterParams, Depends()],
+    interactor: FromDishka[market.GetGiftsInteractor],
+    sort_by: GiftSortParams | None = None,
+) -> list[OrderDM]:
+    return await interactor(filters, sort_by)
+
+
 @market_router.get("/gifts/{id}")
 @inject
 async def get_gift_by_id(id: int, interactor: FromDishka[market.GetGiftInteractor]) -> ReadOrderDM:
