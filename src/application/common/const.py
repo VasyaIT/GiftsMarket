@@ -50,6 +50,11 @@ class HistoryType(Enum):
     SELL_STARS = "sell_stars"
 
 
+class ShopType(Enum):
+    MARKET = "market"
+    AUCTION = "auction"
+
+
 GIFT_RARITY_PERCENT = {
     GiftRarity.COMMON: 2,
     GiftRarity.RARE: 1,

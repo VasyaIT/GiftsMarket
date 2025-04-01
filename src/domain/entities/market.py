@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from src.application.common.const import GiftRarity
+from src.application.common.const import GiftRarity, ShopType
 from src.application.dto.base import BaseDTO
 
 
@@ -62,6 +62,7 @@ class GiftFiltersDM(BaseDTO):
     rarities: list[GiftRarity]
     types: list[str] | None
     model_names: list[str] | None
+    shop_type: ShopType
     user_id: int
 
 
