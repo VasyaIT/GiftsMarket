@@ -36,6 +36,12 @@ class OrderReader(Protocol):
     @abstractmethod
     async def get_gifts_by_ids(self, gifts_ids: list[int], user_id: int) -> list[CartGiftDM]: ...
 
+    @abstractmethod
+    async def get_many(self, **filters) -> list[OrderDM]: ...
+
+    @abstractmethod
+    async def get_user_gifts_by_ids(self, gifts_ids: list[int], user_id: int) -> list[OrderDM]: ...
+
 
 class OrderSaver(Protocol):
     @abstractmethod
@@ -43,6 +49,9 @@ class OrderSaver(Protocol):
 
     @abstractmethod
     async def update_order(self, data: dict, **filters) -> OrderDM | None: ...
+
+    @abstractmethod
+    async def update_giveaway_gifts(self, data: dict, gifts_ids: list[int]) -> None: ...
 
     @abstractmethod
     async def delete_order(self, **filters) -> UserGiftDM | None: ...

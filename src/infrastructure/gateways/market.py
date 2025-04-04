@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.common.const import ShopType
 from src.application.interactors.errors import AlreadyExistError
-from src.application.interfaces.market import OrderSaver
+from src.application.interfaces.market import OrderReader, OrderSaver
 from src.domain.entities.cart import CartGiftDM
 from src.domain.entities.market import (
     BidDM,
@@ -20,7 +20,7 @@ from src.infrastructure.models.order import Bid, Order
 from src.presentation.api.market.params import GiftSortParams
 
 
-class MarketGateway(OrderSaver):
+class MarketGateway(OrderSaver, OrderReader):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
@@ -117,6 +117,15 @@ class MarketGateway(OrderSaver):
         result = await self._session.execute(stmt)
         return [CartGiftDM(**order.__dict__) for order in result.scalars().all()]
 
+    async def get_user_gifts_by_ids(self, gifts_ids: list[int], user_id: int) -> list[OrderDM]:
+        stmt = select(Order).where(
+            Order.id.in_(gifts_ids),
+            Order.is_active == False,
+            Order.seller_id == user_id,
+        )
+        result = await self._session.execute(stmt)
+        return [OrderDM(**order.__dict__) for order in result.scalars().all()]
+
     async def get_auction_orders(self) -> list[OrderDM]:
         stmt = select(Order).where(
             Order.min_step != None,
@@ -141,6 +150,10 @@ class MarketGateway(OrderSaver):
         order = result.scalar_one_or_none()
         if order:
             return OrderDM(**order.__dict__)
+
+    async def update_giveaway_gifts(self, data: dict, gifts_ids: list[int]) -> None:
+        stmt = update(Order).values(data).where(Order.id.in_(gifts_ids))
+        await self._session.execute(stmt)
 
     async def withdraw_from_market(self, data: dict, **filters) -> UserGiftDM | None:
         stmt = update(Order).filter_by(**filters).values(data).returning(Order)

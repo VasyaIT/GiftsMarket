@@ -7,11 +7,12 @@ from fastapi import Request
 from pyrogram.client import Client
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from src.application.interactors import market, star, user
+from src.application.interactors import giveaway, market, star, user
 from src.application.interactors.history import ActivityInteractor, HistoryInteractor
 from src.application.interactors.wallet import WithdrawRequestInteractor
 from src.application.interfaces.auth import InitDataValidator, TokenDecoder, TokenEncoder
 from src.application.interfaces.database import DBSession
+from src.application.interfaces.giveaway import GiveawayManager, GiveawayReader, GiveawaySaver
 from src.application.interfaces.history import HistoryReader, HistorySaver
 from src.application.interfaces.market import OrderManager, OrderReader, OrderSaver
 from src.application.interfaces.star import StarManager, StarOrderReader, StarOrderSaver
@@ -22,6 +23,7 @@ from src.domain.entities.user import UserDM
 from src.entrypoint.config import Config
 from src.infrastructure.database.session import new_session_maker
 from src.infrastructure.gateways.auth import TelegramGateway, TokenGateway
+from src.infrastructure.gateways.giveaway import GiveawayGateway
 from src.infrastructure.gateways.history import HistoryGateway
 from src.infrastructure.gateways.market import MarketGateway
 from src.infrastructure.gateways.star import StarGateway
@@ -87,6 +89,11 @@ class AppProvider(FastapiProvider):
     history_gateway = provide(
         HistoryGateway, scope=Scope.REQUEST, provides=AnyOf[HistoryReader, HistorySaver]
     )
+    giveaway_gateway = provide(
+        GiveawayGateway,
+        scope=Scope.REQUEST,
+        provides=AnyOf[GiveawayManager, GiveawayReader, GiveawaySaver],
+    )
 
     # User
     login_interactor = provide(user.LoginInteractor, scope=Scope.REQUEST)
@@ -130,3 +137,11 @@ class AppProvider(FastapiProvider):
     # History
     history_interactor = provide(HistoryInteractor, scope=Scope.REQUEST)
     activity_interactor = provide(ActivityInteractor, scope=Scope.REQUEST)
+
+    # Giveaway
+    create_giveaway_interactor = provide(giveaway.CreateGiveawayInteractor, scope=Scope.REQUEST)
+    giveaway_join_interactor = provide(giveaway.GiveawayJoinInteractor, scope=Scope.REQUEST)
+    get_giveaway_interactor = provide(giveaway.GetGiveawayInteractor, scope=Scope.REQUEST)
+    telegram_channel_info_interactor = provide(
+        giveaway.TelegramChannelInfoInteractor, scope=Scope.REQUEST
+    )
