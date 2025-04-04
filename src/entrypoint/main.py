@@ -18,18 +18,17 @@ from src.presentation.client.handlers.setup import setup_client_handlers
 def get_fastapi_app() -> FastAPI:
     config = Config()
     bot = get_bot(config.bot.BOT_TOKEN)
-    # client = Client("client", config.bot.API_ID, config.bot.API_HASH, workdir="src")
-    # setup_client_handlers(client)
+    client = Client("client", config.bot.API_ID, config.bot.API_HASH, workdir="src")
+    setup_client_handlers(client)
 
     async def on_startup() -> None:
-        ...
-        # await client.start()
-        # if not config.app.DEBUG:
-        #     create_task(run_queue(client, bot, config))
+        await client.start()
+        if not config.app.DEBUG:
+            create_task(run_queue(client, bot, config))
 
     async def on_shutdown() -> None:
         await bot.session.close()
-        # await client.stop()
+        await client.stop()
 
     app = FastAPI(
         debug=config.app.DEBUG,
@@ -38,8 +37,7 @@ def get_fastapi_app() -> FastAPI:
         on_startup=[on_startup],
         on_shutdown=[on_shutdown],
     )
-    # container = make_async_container(AppProvider(), context={Config: config, Bot: bot, Client: client})
-    container = make_async_container(AppProvider(), context={Config: config, Bot: bot})
+    container = make_async_container(AppProvider(), context={Config: config, Bot: bot, Client: client})
     setup_dishka(container, app)
     setup_middlewares(app, config, bot)
     setup_routers(app)
