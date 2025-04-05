@@ -18,7 +18,7 @@ class Giveaway(Base):
     channels_usernames: Mapped[list[str]] = mapped_column(JSONB)
     quantity_members: Mapped[int] = mapped_column(Integer)
     end_time: Mapped[datetime] = mapped_column(TIMESTAMP)
-    is_completed: Mapped[bool] = mapped_column(Boolean)
+    is_completed: Mapped[bool] = mapped_column(Boolean, default=False)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
 
     user: Mapped[User] = relationship("User", lazy="selectin")

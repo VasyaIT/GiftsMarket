@@ -117,12 +117,8 @@ class MarketGateway(OrderSaver, OrderReader):
         result = await self._session.execute(stmt)
         return [CartGiftDM(**order.__dict__) for order in result.scalars().all()]
 
-    async def get_user_gifts_by_ids(self, gifts_ids: list[int], user_id: int) -> list[UserGiftDM]:
-        stmt = select(Order).where(
-            Order.id.in_(gifts_ids),
-            Order.is_active == False,
-            Order.seller_id == user_id,
-        )
+    async def get_user_gifts_by_ids(self, gifts_ids: list[int], **filters) -> list[UserGiftDM]:
+        stmt = select(Order).where(Order.id.in_(gifts_ids)).filter_by(**filters)
         result = await self._session.execute(stmt)
         return [UserGiftDM(**order.__dict__) for order in result.scalars().all()]
 

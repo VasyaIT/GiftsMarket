@@ -3,6 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel
 
 from src.application.common.const import GiveawayType
+from src.domain.entities.market import UserGiftDM
 
 
 class TelegramChannelDM(BaseModel):
@@ -26,3 +27,7 @@ class CreateGiveawayDM(BaseModel):
 
 class GiveawayDM(CreateGiveawayDM):
     id: int
+
+
+class FullGiveawayDM(GiveawayDM):
+    gifts: list[UserGiftDM]

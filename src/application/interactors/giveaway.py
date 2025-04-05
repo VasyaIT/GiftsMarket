@@ -13,9 +13,9 @@ from src.application.interactors.errors import (
 from src.application.interfaces.database import DBSession
 from src.application.interfaces.giveaway import GiveawayManager, GiveawayReader, GiveawaySaver
 from src.application.interfaces.interactor import Interactor
-from src.application.interfaces.market import OrderManager
+from src.application.interfaces.market import OrderManager, OrderReader
 from src.application.interfaces.user import UserSaver
-from src.domain.entities.giveaway import CreateGiveawayDM, GiveawayDM, TelegramChannelDM
+from src.domain.entities.giveaway import CreateGiveawayDM, FullGiveawayDM, GiveawayDM, TelegramChannelDM
 from src.domain.entities.user import UpdateUserBalanceDM, UserDM
 
 
@@ -35,7 +35,9 @@ class CreateGiveawayInteractor(Interactor[CreateGiveawayDTO, None]):
         self._bot = bot
 
     async def __call__(self, data: CreateGiveawayDTO) -> None:
-        gifts = await self._market_gateway.get_user_gifts_by_ids(data.gifts_ids, self._user.id)
+        gifts = await self._market_gateway.get_user_gifts_by_ids(
+            data.gifts_ids, seller_id=self._user.id, is_active=False
+        )
         if not gifts:
             raise NotFoundError("Gifts not found")
 
@@ -103,22 +105,26 @@ class GetAllGiveawaysInteractor(Interactor[str, list[GiveawayDM]]):
         return await self._giveaway_gateway.get_many(type, self._user.id)
 
 
-class GetGiveawayInteractor(Interactor[int, GiveawayDM]):
+class GetGiveawayInteractor(Interactor[int, FullGiveawayDM]):
     def __init__(
         self,
         giveaway_gateway: GiveawayReader,
+        market_gateway: OrderReader,
         user: UserDM,
         bot: Bot,
     ) -> None:
         self._giveaway_gateway = giveaway_gateway
+        self._market_gateway = market_gateway
         self._user = user
         self._bot = bot
 
-    async def __call__(self, giveaway_id: int) -> GiveawayDM:
+    async def __call__(self, giveaway_id: int) -> FullGiveawayDM:
         giveaway = await self._giveaway_gateway.get_one(id=giveaway_id)
         if not giveaway:
             raise NotFoundError("Giveaway not found")
-        return giveaway
+
+        gifts = await self._market_gateway.get_user_gifts_by_ids(giveaway.gifts_ids)
+        return FullGiveawayDM(**giveaway.__dict__, gifts=gifts)
 
 
 class TelegramChannelInfoInteractor(Interactor[str, TelegramChannelDM]):

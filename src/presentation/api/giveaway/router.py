@@ -6,7 +6,7 @@ from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 from src.application.dto.giveaway import CreateGiveawayDTO
 from src.application.interactors import errors
 from src.application.interactors import giveaway as interactors
-from src.domain.entities.giveaway import GiveawayDM, TelegramChannelDM
+from src.domain.entities.giveaway import FullGiveawayDM, GiveawayDM, TelegramChannelDM
 
 
 giveaway_router = APIRouter(tags=["Giveaway"])
@@ -49,7 +49,9 @@ async def check_giveaway_subscribes(
 
 @giveaway_router.post("/giveaway/{id}")
 @inject
-async def get_giveaway(id: int, interactor: FromDishka[interactors.GetGiveawayInteractor]) -> GiveawayDM:
+async def get_giveaway(
+    id: int, interactor: FromDishka[interactors.GetGiveawayInteractor]
+) -> FullGiveawayDM:
     try:
         return await interactor(id)
     except errors.NotFoundError as e:
