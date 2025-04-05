@@ -14,6 +14,7 @@ class Giveaway(Base):
     type: Mapped[GiveawayType] = mapped_column(ENUM(GiveawayType))
     price: Mapped[float] = mapped_column(Float)
     gifts_ids: Mapped[list[int]] = mapped_column(JSONB)
+    participants_ids: Mapped[list[int]] = mapped_column(JSONB)
     channels_usernames: Mapped[list[str]] = mapped_column(JSONB)
     quantity_members: Mapped[int] = mapped_column(Integer)
     end_time: Mapped[datetime] = mapped_column(TIMESTAMP)

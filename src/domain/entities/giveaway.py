@@ -25,3 +25,4 @@ class CreateGiveawayDM(BaseModel):
 
 class GiveawayDM(CreateGiveawayDM):
     id: int
+    participants_ids: list[int]

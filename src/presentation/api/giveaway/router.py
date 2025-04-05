@@ -12,6 +12,14 @@ from src.domain.entities.giveaway import GiveawayDM, TelegramChannelDM
 giveaway_router = APIRouter(tags=["Giveaway"])
 
 
+@giveaway_router.post("/giveaways")
+@inject
+async def all_giveaway(
+    type: str, interactor: FromDishka[interactors.GetAllGiveawaysInteractor]
+) -> list[GiveawayDM]:
+    return await interactor(type)
+
+
 @giveaway_router.post("/giveaway/create")
 @inject
 async def create_giveaway(

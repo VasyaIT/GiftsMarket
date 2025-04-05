@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import insert, select
+from sqlalchemy import insert, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.application.interfaces.giveaway import GiveawayReader, GiveawaySaver
@@ -22,6 +22,13 @@ class GiveawayGateway(GiveawaySaver, GiveawayReader):
         result = await self._session.execute(stmt)
         if giveaway := result.scalar_one_or_none():
             return GiveawayDM(**giveaway.__dict__)
+
+    async def get_many(self, type: str, user_id: int) -> list[GiveawayDM]:
+        stmt = select(Giveaway)
+        if type == "user":
+            stmt.where(or_(Giveaway.user_id == user_id, Giveaway.participants_ids.contains([user_id])))
+        result = await self._session.execute(stmt)
+        return [GiveawayDM(**giveaway.__dict__) for giveaway in result.scalars().all()]
 
     async def get_ended_giveaways(self) -> list[GiveawayDM]:
         stmt = select(Giveaway).where(datetime.now() > Giveaway.end_time)

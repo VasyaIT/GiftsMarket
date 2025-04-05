@@ -81,6 +81,15 @@ class GiveawayJoinInteractor(Interactor[int, None]):
         await self._db_session.commit()
 
 
+class GetAllGiveawaysInteractor(Interactor[str, list[GiveawayDM]]):
+    def __init__(self, giveaway_gateway: GiveawayReader, user: UserDM) -> None:
+        self._giveaway_gateway = giveaway_gateway
+        self._user = user
+
+    async def __call__(self, type: str) -> list[GiveawayDM]:
+        return await self._giveaway_gateway.get_many(type, self._user.id)
+
+
 class GetGiveawayInteractor(Interactor[int, GiveawayDM]):
     def __init__(
         self,
