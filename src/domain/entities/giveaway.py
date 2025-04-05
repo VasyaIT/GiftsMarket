@@ -19,10 +19,10 @@ class CreateGiveawayDM(BaseModel):
     quantity_members: int
     end_time: datetime
     price: float
+    participants_ids: list[int] = []
 
     user_id: int
 
 
 class GiveawayDM(CreateGiveawayDM):
     id: int
-    participants_ids: list[int]
