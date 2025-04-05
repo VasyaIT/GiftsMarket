@@ -23,6 +23,8 @@ async def start_giveaway_tracker() -> None:
             return
         for giveaway in gateways:
             count_participants = len(giveaway.participants_ids)
+            if not count_participants:
+                continue
             for index, gift_id in enumerate(giveaway.gifts_ids):
                 user_id = giveaway.participants_ids[index % count_participants]
                 queue = Queue("gifts", {"connection": config.redis.REDIS_URL})  # type: ignore
