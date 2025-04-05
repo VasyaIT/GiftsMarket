@@ -71,13 +71,16 @@ class GiveawayJoinInteractor(Interactor[int, None]):
         if giveaway.user_id == self._user.id:
             raise NotAccessError("Forbidden")
 
-        user = await self._user_gateway.update_balance(
-            UpdateUserBalanceDM(id=self._user.id, amount=-giveaway.price)
-        )
-        if user and user.balance < 0:
-            raise NotEnoughBalanceError("User does not have enough balance")
+        if giveaway.price > 0:
+            user = await self._user_gateway.update_balance(
+                UpdateUserBalanceDM(id=self._user.id, amount=-giveaway.price)
+            )
+            if user and user.balance < 0:
+                raise NotEnoughBalanceError("User does not have enough balance")
 
         participants_ids = giveaway.participants_ids
+        if len(participants_ids) + 1 > giveaway.quantity_members:
+            raise NotAccessError("There are too many participants")
 
         for channel_username in giveaway.channels_usernames:
             if not await is_subscriber(self._bot, channel_username, self._user.id):

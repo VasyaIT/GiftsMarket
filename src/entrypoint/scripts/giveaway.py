@@ -22,11 +22,15 @@ async def start_giveaway_tracker() -> None:
         if not gateways:
             return
         for giveaway in gateways:
-            await session.commit()
+            count_participants = len(giveaway.participants_ids)
+            for index, gift_id in enumerate(giveaway.gifts_ids):
+                user_id = giveaway.participants_ids[index % count_participants]
+                queue = Queue("gifts", {"connection": config.redis.REDIS_URL})  # type: ignore
+                await queue.add("send_gift", {"user_id": user_id, "gift_id": gift_id})
+                await queue.close()
 
-            queue = Queue("gifts", {"connection": config.redis.REDIS_URL})  # type: ignore
-            await queue.add("send_gift", {"user_id": giveaway.buyer_id, "gift_id": order.gift_id})
-            await queue.close()
+            await giveaway_gateway.update_giveaway({"is_completed": True}, id=giveaway.id)
+            await session.commit()
 
 
 if __name__ == "__main__":

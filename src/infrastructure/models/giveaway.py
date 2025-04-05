@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import TIMESTAMP, Float, ForeignKey, Integer
+from sqlalchemy import TIMESTAMP, Boolean, Float, ForeignKey, Integer
 from sqlalchemy.dialects.postgresql import ENUM, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -18,6 +18,7 @@ class Giveaway(Base):
     channels_usernames: Mapped[list[str]] = mapped_column(JSONB)
     quantity_members: Mapped[int] = mapped_column(Integer)
     end_time: Mapped[datetime] = mapped_column(TIMESTAMP)
+    is_completed: Mapped[bool] = mapped_column(Boolean)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
 
     user: Mapped[User] = relationship("User", lazy="selectin")

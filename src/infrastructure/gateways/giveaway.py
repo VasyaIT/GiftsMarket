@@ -37,6 +37,6 @@ class GiveawayGateway(GiveawaySaver, GiveawayReader):
         return [GiveawayDM(**giveaway.__dict__) for giveaway in result.scalars().all()]
 
     async def get_ended_giveaways(self) -> list[GiveawayDM]:
-        stmt = select(Giveaway).where(datetime.now() > Giveaway.end_time)
+        stmt = select(Giveaway).where(datetime.now() > Giveaway.end_time, Giveaway.is_completed == False)
         result = await self._session.execute(stmt)
         return [GiveawayDM(**giveaway.__dict__) for giveaway in result.scalars().all()]
