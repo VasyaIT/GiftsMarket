@@ -24,3 +24,7 @@ class GiftSendError(Exception):
 
 class AuctionBidError(Exception):
     pass
+
+
+class GiveawaySubscriptionError(Exception):
+    pass

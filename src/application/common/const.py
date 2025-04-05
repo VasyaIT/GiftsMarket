@@ -5,6 +5,7 @@ MINUTES_TO_SEND_GIFT = 20
 MAX_GIFT_NUMBER = 500000
 MAX_WITHDRAW_AMOUNT = 500
 INLINE_IMAGE_URL = "https://store.nestdex.dev/media/inline_image.jpg"
+DEFAULT_CHANNEL_IMAGE_URL = "https://store.nestdex.dev/media/inline_image.jpg"
 
 
 class OrderStatus(StrEnum):
@@ -53,6 +54,12 @@ class HistoryType(Enum):
 class ShopType(Enum):
     MARKET = "market"
     AUCTION = "auction"
+
+
+class GiveawayType(Enum):
+    SUBSCRIPTION = "subscription"
+    SUBSCRIPTION_PAID_PARTICIPANT = "subscription_paid_participant"
+    SUBSCRIPTION_PAID_TICKET = "subscription_paid_ticket"
 
 
 GIFT_RARITY_PERCENT = {
