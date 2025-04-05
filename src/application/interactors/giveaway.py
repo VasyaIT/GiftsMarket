@@ -6,11 +6,12 @@ from src.application.common.utils import is_subscriber
 from src.application.dto.giveaway import CreateGiveawayDTO
 from src.application.interactors.errors import (
     GiveawaySubscriptionError,
+    NotAccessError,
     NotEnoughBalanceError,
     NotFoundError,
 )
 from src.application.interfaces.database import DBSession
-from src.application.interfaces.giveaway import GiveawayReader, GiveawaySaver
+from src.application.interfaces.giveaway import GiveawayManager, GiveawayReader, GiveawaySaver
 from src.application.interfaces.interactor import Interactor
 from src.application.interfaces.market import OrderManager
 from src.application.interfaces.user import UserSaver
@@ -52,7 +53,7 @@ class GiveawayJoinInteractor(Interactor[int, None]):
     def __init__(
         self,
         db_session: DBSession,
-        giveaway_gateway: GiveawayReader,
+        giveaway_gateway: GiveawayManager,
         user_gateway: UserSaver,
         user: UserDM,
         bot: Bot,
@@ -67,6 +68,8 @@ class GiveawayJoinInteractor(Interactor[int, None]):
         giveaway = await self._giveaway_gateway.get_one(id=giveaway_id)
         if not giveaway:
             raise NotFoundError("Giveaway not found")
+        if giveaway.user_id == self._user.id:
+            raise NotAccessError("Forbidden")
 
         user = await self._user_gateway.update_balance(
             UpdateUserBalanceDM(id=self._user.id, amount=-giveaway.price)
@@ -74,9 +77,16 @@ class GiveawayJoinInteractor(Interactor[int, None]):
         if user and user.balance < 0:
             raise NotEnoughBalanceError("User does not have enough balance")
 
+        participants_ids = giveaway.participants_ids
+
         for channel_username in giveaway.channels_usernames:
             if not await is_subscriber(self._bot, channel_username, self._user.id):
                 raise GiveawaySubscriptionError("The conditions of the giveaway are not fulfilled")
+            participants_ids.append(self._user.id)
+
+        await self._giveaway_gateway.update_giveaway(
+            {"participants_ids": participants_ids}, id=giveaway.id
+        )
 
         await self._db_session.commit()
 

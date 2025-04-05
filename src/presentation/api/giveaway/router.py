@@ -38,7 +38,12 @@ async def check_giveaway_subscribes(
 ) -> None:
     try:
         return await interactor(id)
-    except (errors.NotFoundError, errors.GiveawaySubscriptionError, errors.NotEnoughBalanceError) as e:
+    except (
+        errors.NotFoundError,
+        errors.GiveawaySubscriptionError,
+        errors.NotEnoughBalanceError,
+        errors.NotAccessError,
+    ) as e:
         raise HTTPException(HTTP_400_BAD_REQUEST, str(e))
 
 

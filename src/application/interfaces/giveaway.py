@@ -8,6 +8,9 @@ class GiveawaySaver(Protocol):
     @abstractmethod
     async def save(self, data: CreateGiveawayDM) -> GiveawayDM: ...
 
+    @abstractmethod
+    async def update_giveaway(self, data: dict, **filters) -> GiveawayDM | None: ...
+
 
 class GiveawayReader(Protocol):
     @abstractmethod
