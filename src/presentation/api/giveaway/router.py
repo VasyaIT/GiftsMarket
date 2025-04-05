@@ -17,7 +17,10 @@ giveaway_router = APIRouter(tags=["Giveaway"])
 async def create_giveaway(
     dto: CreateGiveawayDTO, interactor: FromDishka[interactors.CreateGiveawayInteractor]
 ) -> None:
-    return await interactor(dto)
+    try:
+        return await interactor(dto)
+    except errors.NotFoundError as e:
+        raise HTTPException(HTTP_404_NOT_FOUND, str(e))
 
 
 @giveaway_router.post("/giveaway/{id}/join")
