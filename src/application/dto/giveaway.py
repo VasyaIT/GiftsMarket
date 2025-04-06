@@ -13,3 +13,8 @@ class CreateGiveawayDTO(BaseDTO):
     quantity_members: int
     end_time: datetime
     price: float = Field(ge=0)
+
+
+class JoinGiveawayDTO(BaseDTO):
+    id: int
+    count_tickets: int = Field(default=1, ge=1)

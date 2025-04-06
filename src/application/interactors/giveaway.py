@@ -3,7 +3,7 @@ from aiogram.exceptions import TelegramAPIError
 
 from src.application.common.const import DEFAULT_CHANNEL_IMAGE_URL
 from src.application.common.utils import is_subscriber
-from src.application.dto.giveaway import CreateGiveawayDTO
+from src.application.dto.giveaway import CreateGiveawayDTO, JoinGiveawayDTO
 from src.application.interactors.errors import (
     GiveawaySubscriptionError,
     NotAccessError,
@@ -51,7 +51,7 @@ class CreateGiveawayInteractor(Interactor[CreateGiveawayDTO, None]):
         await self._db_session.commit()
 
 
-class GiveawayJoinInteractor(Interactor[int, None]):
+class GiveawayJoinInteractor(Interactor[JoinGiveawayDTO, None]):
     def __init__(
         self,
         db_session: DBSession,
@@ -66,23 +66,24 @@ class GiveawayJoinInteractor(Interactor[int, None]):
         self._user = user
         self._bot = bot
 
-    async def __call__(self, giveaway_id: int) -> None:
-        giveaway = await self._giveaway_gateway.get_one(id=giveaway_id)
+    async def __call__(self, data: JoinGiveawayDTO) -> None:
+        giveaway = await self._giveaway_gateway.get_one(id=data.id)
         if not giveaway:
             raise NotFoundError("Giveaway not found")
         if giveaway.user_id == self._user.id:
             raise NotAccessError("Forbidden")
 
+        participants_ids = giveaway.participants_ids
+        if len(participants_ids) + data.count_tickets > giveaway.quantity_members:
+            raise NotAccessError("There are too many participants")
+
         if giveaway.price > 0:
+            price = data.count_tickets * giveaway.price
             user = await self._user_gateway.update_balance(
-                UpdateUserBalanceDM(id=self._user.id, amount=-giveaway.price)
+                UpdateUserBalanceDM(id=self._user.id, amount=-price)
             )
             if user and user.balance < 0:
                 raise NotEnoughBalanceError("User does not have enough balance")
-
-        participants_ids = giveaway.participants_ids
-        if len(participants_ids) + 1 > giveaway.quantity_members:
-            raise NotAccessError("There are too many participants")
 
         for channel_username in giveaway.channels_usernames:
             if not await is_subscriber(self._bot, channel_username, self._user.id):
