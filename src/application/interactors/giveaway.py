@@ -1,3 +1,5 @@
+from asyncio import gather
+
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
 
@@ -111,11 +113,13 @@ class GetGiveawayInteractor(Interactor[int, FullGiveawayDM]):
         self,
         giveaway_gateway: GiveawayReader,
         market_gateway: OrderReader,
+        telegram_channel_interactor: "TelegramChannelInfoInteractor",
         user: UserDM,
         bot: Bot,
     ) -> None:
         self._giveaway_gateway = giveaway_gateway
         self._market_gateway = market_gateway
+        self._telegram_channel_interactor = telegram_channel_interactor
         self._user = user
         self._bot = bot
 
@@ -125,7 +129,9 @@ class GetGiveawayInteractor(Interactor[int, FullGiveawayDM]):
             raise NotFoundError("Giveaway not found")
 
         gifts = await self._market_gateway.get_user_gifts_by_ids(giveaway.gifts_ids)
-        return FullGiveawayDM(**giveaway.__dict__, gifts=gifts)
+        tasks = [self._telegram_channel_interactor(username) for username in giveaway.channels_usernames]
+        channels = await gather(*tasks)
+        return FullGiveawayDM(**giveaway.__dict__, gifts=gifts, channels=channels)
 
 
 class TelegramChannelInfoInteractor(Interactor[str, TelegramChannelDM]):

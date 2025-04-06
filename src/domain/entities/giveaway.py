@@ -31,3 +31,4 @@ class GiveawayDM(CreateGiveawayDM):
 
 class FullGiveawayDM(GiveawayDM):
     gifts: list[UserGiftDM]
+    channels: list[TelegramChannelDM]
