@@ -76,7 +76,10 @@ class GiveawayJoinInteractor(Interactor[JoinGiveawayDTO, None]):
             raise NotAccessError("Forbidden")
 
         participants_ids = giveaway.participants_ids
-        if len(participants_ids) + data.count_tickets > giveaway.quantity_members:
+        if (
+            giveaway.quantity_members
+            and len(participants_ids) + data.count_tickets > giveaway.quantity_members
+        ):
             raise NotAccessError("There are too many participants")
 
         if giveaway.price > 0:
