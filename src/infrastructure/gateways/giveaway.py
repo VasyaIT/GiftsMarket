@@ -30,9 +30,11 @@ class GiveawayGateway(GiveawaySaver, GiveawayReader):
             return GiveawayDM(**giveaway.__dict__)
 
     async def get_many(self, type: str, user_id: int) -> list[GiveawayDM]:
-        conditions = [Giveaway.is_completed == False, Giveaway.end_time > datetime.now()]
+        conditions = [Giveaway.end_time > datetime.now()]
         if type == "user":
-            conditions.append(or_(Giveaway.user_id == user_id, Giveaway.participants_ids.contains([user_id])))
+            conditions.append(
+                or_(Giveaway.user_id == user_id, Giveaway.participants_ids.contains([user_id]))
+            )
 
         stmt = select(Giveaway).where(*conditions).order_by(Giveaway.end_time)
         result = await self._session.execute(stmt)
