@@ -11,28 +11,34 @@ sys.path.append(str(BASE_DIR))
 from src.entrypoint.config import Config  # noqa: E402
 from src.infrastructure.database.session import new_session_maker  # noqa: E402
 from src.infrastructure.gateways.giveaway import GiveawayGateway  # noqa: E402
+from src.infrastructure.gateways.market import MarketGateway  # noqa: E402
 
 
 async def start_giveaway_tracker() -> None:
     config = Config()
+    queue = Queue("gifts", {"connection": config.redis.REDIS_URL})  # type: ignore
     session_maker = new_session_maker(config.postgres)
+
     async with session_maker() as session:
-        giveaway_gateway = GiveawayGateway(session)
+        giveaway_gateway, market_gateway = GiveawayGateway(session), MarketGateway(session)
         gateways = await giveaway_gateway.get_ended_giveaways()
         if not gateways:
             return
         for giveaway in gateways:
+            gifts = await market_gateway.get_user_gifts_by_ids(giveaway.gifts_ids)
             count_participants = len(giveaway.participants_ids)
             if not count_participants:
                 continue
-            for index, gift_id in enumerate(giveaway.gifts_ids):
+            tasks = []
+            for index, gift in enumerate(gifts):
                 user_id = giveaway.participants_ids[index % count_participants]
-                queue = Queue("gifts", {"connection": config.redis.REDIS_URL})  # type: ignore
-                await queue.add("send_gift", {"user_id": user_id, "gift_id": gift_id})
-                await queue.close()
+                tasks.append(queue.add("send_gift", {"user_id": user_id, "gift_id": gift.gift_id}))
+            await asyncio.gather(*tasks)
 
             await giveaway_gateway.update_giveaway({"is_completed": True}, id=giveaway.id)
             await session.commit()
+
+    await queue.close()
 
 
 if __name__ == "__main__":

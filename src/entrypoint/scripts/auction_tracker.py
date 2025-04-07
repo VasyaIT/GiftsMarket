@@ -22,6 +22,8 @@ from src.infrastructure.gateways.user import UserGateway  # noqa: E402
 async def start_auction_tracker() -> None:
     config = Config()
     session_maker = new_session_maker(config.postgres)
+    queue = Queue("gifts", {"connection": config.redis.REDIS_URL})  # type: ignore
+
     async with session_maker() as session:
         market_gateway, user_gateway = MarketGateway(session), UserGateway(session)
         history_gateway = HistoryGateway(session)
@@ -53,9 +55,9 @@ async def start_auction_tracker() -> None:
             )
             await session.commit()
 
-            queue = Queue("gifts", {"connection": config.redis.REDIS_URL})  # type: ignore
             await queue.add("send_gift", {"user_id": order.buyer_id, "gift_id": order.gift_id})
-            await queue.close()
+
+    await queue.close()
 
 
 if __name__ == "__main__":
