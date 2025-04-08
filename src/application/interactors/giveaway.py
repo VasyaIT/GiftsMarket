@@ -91,7 +91,7 @@ class GiveawayJoinInteractor(Interactor[JoinGiveawayDTO, None]):
                 raise NotEnoughBalanceError("User does not have enough balance")
 
         for channel_username in giveaway.channels_usernames:
-            if not await is_subscriber(self._bot, channel_username, self._user.id):
+            if not await is_subscriber(self._bot, f"@{channel_username}", self._user.id):
                 raise GiveawaySubscriptionError("The conditions of the giveaway are not fulfilled")
             participants_ids.append(self._user.id)
 
