@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import insert, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,7 +30,7 @@ class GiveawayGateway(GiveawaySaver, GiveawayReader):
             return GiveawayDM(**giveaway.__dict__)
 
     async def get_many(self, type: str, user_id: int) -> list[GiveawayDM]:
-        conditions = [Giveaway.end_time > datetime.now()]
+        conditions = [Giveaway.end_time > datetime.now(tz=timezone.utc)]
         if type == "user":
             conditions.append(
                 or_(Giveaway.user_id == user_id, Giveaway.participants_ids.contains([user_id]))
@@ -41,6 +41,8 @@ class GiveawayGateway(GiveawaySaver, GiveawayReader):
         return [GiveawayDM(**giveaway.__dict__) for giveaway in result.scalars().all()]
 
     async def get_ended_giveaways(self) -> list[GiveawayDM]:
-        stmt = select(Giveaway).where(datetime.now() > Giveaway.end_time, Giveaway.is_completed == False)
+        stmt = select(Giveaway).where(
+            datetime.now(tz=timezone.utc) > Giveaway.end_time, Giveaway.is_completed == False
+        )
         result = await self._session.execute(stmt)
         return [GiveawayDM(**giveaway.__dict__) for giveaway in result.scalars().all()]

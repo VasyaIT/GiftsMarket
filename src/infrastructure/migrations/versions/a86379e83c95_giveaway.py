@@ -7,9 +7,10 @@ Create Date: 2025-04-06 01:36:17.237680
 """
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
+
 
 # revision identifiers, used by Alembic.
 revision: str = 'a86379e83c95'
@@ -29,7 +30,7 @@ def upgrade() -> None:
     sa.Column('participants_ids', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
     sa.Column('channels_usernames', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
     sa.Column('quantity_members', sa.Integer(), nullable=False),
-    sa.Column('end_time', sa.TIMESTAMP(), nullable=False),
+    sa.Column('end_time', sa.TIMESTAMP(timezone=True), nullable=False),
     sa.Column('is_completed', sa.Boolean(), nullable=False),
     sa.Column('user_id', sa.BigInteger(), nullable=False),
     sa.Column('created_at', sa.TIMESTAMP(timezone=True), server_default=sa.text('now()'), nullable=False),
