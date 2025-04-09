@@ -143,6 +143,9 @@ class AppProvider(FastapiProvider):
     giveaway_join_interactor = provide(giveaway.GiveawayJoinInteractor, scope=Scope.REQUEST)
     get_giveaway_interactor = provide(giveaway.GetGiveawayInteractor, scope=Scope.REQUEST)
     get_all_giveaways_interactor = provide(giveaway.GetAllGiveawaysInteractor, scope=Scope.REQUEST)
+    get_giveaway_participants_interactor = provide(
+        giveaway.GetGiveawayParticipantsInteractor, scope=Scope.REQUEST
+    )
     telegram_channel_info_interactor = provide(
         giveaway.TelegramChannelInfoInteractor, scope=Scope.REQUEST
     )

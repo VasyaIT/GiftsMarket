@@ -32,3 +32,11 @@ class GiveawayDM(CreateGiveawayDM):
 class FullGiveawayDM(GiveawayDM):
     gifts: list[UserGiftDM]
     channels: list[TelegramChannelDM]
+
+
+class GiveawayParticipantDM(BaseModel):
+    image_url: str
+    name: str
+    chance_win: float
+    count_referrals: int
+    is_win: bool

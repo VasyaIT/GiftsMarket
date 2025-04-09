@@ -3,10 +3,16 @@ from dishka.integrations.fastapi import inject
 from fastapi import APIRouter, HTTPException
 from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
+from src.application.dto.common import IdDTO
 from src.application.dto.giveaway import CreateGiveawayDTO, JoinGiveawayDTO
 from src.application.interactors import errors
 from src.application.interactors import giveaway as interactors
-from src.domain.entities.giveaway import FullGiveawayDM, GiveawayDM, TelegramChannelDM
+from src.domain.entities.giveaway import (
+    FullGiveawayDM,
+    GiveawayDM,
+    GiveawayParticipantDM,
+    TelegramChannelDM,
+)
 
 
 giveaway_router = APIRouter(tags=["Giveaway"])
@@ -45,6 +51,14 @@ async def check_giveaway_subscribes(
         errors.NotAccessError,
     ) as e:
         raise HTTPException(HTTP_400_BAD_REQUEST, str(e))
+
+
+@giveaway_router.get("/giveaway/participants")
+@inject
+async def get_giveaway_participants(
+    dto: IdDTO, interactor: FromDishka[interactors.GetGiveawayParticipantsInteractor]
+) -> list[GiveawayParticipantDM]:
+    return await interactor(dto.id)
 
 
 @giveaway_router.post("/giveaway/{id}")

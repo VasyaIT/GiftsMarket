@@ -17,7 +17,13 @@ from src.application.interfaces.giveaway import GiveawayManager, GiveawayReader,
 from src.application.interfaces.interactor import Interactor
 from src.application.interfaces.market import OrderManager, OrderReader
 from src.application.interfaces.user import UserSaver
-from src.domain.entities.giveaway import CreateGiveawayDM, FullGiveawayDM, GiveawayDM, TelegramChannelDM
+from src.domain.entities.giveaway import (
+    CreateGiveawayDM,
+    FullGiveawayDM,
+    GiveawayDM,
+    GiveawayParticipantDM,
+    TelegramChannelDM,
+)
 from src.domain.entities.user import UpdateUserBalanceDM, UserDM
 
 
@@ -100,6 +106,38 @@ class GiveawayJoinInteractor(Interactor[JoinGiveawayDTO, None]):
         )
 
         await self._db_session.commit()
+
+
+class GetGiveawayParticipantsInteractor(Interactor[int, list[GiveawayParticipantDM]]):
+    def __init__(self, giveaway_gateway: GiveawayReader, user: UserDM) -> None:
+        self._giveaway_gateway = giveaway_gateway
+        self._user = user
+
+    async def __call__(self, giveaway_id: int) -> list[GiveawayParticipantDM]:
+        data = [
+            GiveawayParticipantDM(
+                image_url=DEFAULT_CHANNEL_IMAGE_URL,
+                name="Tapovich",
+                count_referrals=1,
+                chance_win=0.5,
+                is_win=True,
+            ),
+            GiveawayParticipantDM(
+                image_url=DEFAULT_CHANNEL_IMAGE_URL,
+                name="Test user",
+                count_referrals=1,
+                chance_win=0.1,
+                is_win=False,
+            ),
+            GiveawayParticipantDM(
+                image_url=DEFAULT_CHANNEL_IMAGE_URL,
+                name="Test",
+                count_referrals=2,
+                chance_win=0.1,
+                is_win=True,
+            ),
+        ]
+        return data
 
 
 class GetAllGiveawaysInteractor(Interactor[str, list[GiveawayDM]]):
