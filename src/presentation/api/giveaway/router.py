@@ -3,7 +3,6 @@ from dishka.integrations.fastapi import inject
 from fastapi import APIRouter, HTTPException
 from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
-from src.application.dto.common import IdDTO
 from src.application.dto.giveaway import CreateGiveawayDTO, JoinGiveawayDTO
 from src.application.interactors import errors
 from src.application.interactors import giveaway as interactors
@@ -53,12 +52,12 @@ async def check_giveaway_subscribes(
         raise HTTPException(HTTP_400_BAD_REQUEST, str(e))
 
 
-@giveaway_router.get("/giveaway/participants")
+@giveaway_router.get("/giveaway/{id}/participants")
 @inject
 async def get_giveaway_participants(
-    dto: IdDTO, interactor: FromDishka[interactors.GetGiveawayParticipantsInteractor]
+    id: int, interactor: FromDishka[interactors.GetGiveawayParticipantsInteractor]
 ) -> list[GiveawayParticipantDM]:
-    return await interactor(dto.id)
+    return await interactor(id)
 
 
 @giveaway_router.post("/giveaway/{id}")
