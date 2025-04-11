@@ -17,4 +17,5 @@ class CreateGiveawayDTO(BaseDTO):
 
 class JoinGiveawayDTO(BaseDTO):
     id: int
+    referrer_id: int | None = None
     count_tickets: int = Field(default=1, ge=1)

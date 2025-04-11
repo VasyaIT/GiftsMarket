@@ -15,6 +15,8 @@ class Giveaway(Base):
     price: Mapped[float] = mapped_column(Float)
     gifts_ids: Mapped[list[int]] = mapped_column(JSONB)
     participants_ids: Mapped[list[int]] = mapped_column(JSONB)
+    winners_ids: Mapped[list[int]] = mapped_column(JSONB)
+    referrers_ids: Mapped[list[int]] = mapped_column(JSONB)
     channels_usernames: Mapped[list[str]] = mapped_column(JSONB)
     quantity_members: Mapped[int] = mapped_column(Integer)
     end_time: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True))

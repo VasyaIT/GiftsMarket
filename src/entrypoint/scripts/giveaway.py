@@ -25,6 +25,7 @@ async def start_giveaway_tracker() -> None:
         if not gateways:
             return
         for giveaway in gateways:
+            winners_ids = []
             gifts = await market_gateway.get_user_gifts_by_ids(giveaway.gifts_ids)
             count_participants = len(giveaway.participants_ids)
             if not count_participants:
@@ -32,10 +33,13 @@ async def start_giveaway_tracker() -> None:
             tasks = []
             for index, gift in enumerate(gifts):
                 user_id = giveaway.participants_ids[index % count_participants]
+                winners_ids.append(user_id)
                 tasks.append(queue.add("send_gift", {"user_id": user_id, "gift_id": gift.gift_id}))
             await asyncio.gather(*tasks)
 
-            await giveaway_gateway.update_giveaway({"is_completed": True}, id=giveaway.id)
+            await giveaway_gateway.update_giveaway(
+                {"is_completed": True, "winners_ids": winners_ids}, id=giveaway.id
+            )
             await session.commit()
 
     await queue.close()

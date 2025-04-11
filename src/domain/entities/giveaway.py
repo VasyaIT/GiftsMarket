@@ -21,6 +21,8 @@ class CreateGiveawayDM(BaseModel):
     end_time: datetime
     price: float
     participants_ids: list[int] = []
+    winners_ids: list[int] = []
+    referrers_ids: list[int] = []
 
     user_id: int
 
@@ -35,8 +37,8 @@ class FullGiveawayDM(GiveawayDM):
 
 
 class GiveawayParticipantDM(BaseModel):
-    image_url: str
-    name: str
+    photo_url: str
+    name: str | None
     chance_win: float
     count_referrals: int
     is_win: bool

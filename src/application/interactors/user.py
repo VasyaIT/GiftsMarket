@@ -5,6 +5,7 @@ from aiogram import Bot
 from aiogram.utils.payload import decode_payload, encode_payload
 from pyrogram.client import Client
 
+from src.application.common.const import DEFAULT_AVATAR_URL
 from src.application.common.send_gift import send_gift
 from src.application.common.utils import build_direct_link, generate_deposit_comment
 from src.application.dto.market import UpdateOrderDTO
@@ -58,10 +59,14 @@ class LoginInteractor(Interactor[LoginDTO, str]):
         user_data = valid_data.user
         user_id = user_data["id"]
         user = await self._user_gateway.get_by_id(user_id)
+        photo_url = user_data.get("photo_url")
+        if not photo_url:
+            photo_url = DEFAULT_AVATAR_URL
         if not user:
             deposit_comment = generate_deposit_comment()
             user_dm = CreateUserDM(
                 id=user_id,
+                photo_url=photo_url,
                 username=user_data.get("username"),
                 first_name=user_data.get("first_name"),
                 deposit_comment=deposit_comment,
@@ -79,6 +84,9 @@ class LoginInteractor(Interactor[LoginDTO, str]):
 
         if user.username != user_data.get("username"):
             await self._user_gateway.update_user(dict(username=user_data.get("username")), id=user_id)
+            await self._db_session.commit()
+        if user.photo_url != photo_url:
+            await self._user_gateway.update_user(dict(username=photo_url), id=user_id)
             await self._db_session.commit()
         return self._token_gateway.encode(user_id)
 

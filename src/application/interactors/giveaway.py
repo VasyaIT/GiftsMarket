@@ -1,9 +1,10 @@
 from asyncio import gather
+from datetime import datetime, timezone
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
 
-from src.application.common.const import DEFAULT_CHANNEL_IMAGE_URL
+from src.application.common.const import DEFAULT_AVATAR_URL
 from src.application.common.utils import is_subscriber
 from src.application.dto.giveaway import CreateGiveawayDTO, JoinGiveawayDTO
 from src.application.interactors.errors import (
@@ -16,7 +17,7 @@ from src.application.interfaces.database import DBSession
 from src.application.interfaces.giveaway import GiveawayManager, GiveawayReader, GiveawaySaver
 from src.application.interfaces.interactor import Interactor
 from src.application.interfaces.market import OrderManager, OrderReader
-from src.application.interfaces.user import UserSaver
+from src.application.interfaces.user import UserReader, UserSaver
 from src.domain.entities.giveaway import (
     CreateGiveawayDM,
     FullGiveawayDM,
@@ -49,6 +50,10 @@ class CreateGiveawayInteractor(Interactor[CreateGiveawayDTO, None]):
         if not gifts:
             raise NotFoundError("Gifts not found")
 
+        for channel_username in data.channels_usernames:
+            if not await is_subscriber(self._bot, f"@{channel_username}", self._bot.id):
+                raise GiveawaySubscriptionError(f"Bot not in channel @{channel_username}")
+
         await self._market_gateway.update_giveaway_gifts(
             {"is_completed": True}, [gift.id for gift in gifts]
         )
@@ -76,12 +81,15 @@ class GiveawayJoinInteractor(Interactor[JoinGiveawayDTO, None]):
 
     async def __call__(self, data: JoinGiveawayDTO) -> None:
         giveaway = await self._giveaway_gateway.get_one(id=data.id)
-        if not giveaway:
+        if not giveaway or giveaway.end_time < datetime.now(tz=timezone.utc):
             raise NotFoundError("Giveaway not found")
         if giveaway.user_id == self._user.id:
             raise NotAccessError("Forbidden")
 
         participants_ids = giveaway.participants_ids
+        referrers_ids = giveaway.referrers_ids
+        if data.referrer_id:
+            referrers_ids.append(data.referrer_id)
         if (
             giveaway.quantity_members
             and len(participants_ids) + data.count_tickets > giveaway.quantity_members
@@ -102,42 +110,46 @@ class GiveawayJoinInteractor(Interactor[JoinGiveawayDTO, None]):
             participants_ids.append(self._user.id)
 
         await self._giveaway_gateway.update_giveaway(
-            {"participants_ids": participants_ids}, id=giveaway.id
+            {"participants_ids": participants_ids, "referrers_ids": referrers_ids}, id=giveaway.id
         )
 
         await self._db_session.commit()
 
 
 class GetGiveawayParticipantsInteractor(Interactor[int, list[GiveawayParticipantDM]]):
-    def __init__(self, giveaway_gateway: GiveawayReader, user: UserDM) -> None:
+    def __init__(self, giveaway_gateway: GiveawayReader, user_gateway: UserReader) -> None:
         self._giveaway_gateway = giveaway_gateway
-        self._user = user
+        self._user_gateway = user_gateway
 
     async def __call__(self, giveaway_id: int) -> list[GiveawayParticipantDM]:
-        data = [
-            GiveawayParticipantDM(
-                image_url=DEFAULT_CHANNEL_IMAGE_URL,
-                name="Tapovich",
-                count_referrals=1,
-                chance_win=0.5,
-                is_win=True,
-            ),
-            GiveawayParticipantDM(
-                image_url=DEFAULT_CHANNEL_IMAGE_URL,
-                name="Test user",
-                count_referrals=1,
-                chance_win=0.1,
-                is_win=False,
-            ),
-            GiveawayParticipantDM(
-                image_url=DEFAULT_CHANNEL_IMAGE_URL,
-                name="Test",
-                count_referrals=2,
-                chance_win=0.1,
-                is_win=True,
-            ),
-        ]
-        return data
+        giveaway = await self._giveaway_gateway.get_one(id=giveaway_id)
+        if not giveaway:
+            raise NotFoundError("Giveaway not found")
+        tasks = [self._user_gateway.get_by_id(id) for id in giveaway.participants_ids]
+        count_referrers, count_participants = len(giveaway.referrers_ids), len(giveaway.participants_ids)
+        participants = await gather(*tasks)
+        all_win = len(giveaway.gifts_ids) >= count_participants
+        result = []
+        for participant in participants:
+            if not participant:
+                continue
+            chance_win = 100 / count_participants
+            count_participant_referrals = giveaway.referrers_ids.count(participant.id)
+            if count_participant_referrals:
+                chance_win += (count_participant_referrals / (4 * count_referrers)) * 100
+            chance_win = min(chance_win, 95)
+            if all_win:
+                chance_win = 100
+            result.append(
+                GiveawayParticipantDM(
+                    photo_url=participant.photo_url,
+                    name=participant.first_name,
+                    count_referrals=count_participant_referrals,
+                    chance_win=chance_win,
+                    is_win=participant.id in giveaway.winners_ids,
+                ),
+            )
+        return result
 
 
 class GetAllGiveawaysInteractor(Interactor[str, list[GiveawayDM]]):
@@ -184,7 +196,7 @@ class TelegramChannelInfoInteractor(Interactor[str, TelegramChannelDM]):
             channel_info = await self._bot.get_chat(f"@{username}")
         except TelegramAPIError:
             raise NotFoundError("Channel not found")
-        image_url = DEFAULT_CHANNEL_IMAGE_URL
+        image_url = DEFAULT_AVATAR_URL
         if channel_info.photo:
             file_id = channel_info.photo.small_file_id
             file = await self._bot.get_file(file_id)

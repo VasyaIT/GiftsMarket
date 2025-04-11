@@ -57,7 +57,10 @@ async def check_giveaway_subscribes(
 async def get_giveaway_participants(
     id: int, interactor: FromDishka[interactors.GetGiveawayParticipantsInteractor]
 ) -> list[GiveawayParticipantDM]:
-    return await interactor(id)
+    try:
+        return await interactor(id)
+    except errors.NotFoundError as e:
+        raise HTTPException(HTTP_404_NOT_FOUND, str(e))
 
 
 @giveaway_router.post("/giveaway/{id}")

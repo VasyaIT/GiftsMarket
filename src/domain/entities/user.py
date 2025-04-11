@@ -8,6 +8,7 @@ from src.domain.entities.wallet import WithdrawRequestDM
 
 class CreateUserDM(BaseModel):
     id: int
+    photo_url: str
     username: str | None
     first_name: str | None
     deposit_comment: str
@@ -15,6 +16,7 @@ class CreateUserDM(BaseModel):
 
 class UserDM(BaseModel):
     id: int
+    photo_url: str
     username: str | None
     first_name: str | None
     deposit_comment: str
