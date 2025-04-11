@@ -86,7 +86,7 @@ class LoginInteractor(Interactor[LoginDTO, str]):
             await self._user_gateway.update_user(dict(username=user_data.get("username")), id=user_id)
             await self._db_session.commit()
         if user.photo_url != photo_url:
-            await self._user_gateway.update_user(dict(username=photo_url), id=user_id)
+            await self._user_gateway.update_user(dict(photo_url=photo_url), id=user_id)
             await self._db_session.commit()
         return self._token_gateway.encode(user_id)
 
