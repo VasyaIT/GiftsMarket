@@ -1,6 +1,4 @@
-import logging
 from datetime import datetime, timezone
-from logging.handlers import RotatingFileHandler
 
 from aiogram import Bot
 from fastapi import BackgroundTasks
@@ -9,7 +7,7 @@ from pyrogram.client import Client
 from src.application.common.cart import CartGiftDTO
 from src.application.common.const import MAX_GIFT_NUMBER, GiftRarity, HistoryType, PriceList, ShopType
 from src.application.common.send_gift import send_gift
-from src.application.common.utils import build_direct_link, send_message
+from src.application.common.utils import build_direct_link, get_file_logger, send_message
 from src.application.dto.market import BidDTO, CreateOrderDTO
 from src.application.interactors import errors
 from src.application.interfaces.database import DBSession
@@ -28,17 +26,7 @@ from src.presentation.bot.keyboards.base import order_kb
 from src.presentation.bot.services import text
 
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-handler = RotatingFileHandler(
-    filename="src/logs/market.log",
-    maxBytes=1 * 1024 * 1024 * 1024,
-    backupCount=5,
-    encoding="utf-8",
-)
-logger.addHandler(handler)
-formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-handler.setFormatter(formatter)
+logger = get_file_logger(__name__, "src/logs/market.log")
 
 
 class CreateOrderInteractor(Interactor[CreateOrderDTO, None]):

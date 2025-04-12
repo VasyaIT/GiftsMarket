@@ -6,8 +6,11 @@ from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from src.application.common.utils import send_message
+from src.application.common.utils import get_file_logger, send_message
 from src.entrypoint.config import BotConfig, Config
+
+
+logger = get_file_logger(__name__, "src/logs/errors.log")
 
 
 def setup_middlewares(app: FastAPI, config: Config, bot: Bot) -> None:
@@ -16,7 +19,7 @@ def setup_middlewares(app: FastAPI, config: Config, bot: Bot) -> None:
         allow_origins=config.app.cors_allowed_origins,
         allow_methods=["OPTIONS", "GET", "POST", "PUT", "PATCH", "DELETE"],
         allow_headers=["*"],
-        allow_credentials=True
+        allow_credentials=True,
     )
     app.add_middleware(HandleExceptionMiddleware, bot, config.bot)
 
@@ -31,6 +34,8 @@ class HandleExceptionMiddleware(BaseHTTPMiddleware):
         try:
             return await call_next(request)
         except Exception:
-            message = f"{format_exc(chain=False)[2600:2600 + 4096]}"
+            raw_message = format_exc(chain=False)
+            logger.error(raw_message)
+            message = f"{raw_message[3800 : 3800 + 4096]}"
             await send_message(self._bot, hpre(message), self._bot_config.owners_chat_id)
             raise

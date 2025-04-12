@@ -1,13 +1,10 @@
-import logging
-from logging.handlers import RotatingFileHandler
-
 from aiogram import Bot
 from aiogram.utils.payload import decode_payload, encode_payload
 from pyrogram.client import Client
 
 from src.application.common.const import DEFAULT_AVATAR_URL
 from src.application.common.send_gift import send_gift
-from src.application.common.utils import build_direct_link, generate_deposit_comment
+from src.application.common.utils import build_direct_link, generate_deposit_comment, get_file_logger
 from src.application.dto.market import UpdateOrderDTO
 from src.application.dto.user import LoginDTO, UserDTO
 from src.application.interactors.errors import GiftSendError, NotFoundError
@@ -22,17 +19,7 @@ from src.domain.entities.user import CreateUserDM, UserDM
 from src.entrypoint.config import Config
 
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-handler = RotatingFileHandler(
-    filename="src/logs/user.log",
-    maxBytes=1 * 1024 * 1024 * 1024,
-    backupCount=5,
-    encoding="utf-8",
-)
-logger.addHandler(handler)
-formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-handler.setFormatter(formatter)
+logger = get_file_logger(__name__, "src/logs/user.log")
 
 
 class LoginInteractor(Interactor[LoginDTO, str]):

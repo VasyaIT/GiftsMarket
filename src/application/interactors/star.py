@@ -1,11 +1,9 @@
-import logging
 from datetime import datetime, timedelta
-from logging.handlers import RotatingFileHandler
 
 from aiogram import Bot
 
 from src.application.common.const import MINUTES_TO_SEND_GIFT, OrderStatus, PriceList
-from src.application.common.utils import build_direct_link, send_message
+from src.application.common.utils import build_direct_link, get_file_logger, send_message
 from src.application.dto.star import CreateStarOrderDTO, StarsIdDTO
 from src.application.interactors import errors
 from src.application.interfaces.database import DBSession
@@ -20,17 +18,7 @@ from src.presentation.bot.keyboards.base import stars_order_kb
 from src.presentation.bot.services import text
 
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-handler = RotatingFileHandler(
-    filename="src/logs/star.log",
-    maxBytes=1 * 1024 * 1024 * 1024,
-    backupCount=5,
-    encoding="utf-8",
-)
-logger.addHandler(handler)
-formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-handler.setFormatter(formatter)
+logger = get_file_logger(__name__, "src/logs/star.log")
 
 
 class CreateStarOrderInteractor(Interactor[CreateStarOrderDTO, None]):
@@ -69,7 +57,7 @@ class BuyStarsInteractor(Interactor[StarsIdDTO, None]):
         user_gateway: UserSaver,
         user: UserDM,
         bot: Bot,
-        bot_info: BotInfoDM
+        bot_info: BotInfoDM,
     ) -> None:
         self._db_session = db_session
         self._star_gateway = star_gateway
@@ -91,10 +79,7 @@ class BuyStarsInteractor(Interactor[StarsIdDTO, None]):
             raise errors.NotAccessError("Forbidden")
 
         buyer = await self._user_gateway.update_balance(
-            UpdateUserBalanceDM(
-                id=self._user.id,
-                amount=-order.price
-            )
+            UpdateUserBalanceDM(id=self._user.id, amount=-order.price)
         )
         if buyer.balance < 0:  # type: ignore
             await self._db_session.rollback()
@@ -107,7 +92,7 @@ class BuyStarsInteractor(Interactor[StarsIdDTO, None]):
             self._bot,
             text.get_buy_stars_text(order.amount),
             [order.seller_id],
-            reply_markup=stars_order_kb(order.amount, direct_link)
+            reply_markup=stars_order_kb(order.amount, direct_link),
         )
 
         logger.info(
@@ -124,7 +109,7 @@ class CancelStarOrderInteractor(Interactor[StarsIdDTO, None]):
         user_gateway: UserSaver,
         user: UserDM,
         bot: Bot,
-        bot_info: BotInfoDM
+        bot_info: BotInfoDM,
     ) -> None:
         self._db_session = db_session
         self._star_gateway = star_gateway
@@ -144,10 +129,7 @@ class CancelStarOrderInteractor(Interactor[StarsIdDTO, None]):
             raise errors.NotFoundError("Order not found")
 
         await self._user_gateway.update_balance(
-            UpdateUserBalanceDM(
-                id=self._user.id,
-                amount=order.price
-            )
+            UpdateUserBalanceDM(id=self._user.id, amount=order.price)
         )
 
         await self._db_session.commit()
@@ -172,7 +154,7 @@ class SellerAcceptStarOrderInteractor(Interactor[StarsIdDTO, None]):
         user_gateway: UserSaver,
         user: UserDM,
         bot: Bot,
-        bot_info: BotInfoDM
+        bot_info: BotInfoDM,
     ) -> None:
         self._db_session = db_session
         self._star_gateway = star_gateway
@@ -205,7 +187,7 @@ class SellerAcceptStarOrderInteractor(Interactor[StarsIdDTO, None]):
             self._bot,
             text.get_seller_accept_star_text(order.amount),
             [order.buyer_id],
-            reply_markup=stars_order_kb(order.amount, direct_link)
+            reply_markup=stars_order_kb(order.amount, direct_link),
         )
 
         logger.info(
@@ -223,7 +205,7 @@ class SellerCancelStarOrderInteractor(Interactor[StarsIdDTO, None]):
         user: UserDM,
         config: Config,
         bot: Bot,
-        bot_info: BotInfoDM
+        bot_info: BotInfoDM,
     ) -> None:
         self._db_session = db_session
         self._star_gateway = star_gateway
@@ -256,10 +238,7 @@ class SellerCancelStarOrderInteractor(Interactor[StarsIdDTO, None]):
             )
 
         await self._user_gateway.update_balance(
-            UpdateUserBalanceDM(
-                id=order.buyer_id,
-                amount=order.price
-            )
+            UpdateUserBalanceDM(id=order.buyer_id, amount=order.price)
         )
         values = dict(status=OrderStatus.ON_MARKET, buyer_id=None, created_order_date=None)
         await self._star_gateway.update(values, id=data.id)
@@ -270,7 +249,7 @@ class SellerCancelStarOrderInteractor(Interactor[StarsIdDTO, None]):
             await send_message(
                 self._bot,
                 text.get_seller_cancel_star_text(order.amount),
-                [order.buyer_id]  # type: ignore
+                [order.buyer_id],  # type: ignore
             )
             logger.info(
                 "SellerCancelStarOrderInteractor: "
@@ -291,7 +270,7 @@ class ConfirmStarOrderInteractor(Interactor[StarsIdDTO, None]):
         user_gateway: UserSaver,
         user: UserDM,
         bot: Bot,
-        bot_info: BotInfoDM
+        bot_info: BotInfoDM,
     ) -> None:
         self._db_session = db_session
         self._star_gateway = star_gateway
@@ -323,7 +302,7 @@ class ConfirmStarOrderInteractor(Interactor[StarsIdDTO, None]):
             self._bot,
             text.get_confirm_transfer_stars_text(order.amount),
             [order.buyer_id],
-            reply_markup=stars_order_kb(order.amount, direct_link)
+            reply_markup=stars_order_kb(order.amount, direct_link),
         )
 
         logger.info(
@@ -341,7 +320,7 @@ class AcceptTransferStarOrderInteractor(Interactor[StarsIdDTO, None]):
         user: UserDM,
         config: Config,
         bot: Bot,
-        bot_info: BotInfoDM
+        bot_info: BotInfoDM,
     ) -> None:
         self._db_session = db_session
         self._star_gateway = star_gateway
@@ -381,12 +360,11 @@ class AcceptTransferStarOrderInteractor(Interactor[StarsIdDTO, None]):
             self._bot,
             text.get_accept_transfer_stars_text(order.amount),
             [order.buyer_id, order.seller_id],  # type: ignore
-            reply_markup=stars_order_kb(order.amount, direct_link)
+            reply_markup=stars_order_kb(order.amount, direct_link),
         )
 
         logger.info(
-            "AcceptTransferStarOrderInteractor: "
-            f"Stars order id: {data.id} successfully completed"
+            f"AcceptTransferStarOrderInteractor: Stars order id: {data.id} successfully completed"
         )
 
 
@@ -407,9 +385,9 @@ class GetStarOrderInteractor(Interactor[int, StarOrderDM]):
         order = await self._star_gateway.get_one(id=order_id)
         if not order:
             raise errors.NotFoundError("Star order not found")
-        if (
-            order.status != OrderStatus.ON_MARKET
-            and self._user.id not in (order.seller_id, order.buyer_id)
+        if order.status != OrderStatus.ON_MARKET and self._user.id not in (
+            order.seller_id,
+            order.buyer_id,
         ):
             raise errors.NotAccessError("Forbidden")
         return order
@@ -433,7 +411,8 @@ class GetAllStarOrderInteractor(Interactor[None, list[StarOrderDM]]):
         result = []
         for order in orders:
             if (
-                not on_market and order.status != OrderStatus.ON_MARKET
+                not on_market
+                and order.status != OrderStatus.ON_MARKET
                 and self._user.id in (order.seller_id, order.buyer_id)
             ):
                 result.append(order)
