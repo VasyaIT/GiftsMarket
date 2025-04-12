@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
 
-from src.application.common.const import DEFAULT_AVATAR_URL
+from src.application.common.const import DEFAULT_AVATAR_URL, GiveawayType
 from src.application.common.utils import is_subscriber
 from src.application.dto.giveaway import CreateGiveawayDTO, JoinGiveawayDTO
 from src.application.interactors.errors import (
@@ -83,11 +83,15 @@ class GiveawayJoinInteractor(Interactor[JoinGiveawayDTO, None]):
         giveaway = await self._giveaway_gateway.get_one(id=data.id)
         if not giveaway or giveaway.end_time < datetime.now(tz=timezone.utc):
             raise NotFoundError("Giveaway not found")
-        if giveaway.user_id == self._user.id:
-            raise NotAccessError("Forbidden")
-
         participants_ids = giveaway.participants_ids
         referrers_ids = giveaway.referrers_ids
+        if (
+            giveaway.user_id == self._user.id
+            or giveaway.type is not GiveawayType.SUBSCRIPTION_PAID_TICKET
+            and self._user.id in giveaway.participants_ids
+        ):
+            raise NotAccessError("Forbidden")
+
         if data.referrer_id:
             referrers_ids.append(data.referrer_id)
         if (
@@ -167,14 +171,10 @@ class GetGiveawayInteractor(Interactor[int, FullGiveawayDM]):
         giveaway_gateway: GiveawayReader,
         market_gateway: OrderReader,
         telegram_channel_interactor: "TelegramChannelInfoInteractor",
-        user: UserDM,
-        bot: Bot,
     ) -> None:
         self._giveaway_gateway = giveaway_gateway
         self._market_gateway = market_gateway
         self._telegram_channel_interactor = telegram_channel_interactor
-        self._user = user
-        self._bot = bot
 
     async def __call__(self, giveaway_id: int) -> FullGiveawayDM:
         giveaway = await self._giveaway_gateway.get_one(id=giveaway_id)
