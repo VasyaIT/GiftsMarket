@@ -146,6 +146,7 @@ class GetGiveawayParticipantsInteractor(Interactor[int, list[GiveawayParticipant
                 chance_win = 100
             result.append(
                 GiveawayParticipantDM(
+                    id=participant.id,
                     photo_url=participant.photo_url,
                     name=participant.first_name,
                     count_referrals=count_participant_referrals,

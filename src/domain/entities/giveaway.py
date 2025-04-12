@@ -37,6 +37,7 @@ class FullGiveawayDM(GiveawayDM):
 
 
 class GiveawayParticipantDM(BaseModel):
+    id: int
     photo_url: str
     name: str | None
     chance_win: float
