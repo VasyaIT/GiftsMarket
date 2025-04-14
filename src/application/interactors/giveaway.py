@@ -75,14 +75,13 @@ class CreateGiveawayInteractor(Interactor[CreateGiveawayDTO, None]):
         await self._db_session.commit()
 
         message = get_giveaway_text(data)
-        for channel in data.channels_usernames:
-            await send_photo(
-                self._bot,
-                FSInputFile("src/giveaway.jpg"),
-                message,
-                data.channels_usernames,
-                reply_markup=giveaway_kb(giveaway.id),
-            )
+        await send_photo(
+            self._bot,
+            FSInputFile("src/giveaway.jpg"),
+            message,
+            data.channels_usernames,
+            reply_markup=giveaway_kb(giveaway.id),
+        )
 
 
 class GiveawayJoinInteractor(Interactor[JoinGiveawayDTO, None]):
