@@ -158,6 +158,6 @@ Conditions:
 {premium_text}
 • Max number of participants: {participant_number}
 
-Give end time: {data.end_time}
+Give end time: {data.end_time.strftime("%d.%m, %H:%M")}
 """
     return text
