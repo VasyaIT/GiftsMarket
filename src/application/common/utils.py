@@ -6,6 +6,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ChatMemberStatus
 from aiogram.exceptions import TelegramAPIError
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
+from aiogram.types.input_file import FSInputFile
 
 from src.application.common.const import GIFT_RARITY_PERCENT, GiftRarity
 

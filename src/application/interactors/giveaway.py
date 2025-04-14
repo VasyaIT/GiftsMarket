@@ -3,9 +3,10 @@ from datetime import datetime, timezone
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
+from aiogram.types.input_file import FSInputFile
 
 from src.application.common.const import DEFAULT_AVATAR_URL, GiveawayType
-from src.application.common.utils import is_subscriber
+from src.application.common.utils import get_file_logger, is_admin, is_subscriber, send_photo
 from src.application.dto.giveaway import CreateGiveawayDTO, JoinGiveawayDTO
 from src.application.interactors.errors import (
     GiveawaySubscriptionError,
@@ -26,6 +27,11 @@ from src.domain.entities.giveaway import (
     TelegramChannelDM,
 )
 from src.domain.entities.user import UpdateUserBalanceDM, UserDM
+from src.presentation.bot.keyboards.base import giveaway_kb
+from src.presentation.bot.services.text import get_giveaway_text
+
+
+logger = get_file_logger(__name__, "src/logs/giveaway.log")
 
 
 class CreateGiveawayInteractor(Interactor[CreateGiveawayDTO, None]):
@@ -51,17 +57,32 @@ class CreateGiveawayInteractor(Interactor[CreateGiveawayDTO, None]):
             raise NotFoundError("Gifts not found")
 
         for channel_username in data.channels_usernames:
-            if not await is_subscriber(self._bot, f"@{channel_username}", self._bot.id):
+            if not await is_admin(self._bot, f"@{channel_username}", self._bot.id):
+                logger.info(f"Bot not in channel @{channel_username}")
                 raise GiveawaySubscriptionError(f"Bot not in channel @{channel_username}")
+            if not await is_admin(self._bot, f"@{channel_username}", self._user.id):
+                logger.info(f"User: {self._user.id} not in channel @{channel_username}")
+                raise GiveawaySubscriptionError(
+                    f"User: {self._user.id} not in channel @{channel_username}"
+                )
 
         await self._market_gateway.update_giveaway_gifts(
             {"is_completed": True}, [gift.id for gift in gifts]
         )
 
         create_date = CreateGiveawayDM(**data.model_dump(), user_id=self._user.id)
-        await self._giveaway_gateway.save(create_date)
-
+        giveaway = await self._giveaway_gateway.save(create_date)
         await self._db_session.commit()
+
+        message = get_giveaway_text(data)
+        for channel in data.channels_usernames:
+            await send_photo(
+                self._bot,
+                FSInputFile("src/giveaway.jpg"),
+                message,
+                data.channels_usernames,
+                reply_markup=giveaway_kb(giveaway.id),
+            )
 
 
 class GiveawayJoinInteractor(Interactor[JoinGiveawayDTO, None]):

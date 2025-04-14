@@ -1,4 +1,5 @@
 from src.application.common.const import MINUTES_TO_SEND_GIFT
+from src.application.dto.giveaway import CreateGiveawayDTO
 from src.domain.entities.market import OrderDM
 from src.domain.entities.user import FullUserInfoDM
 
@@ -144,3 +145,19 @@ def get_order_info_text(order_info: OrderDM) -> str:
         f"{created_order_text}"
         f"{completed_order_text}"
     )
+
+
+def get_giveaway_text(data: CreateGiveawayDTO) -> str:
+    participant_number = "Unlimited" if data.quantity_members == 0 else data.quantity_members
+    premium_text = "• Telegram Premium Users Only" if data.is_premium else ""
+    text = f"""
+📌 Gifts Giveaway! 📌
+
+Conditions:  
+• Subscribe to the channel(s): {", ".join([f"@{username}" for username in data.channels_usernames])}
+{premium_text}
+• Max number of participants: {participant_number}
+
+Give end time: {data.end_time}
+"""
+    return text
