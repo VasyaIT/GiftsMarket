@@ -61,6 +61,14 @@ async def is_subscriber(bot: Bot, channel_id: int | str, user_id: int) -> bool:
     return chat_member.status not in (ChatMemberStatus.LEFT, ChatMemberStatus.KICKED)
 
 
+async def is_admin(bot: Bot, channel_id: int | str, user_id: int) -> bool:
+    try:
+        chat_member = await bot.get_chat_member(channel_id, user_id)
+    except TelegramAPIError:
+        return False
+    return chat_member.status not in (ChatMemberStatus.CREATOR, ChatMemberStatus.ADMINISTRATOR)
+
+
 def get_bot(token: str) -> Bot:
     return Bot(token=token, default=DefaultBotProperties(parse_mode="html"))
 
