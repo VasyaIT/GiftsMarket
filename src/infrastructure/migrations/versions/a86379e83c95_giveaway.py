@@ -32,6 +32,7 @@ def upgrade() -> None:
     sa.Column('referrers_ids', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
     sa.Column('channels_usernames', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
     sa.Column('quantity_members', sa.Integer(), nullable=False),
+    sa.Column('is_premium', sa.Boolean(), nullable=False),
     sa.Column('end_time', sa.TIMESTAMP(timezone=True), nullable=False),
     sa.Column('is_completed', sa.Boolean(), nullable=False),
     sa.Column('user_id', sa.BigInteger(), nullable=False),

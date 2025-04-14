@@ -13,6 +13,7 @@ class CreateGiveawayDTO(BaseDTO):
     quantity_members: int
     end_time: datetime
     price: float = Field(ge=0)
+    is_premium: bool
 
 
 class JoinGiveawayDTO(BaseDTO):

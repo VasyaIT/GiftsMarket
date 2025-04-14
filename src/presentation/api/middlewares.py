@@ -35,7 +35,7 @@ class HandleExceptionMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
         except Exception:
             raw_message = format_exc(chain=False)
-            logger.error(raw_message)
+            logger.error(f"{raw_message}\n\n\n")
             message = f"{raw_message[3800 : 3800 + 4096]}"
             await send_message(self._bot, hpre(message), self._bot_config.owners_chat_id)
             raise

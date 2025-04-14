@@ -20,6 +20,7 @@ class CreateGiveawayDM(BaseModel):
     quantity_members: int
     end_time: datetime
     price: float
+    is_premium: bool
     participants_ids: list[int] = []
     winners_ids: list[int] = []
     referrers_ids: list[int] = []
