@@ -1,5 +1,3 @@
-from aiogram.utils.markdown import hblockquote
-
 from src.application.common.const import MINUTES_TO_SEND_GIFT
 from src.application.dto.giveaway import CreateGiveawayDTO
 from src.domain.entities.market import OrderDM, UserGiftDM
@@ -156,21 +154,21 @@ def get_giveaway_text(
     premium_text = "\n🟠 <b>Telegram Premium Users Only</b>\n" if data.is_premium else ""
     gifts_links = []
     for gift in gifts:
-        link = f"{gift.type.replace(' ', '').replace('-', '')}-{gift.number}"
+        link = f"https://t.me/nft/{gift.type.replace(' ', '').replace('-', '')}-{gift.number}"
         gifts_links.append(f"<a href='{link}'>{gift.type} #{gift.number}</a>")
-    gifts_text = f"<b>Gifts ({len(gifts)}):</b>\n\n{'\n'.join(gifts_links)}"
+    gifts_text = f"Gifts ({len(gifts)}):\n\n{'\n'.join(gifts_links)}"
     text = f"""
 🎁 <b>Gifts Giveaway</b> 🎁
 
 <b>Conditions:</b>
 
-🟠 <b>Subscribe to the channel(s):</b> {channel_usernames}
+🟠 <b>Subscribe to the channel(s):</b> {", ".join(channel_usernames)}
 {premium_text}
 🟠 <b>Max number of participants:</b> {participant_number}
 
 🟠 <b>Give end time:</b> 25.03, 19:00 GMT+3
 
-{hblockquote(gifts_text)}
+{gifts_text}
 
 💌 Giveaway Powered by @nestore_robot
 """
