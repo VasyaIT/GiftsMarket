@@ -25,7 +25,7 @@ from src.application.interfaces.database import DBSession
 from src.application.interfaces.giveaway import GiveawayManager, GiveawayReader, GiveawaySaver
 from src.application.interfaces.interactor import Interactor
 from src.application.interfaces.market import OrderManager, OrderReader
-from src.application.interfaces.user import UserReader, UserSaver
+from src.application.interfaces.user import UserManager, UserReader
 from src.domain.entities.bot import BotInfoDM
 from src.domain.entities.giveaway import (
     CreateGiveawayDM,
@@ -126,7 +126,7 @@ class GiveawayJoinInteractor(Interactor[JoinGiveawayDTO, None]):
         self,
         db_session: DBSession,
         giveaway_gateway: GiveawayManager,
-        user_gateway: UserSaver,
+        user_gateway: UserManager,
         user: UserDM,
         bot: Bot,
     ) -> None:
@@ -149,8 +149,14 @@ class GiveawayJoinInteractor(Interactor[JoinGiveawayDTO, None]):
         ):
             raise NotAccessError("Forbidden")
 
-        if data.referrer_id:
+        if data.referrer_id and giveaway.type is GiveawayType.SUBSCRIPTION_LIVE:
             referrers_ids.append(data.referrer_id)
+        if giveaway.type is not GiveawayType.SUBSCRIPTION_LIVE:
+            if not await self._user_gateway.get_referrer(self._user.id):
+                await self._user_gateway.add_referral(giveaway.user_id, self._user)
+            else:
+                await self._user_gateway.update_referrer(giveaway.user_id, self._user)
+
         if (
             giveaway.quantity_members
             and len(participants_ids) + data.count_tickets > giveaway.quantity_members
