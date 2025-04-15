@@ -79,7 +79,7 @@ class CreateGiveawayInteractor(Interactor[CreateGiveawayDTO, None]):
             self._bot,
             FSInputFile("src/giveaway.jpg"),
             message,
-            data.channels_usernames,
+            [f"@{username}" for username in data.channels_usernames],
             reply_markup=giveaway_kb(giveaway.id),
         )
 

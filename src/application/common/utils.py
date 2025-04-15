@@ -6,6 +6,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ChatMemberStatus
 from aiogram.exceptions import TelegramAPIError
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
+from aiogram.types.input_file import InputFile
 
 from src.application.common.const import GIFT_RARITY_PERCENT, GiftRarity
 
@@ -38,7 +39,7 @@ async def send_message(
 
 async def send_photo(
     bot: Bot,
-    photo: str,
+    photo: InputFile | str,
     caption: str,
     chats_id: list[int] | list[str],
     parse_mode: str | None = "html",
