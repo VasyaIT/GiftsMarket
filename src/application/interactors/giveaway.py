@@ -86,9 +86,34 @@ class CreateGiveawayInteractor(Interactor[CreateGiveawayDTO, None]):
         channel_usernames = [f"@{username}" for username in data.channels_usernames]
         message = get_giveaway_text(data, gifts, channel_usernames)
         giveaway_url = build_direct_link(self._bot_info.username, f"giveaway_{giveaway.id}")
+        file_path = ""
+        count_participant = len(giveaway.participants_ids)
+        if giveaway.type is GiveawayType.SUBSCRIPTION_LIVE:
+            file_path = "src/media/giveaways/live.jpg"
+        if giveaway.type is GiveawayType.SUBSCRIPTION:
+            if count_participant > 9:
+                file_path = "src/media/giveaways/subscription_legend.jpg"
+            elif count_participant > 4:
+                file_path = "src/media/giveaways/subscription_epic.jpg"
+            else:
+                file_path = "src/media/giveaways/subscription_rare.jpg"
+        if giveaway.type is GiveawayType.SUBSCRIPTION_PAID_PARTICIPANT:
+            if count_participant > 9:
+                file_path = "src/media/giveaways/subscription_paid_legend.jpg"
+            elif count_participant > 4:
+                file_path = "src/media/giveaways/subscription_paid_epic.jpg"
+            else:
+                file_path = "src/media/giveaways/subscription_paid_rare.jpg"
+        if giveaway.type is GiveawayType.SUBSCRIPTION_PAID_TICKET:
+            if count_participant > 9:
+                file_path = "src/media/giveaways/subscription_ticket_legend.jpg"
+            elif count_participant > 4:
+                file_path = "src/media/giveaways/subscription_ticket_epic.jpg"
+            else:
+                file_path = "src/media/giveaways/subscription_ticket_rare.jpg"
         await send_photo(
             self._bot,
-            FSInputFile("src/giveaway.jpg"),
+            FSInputFile(file_path),
             message,
             channel_usernames,
             reply_markup=giveaway_kb(giveaway_url),
