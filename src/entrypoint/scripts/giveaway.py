@@ -49,9 +49,15 @@ async def start_giveaway_tracker() -> None:
             message = get_ended_giveaway_text(
                 count_participants, giveaway.is_premium, gifts, giveaway.channels_usernames
             )
+            count_gifts = len(gifts)
+            file_path = "src/media/giveaways/ended_rare.jpg"
+            if count_gifts > 9:
+                file_path = "src/media/giveaways/ended_legend.jpg"
+            elif count_gifts > 4:
+                file_path = "src/media/giveaways/ended_epic.jpg"
             await send_photo(
                 bot,
-                FSInputFile("src/media/giveaways/ended_legend.jpg"),
+                FSInputFile(file_path),
                 message,
                 [f"@{username}" for username in giveaway.channels_usernames],
             )
