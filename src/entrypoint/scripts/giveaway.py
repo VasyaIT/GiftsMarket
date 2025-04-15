@@ -2,20 +2,24 @@ import asyncio
 import sys
 from pathlib import Path
 
+from aiogram.types.input_file import FSInputFile
 from bullmq import Queue
 
 
 BASE_DIR = Path(__file__).resolve().parents[3]
 sys.path.append(str(BASE_DIR))
 
+from src.application.common.utils import get_bot, send_photo  # noqa: E402
 from src.entrypoint.config import Config  # noqa: E402
 from src.infrastructure.database.session import new_session_maker  # noqa: E402
 from src.infrastructure.gateways.giveaway import GiveawayGateway  # noqa: E402
 from src.infrastructure.gateways.market import MarketGateway  # noqa: E402
+from src.presentation.bot.services.text import get_ended_giveaway_text  # noqa: E402
 
 
 async def start_giveaway_tracker() -> None:
     config = Config()
+    bot = get_bot(config.bot.BOT_TOKEN)
     queue = Queue("gifts", {"connection": config.redis.REDIS_URL})  # type: ignore
     session_maker = new_session_maker(config.postgres)
 
@@ -42,7 +46,15 @@ async def start_giveaway_tracker() -> None:
                 {"is_completed": True, "winners_ids": winners_ids}, id=giveaway.id
             )
             await session.commit()
-
+            message = get_ended_giveaway_text(
+                count_participants, giveaway.is_premium, gifts, giveaway.channels_usernames
+            )
+            await send_photo(
+                bot,
+                FSInputFile("src/media/giveaways/ended_legend.jpg"),
+                message,
+                [f"@{username}" for username in giveaway.channels_usernames],
+            )
     await queue.close()
 
 

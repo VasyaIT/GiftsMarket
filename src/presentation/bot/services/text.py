@@ -166,7 +166,33 @@ def get_giveaway_text(
 {premium_text}
 🟠 <b>Max number of participants:</b> {participant_number}
 
-🟠 <b>Give end time:</b> 25.03, 19:00 GMT+3
+{gifts_text}
+
+💌 Giveaway Powered by @nestore_robot
+"""
+    return text
+
+
+def get_ended_giveaway_text(
+    quantity_members: int, is_premium: bool, gifts: list[UserGiftDM], channel_usernames: list[str]
+):
+    participant_number = "Unlimited" if quantity_members == 0 else quantity_members
+    premium_text = "\n🟠 <b>Telegram Premium Users Only</b>\n" if is_premium else ""
+    gifts_links = []
+    for gift in gifts:
+        link = f"https://t.me/nft/{gift.type.replace(' ', '').replace('-', '')}-{gift.number}"
+        gifts_links.append(f"<a href='{link}'>{gift.type} #{gift.number}</a>")
+    gifts_text = f"Gifts ({len(gifts)}):\n\n{'\n'.join(gifts_links)}"
+    text = f"""
+🎊 <b>Giveaway Ended!</b> 🎊
+
+<b>Conditions:</b>
+
+🟠 <b>Subscribe to the channel(s):</b> {", ".join(channel_usernames)}
+{premium_text}
+🟠 <b>Max number of participants:</b> {participant_number}
+
+❗️Winners, your gifts are already in the profile @nestore_robot❗️
 
 {gifts_text}
 
