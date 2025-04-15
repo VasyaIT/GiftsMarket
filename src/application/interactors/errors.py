@@ -28,3 +28,7 @@ class AuctionBidError(Exception):
 
 class GiveawaySubscriptionError(Exception):
     pass
+
+
+class GiveawayAdminError(Exception):
+    pass

@@ -1,7 +1,7 @@
 from dishka import FromDishka
 from dishka.integrations.fastapi import inject
 from fastapi import APIRouter, HTTPException
-from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+from starlette.status import HTTP_400_BAD_REQUEST, HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND
 
 from src.application.dto.giveaway import CreateGiveawayDTO, JoinGiveawayDTO
 from src.application.interactors import errors
@@ -32,8 +32,10 @@ async def create_giveaway(
 ) -> None:
     try:
         return await interactor(dto)
-    except errors.NotFoundError as e:
-        raise HTTPException(HTTP_404_NOT_FOUND, str(e))
+    except (errors.NotFoundError, errors.GiveawaySubscriptionError) as e:
+        raise HTTPException(HTTP_400_BAD_REQUEST, str(e))
+    except errors.GiveawayAdminError as e:
+        raise HTTPException(HTTP_403_FORBIDDEN, str(e))
 
 
 @giveaway_router.post("/giveaway/join")

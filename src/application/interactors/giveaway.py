@@ -9,6 +9,7 @@ from src.application.common.const import DEFAULT_AVATAR_URL, GiveawayType
 from src.application.common.utils import get_file_logger, is_admin, is_subscriber, send_photo
 from src.application.dto.giveaway import CreateGiveawayDTO, JoinGiveawayDTO
 from src.application.interactors.errors import (
+    GiveawayAdminError,
     GiveawaySubscriptionError,
     NotAccessError,
     NotEnoughBalanceError,
@@ -54,6 +55,7 @@ class CreateGiveawayInteractor(Interactor[CreateGiveawayDTO, None]):
             data.gifts_ids, seller_id=self._user.id, is_active=False
         )
         if not gifts:
+            logger.info(f"Any of gifts {data.gifts_ids} not found")
             raise NotFoundError("Gifts not found")
 
         for channel_username in data.channels_usernames:
@@ -62,9 +64,7 @@ class CreateGiveawayInteractor(Interactor[CreateGiveawayDTO, None]):
                 raise GiveawaySubscriptionError(f"Bot not in channel @{channel_username}")
             if not await is_admin(self._bot, f"@{channel_username}", self._user.id):
                 logger.info(f"User: {self._user.id} not in channel @{channel_username}")
-                raise GiveawaySubscriptionError(
-                    f"User: {self._user.id} not in channel @{channel_username}"
-                )
+                raise GiveawayAdminError(f"User not in channel @{channel_username}")
 
         await self._market_gateway.update_giveaway_gifts(
             {"is_completed": True}, [gift.id for gift in gifts]
