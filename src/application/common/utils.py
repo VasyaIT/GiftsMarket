@@ -6,7 +6,6 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ChatMemberStatus
 from aiogram.exceptions import TelegramAPIError
 from aiogram.types.inline_keyboard_markup import InlineKeyboardMarkup
-from aiogram.types.input_file import FSInputFile
 
 from src.application.common.const import GIFT_RARITY_PERCENT, GiftRarity
 
@@ -67,7 +66,7 @@ async def is_admin(bot: Bot, channel_id: int | str, user_id: int) -> bool:
         chat_member = await bot.get_chat_member(channel_id, user_id)
     except TelegramAPIError:
         return False
-    return chat_member.status not in (ChatMemberStatus.CREATOR, ChatMemberStatus.ADMINISTRATOR)
+    return chat_member.status in (ChatMemberStatus.CREATOR, ChatMemberStatus.ADMINISTRATOR)
 
 
 def get_bot(token: str) -> Bot:
