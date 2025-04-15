@@ -1,6 +1,8 @@
+from aiogram.utils.markdown import hblockquote
+
 from src.application.common.const import MINUTES_TO_SEND_GIFT
 from src.application.dto.giveaway import CreateGiveawayDTO
-from src.domain.entities.market import OrderDM
+from src.domain.entities.market import OrderDM, UserGiftDM
 from src.domain.entities.user import FullUserInfoDM
 
 
@@ -147,17 +149,29 @@ def get_order_info_text(order_info: OrderDM) -> str:
     )
 
 
-def get_giveaway_text(data: CreateGiveawayDTO) -> str:
+def get_giveaway_text(
+    data: CreateGiveawayDTO, gifts: list[UserGiftDM], channel_usernames: list[str]
+) -> str:
     participant_number = "Unlimited" if data.quantity_members == 0 else data.quantity_members
-    premium_text = "• Telegram Premium Users Only" if data.is_premium else ""
+    premium_text = "\n🟠 <b>Telegram Premium Users Only</b>\n" if data.is_premium else ""
+    gifts_links = []
+    for gift in gifts:
+        link = f"{gift.type.replace(' ', '').replace('-', '')}-{gift.number}"
+        gifts_links.append(f"<a href='{link}'>{gift.type} #{gift.number}</a>")
+    gifts_text = f"<b>Gifts ({len(gifts)}):</b>\n\n{'\n'.join(gifts_links)}"
     text = f"""
-📌 Gifts Giveaway! 📌
+🎁 <b>Gifts Giveaway</b> 🎁
 
-Conditions:  
-• Subscribe to the channel(s): {", ".join([f"@{username}" for username in data.channels_usernames])}
+<b>Conditions:</b>
+
+🟠 <b>Subscribe to the channel(s):</b> {channel_usernames}
 {premium_text}
-• Max number of participants: {participant_number}
+🟠 <b>Max number of participants:</b> {participant_number}
 
-Give end time: {data.end_time.strftime("%d.%m, %H:%M")}
+🟠 <b>Give end time:</b> 25.03, 19:00 GMT+3
+
+{hblockquote(gifts_text)}
+
+💌 Giveaway Powered by @nestore_robot
 """
     return text

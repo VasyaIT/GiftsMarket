@@ -6,7 +6,13 @@ from aiogram.exceptions import TelegramAPIError
 from aiogram.types.input_file import FSInputFile
 
 from src.application.common.const import DEFAULT_AVATAR_URL, GiveawayType
-from src.application.common.utils import get_file_logger, is_admin, is_subscriber, send_photo
+from src.application.common.utils import (
+    build_direct_link,
+    get_file_logger,
+    is_admin,
+    is_subscriber,
+    send_photo,
+)
 from src.application.dto.giveaway import CreateGiveawayDTO, JoinGiveawayDTO
 from src.application.interactors.errors import (
     GiveawayAdminError,
@@ -20,6 +26,7 @@ from src.application.interfaces.giveaway import GiveawayManager, GiveawayReader,
 from src.application.interfaces.interactor import Interactor
 from src.application.interfaces.market import OrderManager, OrderReader
 from src.application.interfaces.user import UserReader, UserSaver
+from src.domain.entities.bot import BotInfoDM
 from src.domain.entities.giveaway import (
     CreateGiveawayDM,
     FullGiveawayDM,
@@ -43,12 +50,14 @@ class CreateGiveawayInteractor(Interactor[CreateGiveawayDTO, None]):
         market_gateway: OrderManager,
         user: UserDM,
         bot: Bot,
+        bot_info: BotInfoDM,
     ) -> None:
         self._db_session = db_session
         self._giveaway_gateway = giveaway_gateway
         self._market_gateway = market_gateway
         self._user = user
         self._bot = bot
+        self._bot_info = bot_info
 
     async def __call__(self, data: CreateGiveawayDTO) -> None:
         gifts = await self._market_gateway.get_user_gifts_by_ids(
@@ -74,13 +83,15 @@ class CreateGiveawayInteractor(Interactor[CreateGiveawayDTO, None]):
         giveaway = await self._giveaway_gateway.save(create_date)
         await self._db_session.commit()
 
-        message = get_giveaway_text(data)
+        channel_usernames = [f"@{username}" for username in data.channels_usernames]
+        message = get_giveaway_text(data, gifts, channel_usernames)
+        giveaway_url = build_direct_link(self._bot_info.username, f"giveaway_{giveaway.id}")
         await send_photo(
             self._bot,
             FSInputFile("src/giveaway.jpg"),
             message,
-            [f"@{username}" for username in data.channels_usernames],
-            reply_markup=giveaway_kb(giveaway.id),
+            channel_usernames,
+            reply_markup=giveaway_kb(giveaway_url),
         )
 
 

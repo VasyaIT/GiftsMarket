@@ -14,9 +14,7 @@ def stars_order_kb(amount: float, direct_link: str) -> InlineKeyboardMarkup:
     return keyboard.as_markup()
 
 
-def giveaway_kb(giveaway_id: int) -> InlineKeyboardMarkup:
+def giveaway_kb(url: str) -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardBuilder()
-    keyboard.button(
-        text="Participate", url=f"https://t.me/nestore_robot?startapp=giveaway_{giveaway_id}"
-    )
+    keyboard.button(text="Participate", url=url)
     return keyboard.as_markup()
