@@ -89,6 +89,7 @@ class CreateGiveawayInteractor(Interactor[CreateGiveawayDTO, None]):
         file_path = ""
         count_participant = len(giveaway.participants_ids)
         if giveaway.type is GiveawayType.SUBSCRIPTION_LIVE:
+            giveaway_url = build_direct_link(self._bot_info.username, f"liveGiveaway_{giveaway.id}")
             file_path = "src/media/giveaways/live.jpg"
         if giveaway.type is GiveawayType.SUBSCRIPTION:
             if count_participant > 9:
