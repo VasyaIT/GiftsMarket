@@ -182,7 +182,7 @@ def get_ended_giveaway_text(
     for gift in gifts:
         link = f"https://t.me/nft/{gift.type.replace(' ', '').replace('-', '')}-{gift.number}"
         gifts_links.append(f"<a href='{link}'>{gift.type} #{gift.number}</a>")
-    gifts_text = f"Gifts ({len(gifts)}):\n\n{'\n'.join(gifts_links)}"
+    gifts_text = f"Gifts ({len(gifts)}):\n\n{'\n\n'.join(gifts_links)}"
     text = f"""
 🎊 <b>Giveaway Ended!</b> 🎊
 
@@ -190,7 +190,7 @@ def get_ended_giveaway_text(
 
 🟠 <b>Subscribe to the channel(s):</b> {", ".join(channel_usernames)}
 {premium_text}
-🟠 <b>Max number of participants:</b> {participant_number}
+🟠 <b>Users:</b> {participant_number}
 
 ❗️Winners, your gifts are already in the profile @nestore_robot❗️
 
